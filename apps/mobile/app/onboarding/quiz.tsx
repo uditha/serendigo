@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -11,8 +11,10 @@ import { router } from 'expo-router';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
+  withRepeat,
+  withSequence,
   withTiming,
+  Easing,
 } from 'react-native-reanimated';
 import { colors, spacing, typography } from '@/src/theme';
 
@@ -70,9 +72,68 @@ const CHARACTER_MAP: Record<WorldType, { name: string; tagline: string; color: s
   RESTORE: { name: 'The Seeker',      tagline: "You travel to find stillness",              color: colors.restore },
 };
 
+const CALC_PHRASES = [
+  'Reading your answers…',
+  'Mapping your soul to the island…',
+  'Consulting the ancient texts…',
+  'Almost there…',
+];
+
+const CALC_EMOJIS = ['🍛', '🐆', '🏄', '🏛️', '🌿', '🗺️', '✨', '🌊'];
+
+function CalculatingScreen({ onDone }: { onDone: () => void }) {
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const [emojiIdx, setEmojiIdx] = useState(0);
+  const barWidth = useSharedValue(0);
+  const emojiScale = useSharedValue(1);
+
+  const barStyle = useAnimatedStyle(() => ({ width: `${barWidth.value * 100}%` }));
+  const emojiStyle = useAnimatedStyle(() => ({ transform: [{ scale: emojiScale.value }] }));
+
+  useEffect(() => {
+    // Animate bar to 100% over 2.4s
+    barWidth.value = withTiming(1, { duration: 2400, easing: Easing.out(Easing.quad) });
+
+    // Cycle phrases every 600ms
+    const phraseTimer = setInterval(() => {
+      setPhraseIdx((i) => (i + 1) % CALC_PHRASES.length);
+    }, 600);
+
+    // Cycle emojis every 300ms
+    const emojiTimer = setInterval(() => {
+      setEmojiIdx((i) => (i + 1) % CALC_EMOJIS.length);
+      emojiScale.value = withSequence(
+        withTiming(1.3, { duration: 100 }),
+        withTiming(1, { duration: 150 })
+      );
+    }, 300);
+
+    // Reveal result after 2.5s
+    const doneTimer = setTimeout(onDone, 2500);
+
+    return () => {
+      clearInterval(phraseTimer);
+      clearInterval(emojiTimer);
+      clearTimeout(doneTimer);
+    };
+  }, []);
+
+  return (
+    <View style={[styles.container, styles.resultContainer]}>
+      <Animated.Text style={[styles.calcEmoji, emojiStyle]}>
+        {CALC_EMOJIS[emojiIdx]}
+      </Animated.Text>
+      <Text style={styles.calcPhrase}>{CALC_PHRASES[phraseIdx]}</Text>
+      <View style={styles.progressTrack}>
+        <Animated.View style={[styles.progressFill, barStyle]} />
+      </View>
+    </View>
+  );
+}
+
 export default function QuizScreen() {
   const { width } = useWindowDimensions();
-  const [step, setStep] = useState(0); // 0,1,2 = questions; 3 = result
+  const [step, setStep] = useState(0); // 0,1,2 = questions; 3 = calculating; 4 = result
   const [scores, setScores] = useState<Record<WorldType, number>>({
     TASTE: 0, WILD: 0, MOVE: 0, ROOTS: 0, RESTORE: 0,
   });
@@ -105,7 +166,7 @@ export default function QuizScreen() {
       );
       progress.value = withTiming(1);
       setResult(winner);
-      setStep(3);
+      setStep(3); // show calculating screen first
     }
   };
 
@@ -113,8 +174,13 @@ export default function QuizScreen() {
     router.replace('/(tabs)');
   };
 
+  // Calculating screen
+  if (step === 3) {
+    return <CalculatingScreen onDone={() => setStep(4)} />;
+  }
+
   // Result screen
-  if (step === 3 && result) {
+  if (step === 4 && result) {
     const character = CHARACTER_MAP[result];
     return (
       <View style={[styles.container, styles.resultContainer]}>
@@ -263,6 +329,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: spacing.lg,
+  },
+  calcEmoji: {
+    fontSize: 72,
+    marginBottom: spacing.xl,
+  },
+  calcPhrase: {
+    ...typography.h2,
+    color: colors.textPrimary,
+    textAlign: 'center',
+    marginBottom: spacing.xl,
+    paddingHorizontal: spacing.lg,
   },
   characterBadge: {
     width: 120,
