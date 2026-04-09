@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { router } from 'expo-router';
 import Svg, { Path, Circle, G } from 'react-native-svg';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Reanimated, {
@@ -145,7 +146,7 @@ export default function IslandScreen() {
               const pinColor = WORLD_COLORS[arc.worldType] ?? colors.primary;
               const { x, y } = geoToSvg(firstChapter.lat, firstChapter.lng);
               return (
-                <G key={arc.id}>
+                <G key={arc.id} onPress={() => router.push(`/arc/${arc.id}`)}>
                   {/* Outer glow ring */}
                   <Circle cx={x} cy={y} r={14} fill={pinColor + '25'} />
                   {/* Pin dot */}
