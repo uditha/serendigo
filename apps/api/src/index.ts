@@ -25,6 +25,17 @@ app.get('/health', (c) =>
   c.json({ status: 'ok', timestamp: new Date().toISOString() }),
 )
 
+// Today endpoint
+app.get('/api/today', (c) => {
+  const hour = new Date().getHours()
+  const greeting =
+    hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+  return c.json({
+    success: true,
+    data: { greeting, location: 'Colombo' },
+  })
+})
+
 // Better Auth handles all /api/auth/* routes
 app.on(['GET', 'POST'], '/api/auth/**', (c) => auth.handler(c.req.raw))
 
