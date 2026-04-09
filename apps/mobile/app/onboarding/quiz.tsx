@@ -17,6 +17,8 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { colors, spacing, typography } from '@/src/theme';
+import { fetchFromApi } from '@/src/services/api';
+import { useAuthStore } from '@/src/stores/authStore';
 
 type WorldType = 'TASTE' | 'WILD' | 'MOVE' | 'ROOTS' | 'RESTORE';
 
@@ -139,6 +141,7 @@ export default function QuizScreen() {
   });
   const [selected, setSelected] = useState<WorldType | null>(null);
   const [result, setResult] = useState<WorldType | null>(null);
+  const { user, setAuth, token } = useAuthStore();
 
   const progress = useSharedValue(0);
   const progressStyle = useAnimatedStyle(() => ({
@@ -170,7 +173,20 @@ export default function QuizScreen() {
     }
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
+    if (result && token && user) {
+      try {
+        await fetchFromApi('/api/user/character', {
+          method: 'PATCH',
+          body: JSON.stringify({ character: result }),
+        });
+        // Update local store so the character is immediately available
+        setAuth(token, { ...user, travellerCharacter: result })
+      } catch (e) {
+        // Non-blocking — character can be set again later
+        console.warn('Failed to save character:', e)
+      }
+    }
     router.replace('/(tabs)');
   };
 

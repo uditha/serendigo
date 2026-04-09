@@ -8,6 +8,7 @@ interface AuthUser {
   email: string
   serendipityCoins: number
   level: number
+  travellerCharacter?: string | null
 }
 
 interface AuthState {
