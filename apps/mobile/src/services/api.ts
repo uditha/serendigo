@@ -27,6 +27,7 @@ export async function fetchFromApi<T>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      'Origin': API_URL ?? 'http://localhost:3000',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options?.headers,
     },
