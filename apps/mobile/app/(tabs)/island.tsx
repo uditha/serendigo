@@ -13,8 +13,9 @@ import { DISTRICT_PATHS } from '@/src/data/sriLankaDistricts';
 
 const VIEW_BOX_WIDTH = 449.68774;
 const VIEW_BOX_HEIGHT = 792.54926;
-const MIN_SCALE = 1;
-const MAX_SCALE = 4;
+// Min/max are computed at runtime from fitScale, defined as constants for worklets
+const MIN_SCALE_FACTOR = 1;   // 1× the fit size
+const MAX_SCALE_FACTOR = 4;   // 4× the fit size
 
 export default function IslandScreen() {
   const { width, height } = useWindowDimensions();
@@ -22,16 +23,17 @@ export default function IslandScreen() {
   const padding = spacing.xl * 2;
   const availableWidth = width - padding;
   const availableHeight = height * 0.8;
+
+  // Render SVG at full viewBox resolution — transform scales it down to fit.
+  // This keeps borders sharp at all zoom levels.
   const fitScale = Math.min(
     availableWidth / VIEW_BOX_WIDTH,
     availableHeight / VIEW_BOX_HEIGHT
   );
-  const mapWidth = VIEW_BOX_WIDTH * fitScale;
-  const mapHeight = VIEW_BOX_HEIGHT * fitScale;
 
   // Reanimated shared values for gestures
-  const scale = useSharedValue(1);
-  const savedScale = useSharedValue(1);
+  const scale = useSharedValue(fitScale);
+  const savedScale = useSharedValue(fitScale);
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const savedTranslateX = useSharedValue(0);
@@ -39,17 +41,17 @@ export default function IslandScreen() {
 
   const clampTranslation = (tx: number, ty: number, s: number) => {
     'worklet';
-    const maxX = (mapWidth * (s - 1)) / 2;
-    const maxY = (mapHeight * (s - 1)) / 2;
+    const maxX = (VIEW_BOX_WIDTH * s - availableWidth) / 2;
+    const maxY = (VIEW_BOX_HEIGHT * s - availableHeight) / 2;
     return {
-      x: clamp(tx, -maxX, maxX),
-      y: clamp(ty, -maxY, maxY),
+      x: clamp(tx, -Math.max(0, maxX), Math.max(0, maxX)),
+      y: clamp(ty, -Math.max(0, maxY), Math.max(0, maxY)),
     };
   };
 
   const pinchGesture = Gesture.Pinch()
     .onUpdate((e) => {
-      scale.value = clamp(savedScale.value * e.scale, MIN_SCALE, MAX_SCALE);
+      scale.value = clamp(savedScale.value * e.scale, fitScale * MIN_SCALE_FACTOR, fitScale * MAX_SCALE_FACTOR);
     })
     .onEnd(() => {
       savedScale.value = scale.value;
@@ -78,18 +80,18 @@ export default function IslandScreen() {
   const doubleTapGesture = Gesture.Tap()
     .numberOfTaps(2)
     .onEnd(() => {
-      if (scale.value > 1) {
-        // Reset
-        scale.value = withSpring(1);
-        savedScale.value = 1;
+      if (scale.value > fitScale * 1.1) {
+        // Reset to fit
+        scale.value = withSpring(fitScale);
+        savedScale.value = fitScale;
         translateX.value = withSpring(0);
         translateY.value = withSpring(0);
         savedTranslateX.value = 0;
         savedTranslateY.value = 0;
       } else {
-        // Zoom in to 2x
-        scale.value = withSpring(2);
-        savedScale.value = 2;
+        // Zoom in to 2×
+        scale.value = withSpring(fitScale * 2);
+        savedScale.value = fitScale * 2;
       }
     });
 
@@ -127,10 +129,9 @@ export default function IslandScreen() {
       <GestureDetector gesture={composed}>
         <Reanimated.View style={animatedStyle}>
           <Svg
-            width={mapWidth}
-            height={mapHeight}
+            width={VIEW_BOX_WIDTH}
+            height={VIEW_BOX_HEIGHT}
             viewBox={`0 0 ${VIEW_BOX_WIDTH} ${VIEW_BOX_HEIGHT}`}
-            preserveAspectRatio="xMidYMid meet"
           >
             {Object.entries(DISTRICT_PATHS).map(([name, d]) => (
               <Path
