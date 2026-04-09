@@ -4,12 +4,21 @@ if (!API_URL) {
   console.warn('[API] EXPO_PUBLIC_API_URL not set — requests will fail')
 }
 
-export async function fetchFromApi<T>(path: string): Promise<T> {
+export async function fetchFromApi<T>(
+  path: string,
+  options?: RequestInit
+): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
   })
   if (!response.ok) {
-    throw new Error(`API error ${response.status}: ${response.statusText}`)
+    // Try to parse error message from API response body
+    const body = await response.json().catch(() => ({}))
+    throw new Error(body?.message ?? body?.error ?? `API error ${response.status}`)
   }
   return response.json()
 }
