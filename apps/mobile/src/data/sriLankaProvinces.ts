@@ -16,7 +16,7 @@ export const PROVINCES: Province[] = [
   {
     id: 'central',
     name: 'Central Province',
-    districts: ['Mahanuvara', 'Matale', 'Nuwara Eliya'],
+    districts: ['Kandy', 'Matale', 'Nuwara Eliya'],
   },
   {
     id: 'southern',

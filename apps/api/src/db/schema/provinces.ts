@@ -1,11 +1,4 @@
-import { pgTable, text, customType } from 'drizzle-orm/pg-core'
-
-// PostGIS geometry column (Supabase has PostGIS enabled by default)
-const geometry = customType<{ data: string }>({
-  dataType() {
-    return 'geometry(Polygon,4326)'
-  },
-})
+import { pgTable, text } from 'drizzle-orm/pg-core'
 
 export const provinces = pgTable('provinces', {
   id: text('id').primaryKey(),
@@ -13,7 +6,7 @@ export const provinces = pgTable('provinces', {
   slug: text('slug').notNull().unique(),
   stampDesignKey: text('stamp_design_key'),
   fillColor: text('fill_color'),
-  polygon: geometry('polygon'),
+  // polygon (PostGIS geometry) added in a later migration once PostGIS is enabled
 })
 
 export type Province = typeof provinces.$inferSelect

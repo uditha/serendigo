@@ -7,6 +7,7 @@ import { startWorkers } from './jobs'
 import arcRoutes from './routes/arcs'
 import captureRoutes from './routes/capture'
 import passportRoutes from './routes/passport'
+import districtRoutes from './routes/districts'
 
 const app = new Hono<{ Variables: { userId: string } }>()
 
@@ -43,6 +44,7 @@ app.on(['GET', 'POST'], '/api/auth/**', (c) => auth.handler(c.req.raw))
 app.route('/api/arcs', arcRoutes)
 app.route('/api/capture', captureRoutes)
 app.route('/api/passport', passportRoutes)
+app.route('/api/districts', districtRoutes)
 
 // Error + 404 handlers
 app.onError(errorHandler)
