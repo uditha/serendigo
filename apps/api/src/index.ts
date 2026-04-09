@@ -37,8 +37,12 @@ app.route('/api/passport', passportRoutes)
 app.onError(errorHandler)
 app.notFound((c) => c.json({ success: false, error: 'Not found' }, 404))
 
-// Start background workers
-startWorkers().catch(console.error)
+// Start background workers (skip if Redis not configured)
+if (process.env.REDIS_URL) {
+  startWorkers().catch(console.error)
+} else {
+  console.warn('[Jobs] REDIS_URL not set — workers disabled')
+}
 
 export default {
   port: parseInt(process.env.PORT ?? '3000'),
