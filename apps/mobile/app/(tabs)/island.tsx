@@ -1,16 +1,11 @@
 import { useCallback, useRef } from 'react';
 import { Animated, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import Svg, { G, Path } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 import { colors, spacing, typography } from '@/src/theme';
 import { DISTRICT_PATHS } from '@/src/data/sriLankaDistricts';
-import { PROVINCES } from '@/src/data/sriLankaProvinces';
 
-// SVG viewBox from the source file
 const VIEW_BOX_WIDTH = 449.68774;
 const VIEW_BOX_HEIGHT = 792.54926;
-
-// Light fill per province — all use the same neutral for now
-const PROVINCE_FILL = '#E5E5E0';
 
 export default function IslandScreen() {
   const { width, height } = useWindowDimensions();
@@ -25,13 +20,12 @@ export default function IslandScreen() {
   const mapWidth = VIEW_BOX_WIDTH * scale;
   const mapHeight = VIEW_BOX_HEIGHT * scale;
 
-  // Toast state
   const toastOpacity = useRef(new Animated.Value(0)).current;
   const toastLabel = useRef('');
 
   const showToast = useCallback(
-    (provinceName: string) => {
-      toastLabel.current = provinceName;
+    (districtName: string) => {
+      toastLabel.current = districtName;
       Animated.sequence([
         Animated.timing(toastOpacity, { toValue: 1, duration: 150, useNativeDriver: true }),
         Animated.delay(1500),
@@ -49,27 +43,19 @@ export default function IslandScreen() {
         viewBox={`0 0 ${VIEW_BOX_WIDTH} ${VIEW_BOX_HEIGHT}`}
         preserveAspectRatio="xMidYMid meet"
       >
-        {PROVINCES.map((province) => (
-          <G key={province.id} onPress={() => showToast(province.name)}>
-            {province.districts.map((districtName) => {
-              const d = DISTRICT_PATHS[districtName];
-              if (!d) return null;
-              return (
-                <Path
-                  key={districtName}
-                  d={d}
-                  fill={PROVINCE_FILL}
-                  stroke={colors.primary}
-                  strokeWidth={1.5}
-                  strokeLinejoin="round"
-                />
-              );
-            })}
-          </G>
+        {Object.entries(DISTRICT_PATHS).map(([name, d]) => (
+          <Path
+            key={name}
+            d={d}
+            fill="#E5E5E0"
+            stroke={colors.primary}
+            strokeWidth={1.5}
+            strokeLinejoin="round"
+            onPress={() => showToast(name)}
+          />
         ))}
       </Svg>
 
-      {/* Toast */}
       <Animated.View style={[styles.toast, { opacity: toastOpacity }]}>
         <Text style={styles.toastText}>{toastLabel.current}</Text>
       </Animated.View>
