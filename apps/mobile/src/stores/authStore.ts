@@ -1,7 +1,6 @@
-import { MMKV } from 'react-native-mmkv'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { create } from 'zustand'
-
-const storage = new MMKV({ id: 'auth' })
+import { createJSONStorage, persist } from 'zustand/middleware'
 
 interface AuthUser {
   id: string
@@ -19,23 +18,24 @@ interface AuthState {
   clearAuth: () => void
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  token: storage.getString('token') ?? null,
-  user: (() => {
-    const raw = storage.getString('user')
-    return raw ? JSON.parse(raw) : null
-  })(),
-  isLoggedIn: !!storage.getString('token'),
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      token: null,
+      user: null,
+      isLoggedIn: false,
 
-  setAuth: (token, user) => {
-    storage.set('token', token)
-    storage.set('user', JSON.stringify(user))
-    set({ token, user, isLoggedIn: true })
-  },
+      setAuth: (token, user) => {
+        set({ token, user, isLoggedIn: true })
+      },
 
-  clearAuth: () => {
-    storage.delete('token')
-    storage.delete('user')
-    set({ token: null, user: null, isLoggedIn: false })
-  },
-}))
+      clearAuth: () => {
+        set({ token: null, user: null, isLoggedIn: false })
+      },
+    }),
+    {
+      name: 'auth-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+    }
+  )
+)

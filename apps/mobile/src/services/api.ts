@@ -1,17 +1,27 @@
-import { MMKV } from 'react-native-mmkv'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
-const storage = new MMKV({ id: 'auth' })
 const API_URL = process.env.EXPO_PUBLIC_API_URL
 
 if (!API_URL) {
   console.warn('[API] EXPO_PUBLIC_API_URL not set — requests will fail')
 }
 
+async function getToken(): Promise<string | null> {
+  try {
+    const raw = await AsyncStorage.getItem('auth-storage')
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    return parsed?.state?.token ?? null
+  } catch {
+    return null
+  }
+}
+
 export async function fetchFromApi<T>(
   path: string,
   options?: RequestInit
 ): Promise<T> {
-  const token = storage.getString('token')
+  const token = await getToken()
 
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
@@ -21,8 +31,8 @@ export async function fetchFromApi<T>(
       ...options?.headers,
     },
   })
+
   if (!response.ok) {
-    // Try to parse error message from API response body
     const body = await response.json().catch(() => ({}))
     throw new Error(body?.message ?? body?.error ?? `API error ${response.status}`)
   }
