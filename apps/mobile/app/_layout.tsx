@@ -58,6 +58,7 @@ export default function RootLayout() {
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="onboarding/quiz" options={{ headerShown: false }} />
           <Stack.Screen name="arc/[id]/index" options={{ headerShown: false }} />
+          <Stack.Screen name="arc/[id]/chapter/[chapterId]" options={{ headerShown: false }} />
         </Stack>
       </GestureHandlerRootView>
     </QueryClientProvider>
