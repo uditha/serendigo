@@ -138,32 +138,27 @@ export default function IslandScreen() {
               />
             ))}
 
-            {/* Arc pins — one pin per chapter */}
+            {/* Arc pins — one pin per arc at first chapter position */}
             {arcs?.map((arc) => {
+              const firstChapter = arc.chapters?.[0];
+              if (!firstChapter) return null;
               const pinColor = WORLD_COLORS[arc.worldType] ?? colors.primary;
-              return arc.chapters?.map((chapter) => {
-                const { x, y } = geoToSvg(chapter.lat, chapter.lng);
-                return (
-                  <G key={chapter.id}>
-                    {/* Outer glow ring */}
-                    <Circle
-                      cx={x}
-                      cy={y}
-                      r={10}
-                      fill={pinColor + '30'}
-                    />
-                    {/* Pin dot */}
-                    <Circle
-                      cx={x}
-                      cy={y}
-                      r={6}
-                      fill={pinColor}
-                      stroke="white"
-                      strokeWidth={1.5}
-                    />
-                  </G>
-                );
-              });
+              const { x, y } = geoToSvg(firstChapter.lat, firstChapter.lng);
+              return (
+                <G key={arc.id}>
+                  {/* Outer glow ring */}
+                  <Circle cx={x} cy={y} r={14} fill={pinColor + '25'} />
+                  {/* Pin dot */}
+                  <Circle
+                    cx={x}
+                    cy={y}
+                    r={8}
+                    fill={pinColor}
+                    stroke="white"
+                    strokeWidth={2}
+                  />
+                </G>
+              );
             })}
           </Svg>
         </Reanimated.View>
