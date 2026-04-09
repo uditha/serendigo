@@ -18,7 +18,7 @@ serendigo/
 
 ## Current Phase
 Phase 1 — Foundation
-Current Milestone: 12 — User Registration Screen
+Current Milestone: 15 — Personality Quiz UI
 
 ## Tech Stack
 
@@ -111,9 +111,9 @@ const colors = {
 - Body/UI: Space Grotesk
 
 ## Current Session Memory
-- Last completed: Milestone 11 — Drizzle ORM connected to Supabase, 25 districts table seeded, GET /api/districts working
-- Current blocker: None — API and mobile both running
-- Next step: Milestone 12 — User Registration Screen (auth flow)
+- Last completed: Milestone 14 — Full auth flow working, user created in Supabase, token stored via AsyncStorage/Zustand
+- Current blocker: None
+- Next step: Milestone 15 — Personality Quiz UI (onboarding)
 
 ## Milestones Completed
 - ✅ 1 — Expo app running
@@ -127,6 +127,9 @@ const colors = {
 - ✅ 9 — Bun + Hono API running (GET /health)
 - ✅ 10 — Mobile fetches API with TanStack Query (Today tab)
 - ✅ 11 — Drizzle ORM + Supabase + 25 districts seeded
+- ✅ 12 — Registration + Login screens (UI)
+- ✅ 13 — Better Auth API endpoints working (sign-up/sign-in)
+- ✅ 14 — Mobile auth flow: register → token stored → redirect to tabs
 
 ## Key Decisions & Notes
 - District name: "Mahanuvara" renamed to "Kandy" everywhere
@@ -135,6 +138,9 @@ const colors = {
 - Supabase project: fnsqcimhicxzzjpgebba (eu-central-1)
 - API runs on port 3000 — mobile .env points to LAN IP 192.168.86.22:3000
 - Redis/BullMQ workers disabled until Upstash URL is configured
+- MMKV replaced with AsyncStorage for Expo Go compatibility (swap back when doing EAS build)
+- Better Auth user table is `user` (not `users`) — all FK references updated
+- Auth token stored in AsyncStorage key `auth-storage` (Zustand persist format)
 
 ## Environment Setup
 Copy env files before first run:
