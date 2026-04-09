@@ -88,44 +88,45 @@ export default function CaptureScreen() {
   // Camera view
   return (
     <View style={styles.container}>
-      <CameraView ref={cameraRef} style={styles.camera} facing={facing}>
-        {/* Top bar */}
-        <View style={styles.topBar}>
-          <Pressable onPress={() => router.back()} style={styles.closeButton}>
-            <Text style={styles.closeText}>✕</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setFacing(f => f === 'back' ? 'front' : 'back')}
-            style={styles.flipButton}
-          >
-            <Text style={styles.flipText}>⇄</Text>
-          </Pressable>
-        </View>
+      {/* Camera — no children, uses absolute overlay instead */}
+      <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing={facing} />
 
-        {/* Viewfinder guide */}
-        <View style={styles.viewfinder} pointerEvents="none">
-          <View style={[styles.corner, styles.cornerTL]} />
-          <View style={[styles.corner, styles.cornerTR]} />
-          <View style={[styles.corner, styles.cornerBL]} />
-          <View style={[styles.corner, styles.cornerBR]} />
-        </View>
+      {/* Overlay: top bar */}
+      <View style={styles.topBar}>
+        <Pressable onPress={() => router.back()} style={styles.closeButton}>
+          <Text style={styles.closeText}>✕</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setFacing(f => f === 'back' ? 'front' : 'back')}
+          style={styles.flipButton}
+        >
+          <Text style={styles.flipText}>⇄</Text>
+        </Pressable>
+      </View>
 
-        {/* Capture button */}
-        <View style={styles.bottomBar}>
-          <Text style={styles.hint}>Position the location in frame</Text>
-          <Pressable
-            style={[styles.captureButton, capturing && styles.captureButtonDisabled]}
-            onPress={handleCapture}
-            disabled={capturing}
-          >
-            {capturing ? (
-              <ActivityIndicator color={colors.textPrimary} />
-            ) : (
-              <View style={styles.captureInner} />
-            )}
-          </Pressable>
-        </View>
-      </CameraView>
+      {/* Overlay: viewfinder corners */}
+      <View style={styles.viewfinder} pointerEvents="none">
+        <View style={[styles.corner, styles.cornerTL]} />
+        <View style={[styles.corner, styles.cornerTR]} />
+        <View style={[styles.corner, styles.cornerBL]} />
+        <View style={[styles.corner, styles.cornerBR]} />
+      </View>
+
+      {/* Overlay: bottom capture button */}
+      <View style={styles.bottomBar}>
+        <Text style={styles.hint}>Position the location in frame</Text>
+        <Pressable
+          style={[styles.captureButton, capturing && styles.captureButtonDisabled]}
+          onPress={handleCapture}
+          disabled={capturing}
+        >
+          {capturing ? (
+            <ActivityIndicator color={colors.textPrimary} />
+          ) : (
+            <View style={styles.captureInner} />
+          )}
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -144,10 +145,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     gap: spacing.lg,
     padding: spacing.lg,
-  },
-  camera: {
-    flex: 1,
-    justifyContent: 'space-between',
   },
   topBar: {
     flexDirection: 'row',
