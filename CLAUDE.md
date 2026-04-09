@@ -18,17 +18,18 @@ serendigo/
 
 ## Current Phase
 Phase 1 — Foundation
-Current Milestone: 1 — Expo App Running
+Current Milestone: 12 — User Registration Screen
 
 ## Tech Stack
 
 ### Mobile (apps/mobile/)
-- Expo SDK 52 (latest)
-- Expo Router (file-based navigation)
-- @shopify/react-native-skia (map + animations)
-- react-native-reanimated 3 (gestures + transitions)
+- Expo SDK 54 (installed)
+- Expo Router (file-based navigation) ✅
+- react-native-svg (island map) ✅
+- react-native-gesture-handler (pan/zoom) ✅
+- react-native-reanimated 4 (gestures + transitions) ✅
+- @tanstack/react-query 5 (server state) ✅
 - react-native-mmkv (fast storage)
-- @tanstack/react-query 5 (server state)
 - zustand (client state)
 
 ### API (apps/api/)
@@ -110,9 +111,30 @@ const colors = {
 - Body/UI: Space Grotesk
 
 ## Current Session Memory
-- Last completed: API scaffold — Hono server, Drizzle schema, all routes/handlers/services, BullMQ workers
-- Current blocker: Need Supabase DATABASE_URL and Upstash REDIS_URL in apps/api/.env to run
-- Next step: Fill apps/api/.env → run `cd apps/api && bun install && bun dev` → verify `curl http://localhost:3000/health`
+- Last completed: Milestone 11 — Drizzle ORM connected to Supabase, 25 districts table seeded, GET /api/districts working
+- Current blocker: None — API and mobile both running
+- Next step: Milestone 12 — User Registration Screen (auth flow)
+
+## Milestones Completed
+- ✅ 1 — Expo app running
+- ✅ 2 — Four tabs navigation (Today, The Island, Your Story, Passport)
+- ✅ 3 — Fonts loading (DM Serif Display + Space Grotesk)
+- ✅ 4 — Theme system (colors, typography, spacing)
+- ✅ 5 — Sri Lanka SVG outline on island map (real GeoJSON, 25 districts)
+- ✅ 6 — Individual district tap detection with toast
+- ✅ 7 — Pan and zoom gestures (pinch 1x–8x, double-tap, clamp)
+- ✅ 8 — District bottom sheet (slide up, drag to dismiss, amber highlight)
+- ✅ 9 — Bun + Hono API running (GET /health)
+- ✅ 10 — Mobile fetches API with TanStack Query (Today tab)
+- ✅ 11 — Drizzle ORM + Supabase + 25 districts seeded
+
+## Key Decisions & Notes
+- District name: "Mahanuvara" renamed to "Kandy" everywhere
+- SVG rendered at native viewBox resolution, transform handles scale (keeps borders crisp)
+- PostGIS geometry column removed from provinces — add back when location queries needed
+- Supabase project: fnsqcimhicxzzjpgebba (eu-central-1)
+- API runs on port 3000 — mobile .env points to LAN IP 192.168.86.22:3000
+- Redis/BullMQ workers disabled until Upstash URL is configured
 
 ## Environment Setup
 Copy env files before first run:
@@ -129,6 +151,8 @@ See each `.env.example` for required values (Supabase, Upstash, Stripe, Cloudfla
 2. Using Bun over Node.js for 3x faster TypeScript execution
 3. Using Drizzle over Prisma for no code generation step
 4. Using Supabase for managed PostgreSQL + PostGIS
+5. Districts (25) used instead of provinces (9) for map granularity
+6. SVG map sourced from real MapSVG GeoJSON file — not hand-drawn
 
 ## Commands Available
 See .claude/commands/ for custom workflows:
