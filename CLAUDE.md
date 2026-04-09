@@ -12,7 +12,7 @@ serendigo/
 │   ├── api/             # Bun + Hono + Drizzle
 │   └── admin/           # Next.js 15 + Payload CMS
 ├── packages/
-│   └── shared/          # Shared types and utilities
+│   └── shared/          # WorldType, Province, Arc, Chapter, Coordinates
 └── docs/                # Documentation
 ```
 
@@ -83,6 +83,8 @@ apps/api/src/
 4. API: route → handler → service (no logic in routes)
 5. Mobile: TanStack Query for all API calls
 6. Commit after each working feature
+7. End of every session: update "Current Session Memory" — last completed, current blocker, next step
+8. Shared types live in packages/shared — import from @serendigo/shared in both mobile and api
 
 ## Colors (Reference)
 ```typescript
@@ -110,7 +112,16 @@ const colors = {
 ## Current Session Memory
 - Last completed: [None yet — first session]
 - Current blocker: [None]
-- Next step: Milestone 1 — create Expo app in apps/mobile/
+- Next step: Milestone 1 — run `npx create-expo-app@latest apps/mobile --template blank-typescript`
+
+## Environment Setup
+Copy env files before first run:
+```bash
+cp apps/api/.env.example apps/api/.env
+cp apps/mobile/.env.example apps/mobile/.env
+cp apps/admin/.env.example apps/admin/.env
+```
+See each `.env.example` for required values (Supabase, Upstash, Stripe, Cloudflare R2).
 
 ## Important Decisions Made
 <!-- Record architectural decisions here -->

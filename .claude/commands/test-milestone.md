@@ -88,10 +88,11 @@ npx expo start --clear  # Also clears cache
 
 A milestone is DONE when:
 1. All visual tests pass
-2. All interaction tests pass  
+2. All interaction tests pass
 3. All data tests pass
 4. At least basic edge cases handled
 5. You can demo it to someone else
+6. "Current Session Memory" in CLAUDE.md is updated with last completed + next step
 
 ## Common "Not Quite Done" Issues
 
@@ -103,6 +104,15 @@ A milestone is DONE when:
 
 **"It works when everything is perfect"**
 → Test offline, with slow network, with permissions denied
+
+## After Passing
+
+Update CLAUDE.md → "Current Session Memory":
+```
+- Last completed: Milestone [N] — [Name]
+- Current blocker: [None / describe if any]
+- Next step: Milestone [N+1] — [first action]
+```
 
 ## Ask me:
 1. Which milestone are you testing?
