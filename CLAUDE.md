@@ -108,10 +108,9 @@ const colors = {
 - Body/UI: Space Grotesk
 
 ## Current Session Memory
-<!-- Claude Code updates this section -->
-- Last completed: [None yet]
+- Last completed: [None yet — first session]
 - Current blocker: [None]
-- Next step: Set up Expo project
+- Next step: Milestone 1 — create Expo app in apps/mobile/
 
 ## Important Decisions Made
 <!-- Record architectural decisions here -->
@@ -126,3 +125,11 @@ See .claude/commands/ for custom workflows:
 - /new-endpoint — Add an API endpoint
 - /new-arc — Add story arc content
 - /db-change — Database schema changes
+- /debug — Systematic debugging workflow
+- /test-milestone — Verify a milestone before moving on
+
+## Skills Available
+Specialized context auto-loaded when working in each area:
+- serendigo-mobile — Mobile screens, animations, Expo, React Native
+- serendigo-api — Backend endpoints, Drizzle schema, BullMQ jobs
+- serendigo-content — Story arc and chapter content creation
