@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -71,14 +72,7 @@ export default function CaptureScreen() {
   if (photo) {
     return (
       <View style={styles.container}>
-        {/* Preview overlay using camera frozen */}
-        <View style={styles.preview}>
-          <CameraView style={StyleSheet.absoluteFill} />
-          <View style={styles.previewOverlay}>
-            <Text style={styles.previewLabel}>Moment captured</Text>
-          </View>
-        </View>
-
+        <Image source={{ uri: photo }} style={styles.previewImage} resizeMode="cover" />
         <View style={styles.previewActions}>
           <Pressable style={styles.retakeButton} onPress={handleRetake}>
             <Text style={styles.retakeText}>Retake</Text>
@@ -248,23 +242,9 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     backgroundColor: 'white',
   },
-  // Preview
-  preview: {
+  previewImage: {
     flex: 1,
-    position: 'relative',
-  },
-  previewOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'flex-end',
-    padding: spacing.lg,
-  },
-  previewLabel: {
-    color: 'white',
-    ...typography.h3,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    padding: spacing.sm,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
+    width: '100%',
   },
   previewActions: {
     flexDirection: 'row',
