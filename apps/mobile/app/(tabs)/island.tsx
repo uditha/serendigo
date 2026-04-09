@@ -15,7 +15,7 @@ const VIEW_BOX_WIDTH = 449.68774;
 const VIEW_BOX_HEIGHT = 792.54926;
 // Min/max are computed at runtime from fitScale, defined as constants for worklets
 const MIN_SCALE_FACTOR = 1;   // 1× the fit size
-const MAX_SCALE_FACTOR = 4;   // 4× the fit size
+const MAX_SCALE_FACTOR = 8;   // 8× the fit size
 
 export default function IslandScreen() {
   const { width, height } = useWindowDimensions();
@@ -89,9 +89,9 @@ export default function IslandScreen() {
         savedTranslateX.value = 0;
         savedTranslateY.value = 0;
       } else {
-        // Zoom in to 2×
-        scale.value = withSpring(fitScale * 2);
-        savedScale.value = fitScale * 2;
+        // Zoom in to 3×
+        scale.value = withSpring(fitScale * 3);
+        savedScale.value = fitScale * 3;
       }
     });
 
