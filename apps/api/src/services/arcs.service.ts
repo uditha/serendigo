@@ -1,6 +1,7 @@
 import { db } from '../db'
-import { arcs, chapters, userArcs, captures } from '../db/schema'
+import { arcs, arcPlaces, places, userArcs, userPlaces } from '../db/schema'
 import { eq, and, inArray } from 'drizzle-orm'
+import type { Arc } from '../db/schema'
 
 interface ArcFilters {
   province?: string
@@ -24,58 +25,39 @@ export async function getArcs(filters: ArcFilters) {
     .orderBy(arcs.title)
 
   const currentMonth = new Date().getMonth() + 1
-
-  return result.map((arc) => ({
-    ...arc,
-    isActiveNow: isInSeason(arc, currentMonth),
-  }))
+  return result.map((arc) => ({ ...arc, isActiveNow: isInSeason(arc, currentMonth) }))
 }
 
 export async function getArcById(id: string) {
-  const arc = await db.query.arcs.findFirst({
-    where: eq(arcs.id, id),
-    with: { chapters: { orderBy: (c, { asc }) => [asc(c.order)] } },
-  })
-
+  const arc = await db.query.arcs.findFirst({ where: eq(arcs.id, id) })
   if (!arc) return null
 
+  const arcWithPlaces = await getArcPlaces(id)
   const currentMonth = new Date().getMonth() + 1
-  return { ...arc, isActiveNow: isInSeason(arc, currentMonth) }
+  return { ...arc, places: arcWithPlaces, isActiveNow: isInSeason(arc, currentMonth) }
 }
 
 export async function getArcBySlug(slug: string) {
-  const arc = await db.query.arcs.findFirst({
-    where: eq(arcs.slug, slug),
-    with: { chapters: { orderBy: (c, { asc }) => [asc(c.order)] } },
-  })
-
+  const arc = await db.query.arcs.findFirst({ where: eq(arcs.slug, slug) })
   if (!arc) return null
 
+  const arcWithPlaces = await getArcPlaces(arc.id)
   const currentMonth = new Date().getMonth() + 1
-  return { ...arc, isActiveNow: isInSeason(arc, currentMonth) }
+  return { ...arc, places: arcWithPlaces, isActiveNow: isInSeason(arc, currentMonth) }
 }
 
-export async function getChapters(arcId: string) {
+async function getArcPlaces(arcId: string) {
   return db
-    .select()
-    .from(chapters)
-    .where(eq(chapters.arcId, arcId))
-    .orderBy(chapters.order)
-}
-
-export async function enrollUser(userId: string, arcId: string) {
-  const existing = await db.query.userArcs.findFirst({
-    where: and(eq(userArcs.userId, userId), eq(userArcs.arcId, arcId)),
-  })
-
-  if (existing) return existing
-
-  const [enrollment] = await db
-    .insert(userArcs)
-    .values({ userId, arcId })
-    .returning()
-
-  return enrollment
+    .select({
+      place: places,
+      order: arcPlaces.order,
+      transitionText: arcPlaces.transitionText,
+      customLoreText: arcPlaces.customLoreText,
+    })
+    .from(arcPlaces)
+    .innerJoin(places, eq(arcPlaces.placeId, places.id))
+    .where(eq(arcPlaces.arcId, arcId))
+    .orderBy(arcPlaces.order)
 }
 
 export async function getUserArcProgress(userId: string, arcId: string) {
@@ -83,39 +65,31 @@ export async function getUserArcProgress(userId: string, arcId: string) {
     where: and(eq(userArcs.userId, userId), eq(userArcs.arcId, arcId)),
   })
 
-  if (!enrollment) return null
+  const arcWithPlaces = await getArcPlaces(arcId)
+  const placeIds = arcWithPlaces.map((ap) => ap.place.id)
 
-  const arcChapters = await db
-    .select({ id: chapters.id })
-    .from(chapters)
-    .where(eq(chapters.arcId, arcId))
+  const captured = placeIds.length > 0
+    ? await db
+        .select({ placeId: userPlaces.placeId })
+        .from(userPlaces)
+        .where(and(eq(userPlaces.userId, userId), inArray(userPlaces.placeId, placeIds)))
+    : []
 
-  const chapterIds = arcChapters.map((c) => c.id)
-
-  const completedCaptures = await db
-    .select({ chapterId: captures.chapterId })
-    .from(captures)
-    .where(and(eq(captures.userId, userId), inArray(captures.chapterId, chapterIds)))
-
-  const completedIds = completedCaptures.map((c) => c.chapterId)
+  const capturedIds = captured.map((c) => c.placeId)
 
   return {
-    ...enrollment,
-    totalChapters: chapterIds.length,
-    completedChapters: completedIds.length,
-    completedChapterIds: completedIds,
-    isComplete: enrollment.completedAt !== null,
+    enrollment: enrollment ?? null,
+    totalPlaces: placeIds.length,
+    completedPlaces: capturedIds.length,
+    capturedPlaceIds: capturedIds,
+    isComplete: enrollment?.status === 'COMPLETED',
   }
 }
-
-// Types imported from schema
-import type { Arc } from '../db/schema'
 
 function isInSeason(arc: Arc, month: number): boolean {
   if (!arc.isSeasonal || arc.seasonStart === null || arc.seasonEnd === null) return true
   if (arc.seasonStart <= arc.seasonEnd) {
     return month >= arc.seasonStart && month <= arc.seasonEnd
   }
-  // Wraps across year-end (e.g. Nov–Mar)
   return month >= arc.seasonStart || month <= arc.seasonEnd
 }

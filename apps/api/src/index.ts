@@ -4,21 +4,18 @@ import { logger } from 'hono/logger'
 import { auth } from './lib/auth'
 import { errorHandler } from './middleware/error'
 import { startWorkers } from './jobs'
+import placeRoutes from './routes/places'
 import arcRoutes from './routes/arcs'
-import captureRoutes from './routes/capture'
 import passportRoutes from './routes/passport'
 
 const app = new Hono<{ Variables: { userId: string } }>()
 
 // Global middleware
 app.use('*', logger())
-app.use(
-  '*',
-  cors({
-    origin: process.env.CORS_ORIGIN ?? '*',
-    credentials: true,
-  }),
-)
+app.use('*', cors({
+  origin: process.env.CORS_ORIGIN ?? '*',
+  credentials: true,
+}))
 
 // Health check
 app.get('/health', (c) =>
@@ -29,11 +26,11 @@ app.get('/health', (c) =>
 app.on(['GET', 'POST'], '/api/auth/**', (c) => auth.handler(c.req.raw))
 
 // API routes
+app.route('/api/places', placeRoutes)
 app.route('/api/arcs', arcRoutes)
-app.route('/api/capture', captureRoutes)
 app.route('/api/passport', passportRoutes)
 
-// Error + 404 handlers
+// Error + 404
 app.onError(errorHandler)
 app.notFound((c) => c.json({ success: false, error: 'Not found' }, 404))
 

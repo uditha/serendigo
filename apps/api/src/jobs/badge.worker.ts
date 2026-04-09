@@ -1,8 +1,8 @@
 import { Worker } from 'bullmq'
 import { redis } from '../utils/redis'
-import { notificationQueue } from './index'
+import { notificationQueue } from './queues' // no circular import
 import { db } from '../db'
-import { captures, userArcs } from '../db/schema'
+import { userPlaces, userArcs } from '../db/schema'
 import { eq, count } from 'drizzle-orm'
 
 export function startBadgeWorker() {
@@ -31,11 +31,10 @@ async function checkBadgeConditions(userId: string): Promise<string[]> {
 
   const [captureCount] = await db
     .select({ count: count() })
-    .from(captures)
-    .where(eq(captures.userId, userId))
+    .from(userPlaces)
+    .where(eq(userPlaces.userId, userId))
 
   const total = captureCount?.count ?? 0
-
   if (total === 1) earned.push('first-capture')
   if (total === 10) earned.push('ten-captures')
   if (total === 50) earned.push('fifty-captures')

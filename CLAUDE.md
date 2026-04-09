@@ -110,9 +110,9 @@ const colors = {
 - Body/UI: Space Grotesk
 
 ## Current Session Memory
-- Last completed: API scaffold — Hono server, Drizzle schema, all routes/handlers/services, BullMQ workers
+- Last completed: Data model redesign — Places as atomic units, Arcs as curated journeys via arc_places junction. All 4 bugs fixed (circular import, Drizzle relations, Better Auth table mismatch, sql.raw)
 - Current blocker: Need Supabase DATABASE_URL and Upstash REDIS_URL in apps/api/.env to run
-- Next step: Fill apps/api/.env → run `cd apps/api && bun install && bun dev` → verify `curl http://localhost:3000/health`
+- Next step: Fill apps/api/.env → `cd apps/api && bun install && bun dev` → verify `curl http://localhost:3000/health`
 
 ## Environment Setup
 Copy env files before first run:

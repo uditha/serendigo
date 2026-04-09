@@ -7,7 +7,7 @@ export function startNotificationWorker() {
     async (job) => {
       const { userId, badges } = job.data as { userId: string; badges: string[] }
       console.log(`[Notifications] Sending badge notification to ${userId}:`, badges)
-      // TODO: integrate push notifications (Expo Push / FCM / APNs)
+      // TODO: integrate Expo Push / FCM / APNs
     },
     { connection: redis },
   )

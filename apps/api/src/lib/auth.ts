@@ -3,13 +3,14 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { db } from '../db'
 
 export const auth = betterAuth({
-  database: drizzleAdapter(db, { provider: 'pg' }),
+  database: drizzleAdapter(db, {
+    provider: 'pg',
+    usePlural: true, // use 'users' table (our table) instead of 'user'
+  }),
   secret: process.env.BETTER_AUTH_SECRET!,
   baseURL: process.env.BETTER_AUTH_URL!,
 
-  emailAndPassword: {
-    enabled: true,
-  },
+  emailAndPassword: { enabled: true },
 
   socialProviders: {
     google: {
@@ -18,7 +19,7 @@ export const auth = betterAuth({
     },
   },
 
-  // Game-specific fields on the user record
+  // Game fields synced onto the shared users table
   user: {
     additionalFields: {
       serendipityCoins: { type: 'number', defaultValue: 0 },
