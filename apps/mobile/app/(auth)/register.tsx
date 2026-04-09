@@ -13,6 +13,7 @@ import {
 import { Link, router } from 'expo-router';
 import { colors, spacing, typography } from '@/src/theme';
 import { fetchFromApi } from '@/src/services/api';
+import { useAuthStore } from '@/src/stores/authStore';
 
 export default function RegisterScreen() {
   const [name, setName] = useState('');
@@ -20,6 +21,7 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const setAuth = useAuthStore((s) => s.setAuth);
 
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password.trim()) {
@@ -35,10 +37,11 @@ export default function RegisterScreen() {
     setLoading(true);
 
     try {
-      await fetchFromApi('/api/auth/sign-up/email', {
+      const res = await fetchFromApi<{ token: string; user: any }>('/api/auth/sign-up/email', {
         method: 'POST',
         body: JSON.stringify({ name, email, password }),
       });
+      setAuth(res.token, res.user);
       router.replace('/(tabs)');
     } catch (err: any) {
       setError(err.message ?? 'Registration failed. Please try again.');

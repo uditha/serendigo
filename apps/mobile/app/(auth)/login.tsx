@@ -13,12 +13,14 @@ import {
 import { Link, router } from 'expo-router';
 import { colors, spacing, typography } from '@/src/theme';
 import { fetchFromApi } from '@/src/services/api';
+import { useAuthStore } from '@/src/stores/authStore';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const setAuth = useAuthStore((s) => s.setAuth);
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -30,10 +32,11 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      await fetchFromApi('/api/auth/sign-in/email', {
+      const res = await fetchFromApi<{ token: string; user: any }>('/api/auth/sign-in/email', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
+      setAuth(res.token, res.user);
       router.replace('/(tabs)');
     } catch (err: any) {
       setError(err.message ?? 'Sign in failed. Please try again.');
