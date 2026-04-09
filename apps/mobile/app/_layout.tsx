@@ -19,7 +19,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
-  initialRouteName: '(auth)',
+  initialRouteName: '(tabs)',
 };
 
 SplashScreen.preventAutoHideAsync();
