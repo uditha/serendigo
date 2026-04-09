@@ -1,0 +1,35 @@
+name: Typecheck
+
+on:
+  push:
+    branches: [main, develop, "claude/**"]
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "package.json"
+      - "turbo.json"
+      - "tsconfig.json"
+  pull_request:
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "package.json"
+      - "turbo.json"
+      - "tsconfig.json"
+
+jobs:
+  typecheck:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Typecheck
+        run: bun run typecheck
