@@ -18,7 +18,7 @@ serendigo/
 
 ## Current Phase
 Phase 1 — Foundation
-Current Milestone: 15 — Personality Quiz UI
+Current Milestone: 17 — Arc Database Schema
 
 ## Tech Stack
 
@@ -111,9 +111,9 @@ const colors = {
 - Body/UI: Space Grotesk
 
 ## Current Session Memory
-- Last completed: Milestone 14 — Full auth flow working, user created in Supabase, token stored via AsyncStorage/Zustand
+- Last completed: Milestone 16 — Character assignment saves to Supabase, auth store updated
 - Current blocker: None
-- Next step: Milestone 15 — Personality Quiz UI (onboarding)
+- Next step: Milestone 17 — Arc Database Schema
 
 ## Milestones Completed
 - ✅ 1 — Expo app running
@@ -130,6 +130,8 @@ const colors = {
 - ✅ 12 — Registration + Login screens (UI)
 - ✅ 13 — Better Auth API endpoints working (sign-up/sign-in)
 - ✅ 14 — Mobile auth flow: register → token stored → redirect to tabs
+- ✅ 15 — Personality quiz UI (3 questions, 5 characters, calculating animation)
+- ✅ 16 — Character assignment saved to Supabase user profile
 
 ## Key Decisions & Notes
 - District name: "Mahanuvara" renamed to "Kandy" everywhere
