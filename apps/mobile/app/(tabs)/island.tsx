@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Circle, G } from 'react-native-svg';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Reanimated, {
   useSharedValue,
@@ -11,14 +11,25 @@ import Reanimated, {
 import { colors, spacing } from '@/src/theme';
 import { DISTRICT_PATHS } from '@/src/data/sriLankaDistricts';
 import DistrictBottomSheet from '@/src/components/DistrictBottomSheet';
+import { useArcs } from '@/src/hooks/useArcs';
+import { geoToSvg } from '@/src/utils/geoToSvg';
 
 const VIEW_BOX_WIDTH = 449.68774;
 const VIEW_BOX_HEIGHT = 792.54926;
 const MIN_SCALE_FACTOR = 1;
 const MAX_SCALE_FACTOR = 8;
 
+const WORLD_COLORS: Record<string, string> = {
+  TASTE:   colors.taste,
+  WILD:    colors.wild,
+  MOVE:    colors.move,
+  ROOTS:   colors.roots,
+  RESTORE: colors.restore,
+};
+
 export default function IslandScreen() {
   const { width, height } = useWindowDimensions();
+  const { data: arcs } = useArcs();
 
   const padding = spacing.xl * 2;
   const availableWidth = width - padding;
@@ -114,6 +125,7 @@ export default function IslandScreen() {
             height={VIEW_BOX_HEIGHT}
             viewBox={`0 0 ${VIEW_BOX_WIDTH} ${VIEW_BOX_HEIGHT}`}
           >
+            {/* District polygons */}
             {Object.entries(DISTRICT_PATHS).map(([name, d]) => (
               <Path
                 key={name}
@@ -125,6 +137,34 @@ export default function IslandScreen() {
                 onPress={() => setSelectedDistrict(name)}
               />
             ))}
+
+            {/* Arc pins — one pin per chapter */}
+            {arcs?.map((arc) => {
+              const pinColor = WORLD_COLORS[arc.worldType] ?? colors.primary;
+              return arc.chapters?.map((chapter) => {
+                const { x, y } = geoToSvg(chapter.lat, chapter.lng);
+                return (
+                  <G key={chapter.id}>
+                    {/* Outer glow ring */}
+                    <Circle
+                      cx={x}
+                      cy={y}
+                      r={10}
+                      fill={pinColor + '30'}
+                    />
+                    {/* Pin dot */}
+                    <Circle
+                      cx={x}
+                      cy={y}
+                      r={6}
+                      fill={pinColor}
+                      stroke="white"
+                      strokeWidth={1.5}
+                    />
+                  </G>
+                );
+              });
+            })}
           </Svg>
         </Reanimated.View>
       </GestureDetector>

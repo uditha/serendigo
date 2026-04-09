@@ -17,11 +17,16 @@ export async function getArcs(filters: ArcFilters) {
     conditions.push(eq(arcs.worldType, filters.worldType as Arc['worldType']))
   }
 
-  const result = await db
-    .select()
-    .from(arcs)
-    .where(and(...conditions))
-    .orderBy(arcs.title)
+  const result = await db.query.arcs.findMany({
+    where: and(...conditions),
+    orderBy: (a, { asc }) => [asc(a.title)],
+    with: {
+      chapters: {
+        columns: { id: true, lat: true, lng: true, title: true, order: true },
+        orderBy: (c, { asc }) => [asc(c.order)],
+      },
+    },
+  })
 
   const currentMonth = new Date().getMonth() + 1
 
