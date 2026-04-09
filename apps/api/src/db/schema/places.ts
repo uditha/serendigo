@@ -19,10 +19,12 @@ export const places = pgTable('places', {
   address: text('address'),
 
   // Classification
+  // Open text — common values: 'temple', 'tea', 'beach', 'viewpoint', 'hotel',
+  //   'transport', 'experience', 'restaurant', 'factory', 'guide', 'market'
   worldType: text('world_type', {
     enum: ['TASTE', 'WILD', 'MOVE', 'ROOTS', 'RESTORE'],
   }).notNull(),
-  category: text('category').notNull(), // 'tea', 'temple', 'beach', 'viewpoint', etc.
+  category: text('category').notNull(),
   tags: text('tags').array(),
   tier: integer('tier').default(2).notNull(), // 1=Signature, 2=Essential, 3=Deep Cut
 
@@ -32,9 +34,34 @@ export const places = pgTable('places', {
     bestTime?: string
     dresscode?: string
     entryFee?: string
+    priceRange?: string    // e.g. "2,000–3,500 LKR half/full day"
     etiquette?: string
+    bookingRequired?: boolean
   }>(),
   coverImage: text('cover_image'),
+
+  // Contact (for service providers: tuk drivers, guides, hotels, experiences)
+  contactInfo: jsonb('contact_info').$type<{
+    phone?: string
+    whatsapp?: string
+    website?: string
+    instagram?: string
+  }>(),
+
+  // Operating hours (optional — for businesses, not natural sites)
+  operatingHours: jsonb('operating_hours').$type<{
+    monday?: string     // e.g. "6am – 6pm"
+    tuesday?: string
+    wednesday?: string
+    thursday?: string
+    friday?: string
+    saturday?: string
+    sunday?: string
+    note?: string       // e.g. "Closed on Poya days"
+  }>(),
+
+  // Service area (for transport/guides — "Sigiriya, Dambulla, Polonnaruwa")
+  serviceArea: text('service_area'),
 
   // Gamification
   coinReward: integer('coin_reward').default(50).notNull(),
