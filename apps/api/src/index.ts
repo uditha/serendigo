@@ -38,10 +38,11 @@ app.onError(errorHandler)
 app.notFound((c) => c.json({ success: false, error: 'Not found' }, 404))
 
 // Start background workers (skip if Redis not configured)
-if (process.env.REDIS_URL) {
+const redisUrl = process.env.REDIS_URL
+if (redisUrl && !redisUrl.includes('[')) {
   startWorkers().catch(console.error)
 } else {
-  console.warn('[Jobs] REDIS_URL not set — workers disabled')
+  console.warn('[Jobs] REDIS_URL not configured — workers disabled')
 }
 
 export default {
