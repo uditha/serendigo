@@ -91,25 +91,25 @@ function CalculatingScreen({ onDone }: { onDone: () => void }) {
   const emojiStyle = useAnimatedStyle(() => ({ transform: [{ scale: emojiScale.value }] }));
 
   useEffect(() => {
-    // Animate bar to 100% over 2.4s
-    barWidth.value = withTiming(1, { duration: 2400, easing: Easing.out(Easing.quad) });
+    // Animate bar to 100% over 4.8s
+    barWidth.value = withTiming(1, { duration: 4800, easing: Easing.out(Easing.quad) });
 
-    // Cycle phrases every 600ms
+    // Cycle phrases every 1200ms
     const phraseTimer = setInterval(() => {
       setPhraseIdx((i) => (i + 1) % CALC_PHRASES.length);
-    }, 600);
+    }, 1200);
 
-    // Cycle emojis every 300ms
+    // Cycle emojis every 600ms
     const emojiTimer = setInterval(() => {
       setEmojiIdx((i) => (i + 1) % CALC_EMOJIS.length);
       emojiScale.value = withSequence(
-        withTiming(1.3, { duration: 100 }),
-        withTiming(1, { duration: 150 })
+        withTiming(1.3, { duration: 150 }),
+        withTiming(1, { duration: 250 })
       );
-    }, 300);
+    }, 600);
 
-    // Reveal result after 2.5s
-    const doneTimer = setTimeout(onDone, 2500);
+    // Reveal result after 5s
+    const doneTimer = setTimeout(onDone, 5000);
 
     return () => {
       clearInterval(phraseTimer);
