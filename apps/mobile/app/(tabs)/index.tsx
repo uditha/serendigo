@@ -51,6 +51,12 @@ export default function TodayScreen() {
       {isLoggedIn && user ? (
         <>
           <Text style={styles.userText}>Signed in as {user.name}</Text>
+          <Pressable
+            onPress={() => router.push('/onboarding/quiz')}
+            style={styles.testButton}
+          >
+            <Text style={styles.testButtonText}>→ Take personality quiz</Text>
+          </Pressable>
           <Pressable onPress={handleLogout} style={styles.logoutButton}>
             <Text style={styles.logoutText}>Sign out</Text>
           </Pressable>
