@@ -1,0 +1,9 @@
+import type { Context } from 'hono'
+
+export function errorHandler(err: Error, c: Context) {
+  console.error('[API Error]', err.message, err.stack)
+  return c.json(
+    { success: false, error: err.message || 'Internal server error' },
+    500,
+  )
+}

@@ -110,9 +110,9 @@ const colors = {
 - Body/UI: Space Grotesk
 
 ## Current Session Memory
-- Last completed: [None yet — first session]
-- Current blocker: [None]
-- Next step: Milestone 1 — run `npx create-expo-app@latest apps/mobile --template blank-typescript`
+- Last completed: API scaffold — Hono server, Drizzle schema, all routes/handlers/services, BullMQ workers
+- Current blocker: Need Supabase DATABASE_URL and Upstash REDIS_URL in apps/api/.env to run
+- Next step: Fill apps/api/.env → run `cd apps/api && bun install && bun dev` → verify `curl http://localhost:3000/health`
 
 ## Environment Setup
 Copy env files before first run:
