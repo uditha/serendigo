@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import { colors, typography, spacing } from '@/src/theme';
 import { useToday } from '@/src/hooks/useToday';
 
@@ -39,6 +40,14 @@ export default function TodayScreen() {
           <Text style={styles.subtitle}>{data?.location}</Text>
         </>
       )}
+
+      {/* Temp: test auth screens */}
+      <Pressable
+        onPress={() => router.push('/(auth)/register')}
+        style={styles.testButton}
+      >
+        <Text style={styles.testButtonText}>→ Register screen</Text>
+      </Pressable>
     </View>
   );
 }
@@ -58,6 +67,17 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     ...typography.body,
+    color: colors.textSecondary,
+  },
+  testButton: {
+    marginTop: spacing.xl,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: 8,
+    backgroundColor: colors.border,
+  },
+  testButtonText: {
+    ...typography.caption,
     color: colors.textSecondary,
   },
 });
