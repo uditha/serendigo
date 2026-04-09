@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { colors, typography, spacing } from '@/src/theme';
 import { useToday } from '@/src/hooks/useToday';
+import { useAuthStore } from '@/src/stores/authStore';
 
 function SkeletonLine({ width, height = 20 }: { width: number | string; height?: number }) {
   return (
@@ -19,6 +20,12 @@ function SkeletonLine({ width, height = 20 }: { width: number | string; height?:
 
 export default function TodayScreen() {
   const { data, isLoading, error } = useToday();
+  const { isLoggedIn, user, clearAuth } = useAuthStore();
+
+  const handleLogout = () => {
+    clearAuth();
+    router.replace('/(auth)/login');
+  };
 
   return (
     <View style={styles.container}>
@@ -41,13 +48,21 @@ export default function TodayScreen() {
         </>
       )}
 
-      {/* Temp: test auth screens */}
-      <Pressable
-        onPress={() => router.push('/(auth)/register')}
-        style={styles.testButton}
-      >
-        <Text style={styles.testButtonText}>→ Register screen</Text>
-      </Pressable>
+      {isLoggedIn && user ? (
+        <>
+          <Text style={styles.userText}>Signed in as {user.name}</Text>
+          <Pressable onPress={handleLogout} style={styles.logoutButton}>
+            <Text style={styles.logoutText}>Sign out</Text>
+          </Pressable>
+        </>
+      ) : (
+        <Pressable
+          onPress={() => router.push('/(auth)/login')}
+          style={styles.testButton}
+        >
+          <Text style={styles.testButtonText}>→ Sign in</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -68,6 +83,23 @@ const styles = StyleSheet.create({
   subtitle: {
     ...typography.body,
     color: colors.textSecondary,
+  },
+  userText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
+  },
+  logoutButton: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: colors.error,
+  },
+  logoutText: {
+    ...typography.caption,
+    color: colors.error,
   },
   testButton: {
     marginTop: spacing.xl,
