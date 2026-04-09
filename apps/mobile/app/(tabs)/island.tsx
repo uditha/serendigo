@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { colors, spacing, typography } from '@/src/theme';
@@ -21,11 +21,11 @@ export default function IslandScreen() {
   const mapHeight = VIEW_BOX_HEIGHT * scale;
 
   const toastOpacity = useRef(new Animated.Value(0)).current;
-  const toastLabel = useRef('');
+  const [toastLabel, setToastLabel] = useState('');
 
   const showToast = useCallback(
     (districtName: string) => {
-      toastLabel.current = districtName;
+      setToastLabel(districtName);
       Animated.sequence([
         Animated.timing(toastOpacity, { toValue: 1, duration: 150, useNativeDriver: true }),
         Animated.delay(1500),
@@ -57,7 +57,7 @@ export default function IslandScreen() {
       </Svg>
 
       <Animated.View style={[styles.toast, { opacity: toastOpacity }]}>
-        <Text style={styles.toastText}>{toastLabel.current}</Text>
+        <Text style={styles.toastText}>{toastLabel}</Text>
       </Animated.View>
     </View>
   );
