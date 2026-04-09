@@ -1,5 +1,5 @@
 import { db } from '../db'
-import { captures, chapters, users, userArcs } from '../db/schema'
+import { captures, chapters, user, userArcs } from '../db/schema'
 import { eq, and, sql, count } from 'drizzle-orm'
 import { uploadPhoto } from '../utils/storage'
 import { badgeQueue, leaderboardQueue } from '../jobs'
@@ -62,12 +62,12 @@ export async function processCapture(input: CaptureInput) {
   const xpField = xpColumnForCategory(chapter.xpCategory)
 
   await db
-    .update(users)
+    .update(user)
     .set({
       serendipityCoins: sql`serendipity_coins + ${chapter.coinReward}`,
       [xpField]: sql`${sql.raw(xpField)} + ${chapter.coinReward}`,
     })
-    .where(eq(users.id, input.userId))
+    .where(eq(user.id, input.userId))
 
   // 7. Check arc completion
   const arcComplete = await checkArcCompletion(input.userId, chapter.arcId)

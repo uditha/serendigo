@@ -1,24 +1,20 @@
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { db } from '../db'
+import * as schema from '../db/schema'
 
 export const auth = betterAuth({
-  database: drizzleAdapter(db, { provider: 'pg' }),
-  secret: process.env.BETTER_AUTH_SECRET!,
-  baseURL: process.env.BETTER_AUTH_URL!,
+  database: drizzleAdapter(db, {
+    provider: 'pg',
+    schema,
+  }),
+  secret: process.env.BETTER_AUTH_SECRET ?? 'dev-secret-change-in-production',
+  baseURL: process.env.BETTER_AUTH_URL ?? 'http://localhost:3000',
 
   emailAndPassword: {
     enabled: true,
   },
 
-  socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    },
-  },
-
-  // Game-specific fields on the user record
   user: {
     additionalFields: {
       serendipityCoins: { type: 'number', defaultValue: 0 },

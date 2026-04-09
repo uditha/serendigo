@@ -1,6 +1,6 @@
 import { pgTable, text, boolean, integer, timestamp } from 'drizzle-orm/pg-core'
 import { createId } from '@paralleldrive/cuid2'
-import { users } from './users'
+import { user } from './auth'
 
 export const arcs = pgTable('arcs', {
   id: text('id').primaryKey().$defaultFn(() => createId()),
@@ -20,7 +20,7 @@ export const arcs = pgTable('arcs', {
   seasonEnd: integer('season_end'),     // month 1-12
   isSeasonal: boolean('is_seasonal').default(false).notNull(),
   isPublished: boolean('is_published').default(false).notNull(),
-  authorUserId: text('author_user_id').references(() => users.id),
+  authorUserId: text('author_user_id').references(() => user.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })

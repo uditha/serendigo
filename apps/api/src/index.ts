@@ -38,7 +38,14 @@ app.get('/api/today', (c) => {
 })
 
 // Better Auth handles all /api/auth/* routes
-app.on(['GET', 'POST'], '/api/auth/**', (c) => auth.handler(c.req.raw))
+app.on(['GET', 'POST'], '/api/auth/*', async (c) => {
+  try {
+    return await auth.handler(c.req.raw)
+  } catch (e) {
+    console.error('[Auth] handler error:', e)
+    return c.json({ success: false, error: 'Auth error' }, 500)
+  }
+})
 
 // API routes
 app.route('/api/arcs', arcRoutes)
