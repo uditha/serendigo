@@ -18,6 +18,7 @@ import { useAuthStore } from '@/src/stores/authStore';
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const setAuth = useAuthStore((s) => s.setAuth);
@@ -78,15 +79,23 @@ export default function LoginScreen() {
 
           <View style={styles.field}>
             <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Your password"
-              placeholderTextColor={colors.textTertiary}
-              secureTextEntry
-              autoComplete="current-password"
-            />
+            <View style={styles.passwordRow}>
+              <TextInput
+                style={[styles.input, styles.passwordInput]}
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Your password"
+                placeholderTextColor={colors.textTertiary}
+                secureTextEntry={!showPassword}
+                autoComplete="current-password"
+              />
+              <Pressable
+                style={styles.eyeButton}
+                onPress={() => setShowPassword((v) => !v)}
+              >
+                <Text style={styles.eyeText}>{showPassword ? '🙈' : '👁️'}</Text>
+              </Pressable>
+            </View>
           </View>
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -159,6 +168,30 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     ...typography.body,
     color: colors.textPrimary,
+  },
+  passwordRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  passwordInput: {
+    flex: 1,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+    borderRightWidth: 0,
+  },
+  eyeButton: {
+    backgroundColor: colors.surfaceWhite,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderTopRightRadius: 12,
+    borderBottomRightRadius: 12,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  eyeText: {
+    fontSize: 16,
   },
   error: {
     ...typography.caption,
