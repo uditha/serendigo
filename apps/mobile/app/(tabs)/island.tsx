@@ -1,5 +1,5 @@
-import { useCallback, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Reanimated, {
@@ -8,14 +8,14 @@ import Reanimated, {
   withSpring,
   clamp,
 } from 'react-native-reanimated';
-import { colors, spacing, typography } from '@/src/theme';
+import { colors, spacing } from '@/src/theme';
 import { DISTRICT_PATHS } from '@/src/data/sriLankaDistricts';
+import DistrictBottomSheet from '@/src/components/DistrictBottomSheet';
 
 const VIEW_BOX_WIDTH = 449.68774;
 const VIEW_BOX_HEIGHT = 792.54926;
-// Min/max are computed at runtime from fitScale, defined as constants for worklets
-const MIN_SCALE_FACTOR = 1;   // 1× the fit size
-const MAX_SCALE_FACTOR = 8;   // 8× the fit size
+const MIN_SCALE_FACTOR = 1;
+const MAX_SCALE_FACTOR = 8;
 
 export default function IslandScreen() {
   const { width, height } = useWindowDimensions();
@@ -24,14 +24,11 @@ export default function IslandScreen() {
   const availableWidth = width - padding;
   const availableHeight = height * 0.8;
 
-  // Render SVG at full viewBox resolution — transform scales it down to fit.
-  // This keeps borders sharp at all zoom levels.
   const fitScale = Math.min(
     availableWidth / VIEW_BOX_WIDTH,
     availableHeight / VIEW_BOX_HEIGHT
   );
 
-  // Reanimated shared values for gestures
   const scale = useSharedValue(fitScale);
   const savedScale = useSharedValue(fitScale);
   const translateX = useSharedValue(0);
@@ -81,7 +78,6 @@ export default function IslandScreen() {
     .numberOfTaps(2)
     .onEnd(() => {
       if (scale.value > fitScale * 1.1) {
-        // Reset to fit
         scale.value = withSpring(fitScale);
         savedScale.value = fitScale;
         translateX.value = withSpring(0);
@@ -89,7 +85,6 @@ export default function IslandScreen() {
         savedTranslateX.value = 0;
         savedTranslateY.value = 0;
       } else {
-        // Zoom in to 3×
         scale.value = withSpring(fitScale * 3);
         savedScale.value = fitScale * 3;
       }
@@ -108,21 +103,7 @@ export default function IslandScreen() {
     ],
   }));
 
-  // Toast
-  const toastOpacity = useRef(new Animated.Value(0)).current;
-  const [toastLabel, setToastLabel] = useState('');
-
-  const showToast = useCallback(
-    (districtName: string) => {
-      setToastLabel(districtName);
-      Animated.sequence([
-        Animated.timing(toastOpacity, { toValue: 1, duration: 150, useNativeDriver: true }),
-        Animated.delay(1500),
-        Animated.timing(toastOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
-      ]).start();
-    },
-    [toastOpacity]
-  );
+  const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
 
   return (
     <View style={styles.container}>
@@ -137,20 +118,21 @@ export default function IslandScreen() {
               <Path
                 key={name}
                 d={d}
-                fill="#E5E5E0"
+                fill={selectedDistrict === name ? colors.primary + '55' : '#E5E5E0'}
                 stroke={colors.primary}
                 strokeWidth={1.5}
                 strokeLinejoin="round"
-                onPress={() => showToast(name)}
+                onPress={() => setSelectedDistrict(name)}
               />
             ))}
           </Svg>
         </Reanimated.View>
       </GestureDetector>
 
-      <Animated.View style={[styles.toast, { opacity: toastOpacity }]}>
-        <Text style={styles.toastText}>{toastLabel}</Text>
-      </Animated.View>
+      <DistrictBottomSheet
+        district={selectedDistrict}
+        onClose={() => setSelectedDistrict(null)}
+      />
     </View>
   );
 }
@@ -162,17 +144,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.surface,
     overflow: 'hidden',
-  },
-  toast: {
-    position: 'absolute',
-    bottom: 40,
-    backgroundColor: colors.textPrimary,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: 24,
-  },
-  toastText: {
-    ...typography.body,
-    color: colors.surfaceWhite,
   },
 });
