@@ -8,6 +8,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -134,6 +135,7 @@ function CalculatingScreen({ onDone }: { onDone: () => void }) {
 }
 
 export default function QuizScreen() {
+  const { top } = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [step, setStep] = useState(0); // 0,1,2 = questions; 3 = calculating; 4 = result
   const [scores, setScores] = useState<Record<WorldType, number>>({
@@ -199,7 +201,7 @@ export default function QuizScreen() {
   if (step === 4 && result) {
     const character = CHARACTER_MAP[result];
     return (
-      <View style={[styles.container, styles.resultContainer]}>
+      <View style={[styles.container, styles.resultContainer, { paddingTop: top + spacing.xl }]}>
         <View style={[styles.characterBadge, { backgroundColor: character.color + '22', borderColor: character.color }]}>
           <Text style={styles.characterEmoji}>
             {result === 'TASTE' ? '🍛' : result === 'WILD' ? '🐆' : result === 'MOVE' ? '🏄' : result === 'ROOTS' ? '🏛️' : '🌿'}
@@ -223,7 +225,7 @@ export default function QuizScreen() {
   const question = QUESTIONS[step];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: top + spacing.lg }]}>
       {/* Progress bar */}
       <View style={styles.progressTrack}>
         <Animated.View style={[styles.progressFill, progressStyle]} />
@@ -270,7 +272,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surface,
-    paddingTop: spacing.xxl,
     paddingHorizontal: spacing.lg,
   },
   progressTrack: {

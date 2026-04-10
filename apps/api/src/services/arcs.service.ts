@@ -113,6 +113,56 @@ export async function getUserArcProgress(userId: string, arcId: string) {
   }
 }
 
+export async function getMyArcCaptures(userId: string, arcId: string) {
+  const arc = await db.query.arcs.findFirst({
+    where: eq(arcs.id, arcId),
+    columns: { id: true, title: true, worldType: true },
+  })
+  if (!arc) return null
+
+  const allChapters = await db
+    .select()
+    .from(chapters)
+    .where(eq(chapters.arcId, arcId))
+    .orderBy(chapters.order)
+
+  const userCaptures = await db
+    .select()
+    .from(captures)
+    .where(
+      and(
+        eq(captures.userId, userId),
+        inArray(captures.chapterId, allChapters.map((c) => c.id)),
+      ),
+    )
+
+  const capturesByChapter = Object.fromEntries(
+    userCaptures.map((c) => [c.chapterId, c]),
+  )
+
+  return {
+    arc,
+    chapters: allChapters.map((ch) => {
+      const capture = capturesByChapter[ch.id] ?? null
+      return {
+        id: ch.id,
+        order: ch.order,
+        title: ch.title,
+        coinReward: ch.coinReward,
+        capture: capture
+          ? {
+              id: capture.id,
+              photoUrl: capture.photoUrl,
+              note: capture.note,
+              coinsEarned: capture.coinsEarned,
+              capturedAt: capture.capturedAt,
+            }
+          : null,
+      }
+    }),
+  }
+}
+
 // Types imported from schema
 import type { Arc } from '../db/schema'
 

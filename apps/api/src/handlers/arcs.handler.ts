@@ -47,3 +47,13 @@ export async function getArcProgress(c: Context) {
 
   return c.json({ success: true, data })
 }
+
+export async function getMyCaptures(c: Context) {
+  const userId = c.get('userId')
+  const arcId = c.req.param('id')
+  const data = await arcService.getMyArcCaptures(userId, arcId)
+
+  if (!data) return c.json({ success: false, error: 'Arc not found' }, 404)
+
+  return c.json({ success: true, data })
+}

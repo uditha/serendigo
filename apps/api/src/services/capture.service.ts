@@ -1,8 +1,10 @@
 import { db } from '../db'
 import { captures, chapters, user, userArcs } from '../db/schema'
 import { eq, and, sql, count } from 'drizzle-orm'
+
 import { uploadPhoto } from '../utils/storage'
 import { badgeQueue, leaderboardQueue } from '../jobs'
+import { checkAndAwardBadges, type BadgeAwarded } from './badge.service'
 
 interface CaptureInput {
   userId: string
@@ -22,29 +24,39 @@ export async function processCapture(input: CaptureInput) {
   if (!chapter) throw new Error('Chapter not found')
 
   // 2. Verify GPS is within chapter radius (PostGIS)
-  const withinRadius = await verifyLocation(
-    input.lat,
-    input.lng,
-    chapter.lat,
-    chapter.lng,
-    chapter.radiusMeters,
-  )
+  // Set SKIP_LOCATION_CHECK=true in .env to bypass during local testing
+  if (process.env.SKIP_LOCATION_CHECK !== 'true') {
+    const withinRadius = await verifyLocation(
+      input.lat,
+      input.lng,
+      chapter.lat,
+      chapter.lng,
+      chapter.radiusMeters,
+    )
 
-  if (!withinRadius) {
-    throw new Error('You are not close enough to this location')
+    if (!withinRadius) {
+      throw new Error('You are not close enough to this location')
+    }
   }
 
-  // 3. Check not already captured
+  // 3. Check user is enrolled in the arc
+  const enrollment = await db.query.userArcs.findFirst({
+    where: and(eq(userArcs.userId, input.userId), eq(userArcs.arcId, chapter.arcId)),
+  })
+
+  if (!enrollment) throw new Error('You must start this journey before capturing')
+
+  // 4. Check not already captured
   const existing = await db.query.captures.findFirst({
     where: and(eq(captures.userId, input.userId), eq(captures.chapterId, input.chapterId)),
   })
 
   if (existing) throw new Error('You have already captured this chapter')
 
-  // 4. Upload photo to Cloudflare R2
+  // 5. Upload photo to Cloudflare R2
   const photoUrl = await uploadPhoto(input.photo, input.userId)
 
-  // 5. Save capture
+  // 6. Save capture
   const [capture] = await db
     .insert(captures)
     .values({
@@ -58,24 +70,25 @@ export async function processCapture(input: CaptureInput) {
     })
     .returning()
 
-  // 6. Award coins + XP atomically
-  const xpField = xpColumnForCategory(chapter.xpCategory)
+  // 7. Award coins + XP atomically
 
   await db
     .update(user)
     .set({
       serendipityCoins: sql`serendipity_coins + ${chapter.coinReward}`,
-      [xpField]: sql`${sql.raw(xpField)} + ${chapter.coinReward}`,
+      ...xpUpdate(chapter.xpCategory, chapter.coinReward),
     })
     .where(eq(user.id, input.userId))
 
   // 7. Check arc completion
   const arcComplete = await checkArcCompletion(input.userId, chapter.arcId)
 
-  // 8. Queue background jobs
+  // 8. Check badges inline (fast enough, no Redis needed)
+  const badgesEarned = await checkAndAwardBadges(input.userId)
+
+  // 9. Queue background jobs (skipped when Redis not configured)
   await Promise.all([
-    badgeQueue.add('check-badges', { userId: input.userId }),
-    leaderboardQueue.add('update', { userId: input.userId, coins: chapter.coinReward }),
+    leaderboardQueue?.add('update', { userId: input.userId, coins: chapter.coinReward }),
   ])
 
   return {
@@ -85,6 +98,7 @@ export async function processCapture(input: CaptureInput) {
     xpCategory: chapter.xpCategory,
     loreText: chapter.loreText,
     arcComplete,
+    badgesEarned,
   }
 }
 
@@ -134,13 +148,13 @@ async function checkArcCompletion(userId: string, arcId: string): Promise<boolea
   return false
 }
 
-function xpColumnForCategory(category: string): string {
-  const map: Record<string, string> = {
-    TASTE: 'taste_xp',
-    WILD: 'wild_xp',
-    MOVE: 'move_xp',
-    ROOTS: 'roots_xp',
-    RESTORE: 'restore_xp',
+function xpUpdate(category: string, amount: number): Partial<typeof user.$inferInsert> {
+  switch (category) {
+    case 'TASTE':   return { tasteXP:   sql`taste_xp + ${amount}` as unknown as number }
+    case 'WILD':    return { wildXP:    sql`wild_xp + ${amount}` as unknown as number }
+    case 'MOVE':    return { moveXP:    sql`move_xp + ${amount}` as unknown as number }
+    case 'ROOTS':   return { rootsXP:   sql`roots_xp + ${amount}` as unknown as number }
+    case 'RESTORE': return { restoreXP: sql`restore_xp + ${amount}` as unknown as number }
+    default:        return { tasteXP:   sql`taste_xp + ${amount}` as unknown as number }
   }
-  return map[category] ?? 'taste_xp'
 }

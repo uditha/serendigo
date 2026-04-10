@@ -11,11 +11,13 @@ import {
   View,
 } from 'react-native';
 import { Link, router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography } from '@/src/theme';
 import { fetchFromApi } from '@/src/services/api';
 import { useAuthStore } from '@/src/stores/authStore';
 
 export default function LoginScreen() {
+  const { top } = useSafeAreaInsets();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -52,7 +54,7 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
-        contentContainerStyle={styles.container}
+        contentContainerStyle={[styles.container, { paddingTop: top + spacing.xl }]}
         keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
@@ -135,6 +137,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: spacing.lg,
+    paddingTop: spacing.xl,
     justifyContent: 'center',
   },
   header: {

@@ -1,7 +1,10 @@
-import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchFromApi } from '@/src/services/api';
+import { fetchArcProgress, enrollInArc } from '@/src/services/arcs';
+import { useAuthStore } from '@/src/stores/authStore';
 import { colors, spacing, typography } from '@/src/theme';
 
 const WORLD_COLORS: Record<string, string> = {
@@ -63,6 +66,9 @@ function SkeletonLine({ width, height = 16 }: { width: number | string; height?:
 
 export default function ArcDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { top } = useSafeAreaInsets();
+  const { isLoggedIn } = useAuthStore();
+  const queryClient = useQueryClient();
 
   const { data: arc, isLoading, error } = useQuery({
     queryKey: ['arc', id],
@@ -72,7 +78,29 @@ export default function ArcDetailScreen() {
       ),
   });
 
+  const { data: progress, isLoading: progressLoading } = useQuery({
+    queryKey: ['arc-progress', id],
+    queryFn: () => fetchArcProgress(id!),
+    enabled: isLoggedIn && !!id,
+    // 404 = not enrolled — treat as null
+    retry: false,
+  });
+
+  const { mutate: enroll, isPending: enrolling } = useMutation({
+    mutationFn: () => enrollInArc(id!),
+    onSuccess: (data) => {
+      queryClient.setQueryData(['arc-progress', id], data);
+      // Invalidate story so active arcs refreshes
+      queryClient.invalidateQueries({ queryKey: ['story'] });
+    },
+  });
+
   const worldColor = arc ? (WORLD_COLORS[arc.worldType] ?? colors.primary) : colors.primary;
+  const isEnrolled = !!progress;
+  const completedIds = new Set(progress?.completedChapterIds ?? []);
+  const progressPct = progress && progress.totalChapters > 0
+    ? (progress.completedChapters / progress.totalChapters) * 100
+    : 0;
 
   if (isLoading) {
     return (
@@ -107,9 +135,9 @@ export default function ArcDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: spacing.xxl }}>
         {/* Header */}
-        <View style={[styles.header, { borderBottomColor: worldColor + '40' }]}>
+        <View style={[styles.header, { borderBottomColor: worldColor + '40', paddingTop: top + spacing.md }]}>
           <Pressable onPress={() => router.back()} style={styles.backLink}>
             <Text style={styles.backLinkText}>← The Island</Text>
           </Pressable>
@@ -150,30 +178,86 @@ export default function ArcDetailScreen() {
           </View>
         </View>
 
+        {/* Enrollment / Progress */}
+        {isLoggedIn && !progressLoading && (
+          <View style={styles.enrollSection}>
+            {isEnrolled ? (
+              <View style={styles.progressBlock}>
+                <View style={styles.progressRow}>
+                  <Text style={styles.progressLabel}>
+                    {progress!.isComplete ? '✓ Completed' : 'In Progress'}
+                  </Text>
+                  <Text style={[styles.progressCount, { color: worldColor }]}>
+                    {progress!.completedChapters}/{progress!.totalChapters}
+                  </Text>
+                </View>
+                <View style={styles.progressBarTrack}>
+                  <View
+                    style={[
+                      styles.progressBarFill,
+                      { width: `${progressPct}%`, backgroundColor: worldColor },
+                    ]}
+                  />
+                </View>
+              </View>
+            ) : (
+              <Pressable
+                style={[styles.enrollButton, { backgroundColor: worldColor }, enrolling && styles.enrollButtonDisabled]}
+                onPress={() => enroll()}
+                disabled={enrolling}
+              >
+                {enrolling ? (
+                  <ActivityIndicator color="white" size="small" />
+                ) : (
+                  <Text style={styles.enrollButtonText}>Start Journey →</Text>
+                )}
+              </Pressable>
+            )}
+          </View>
+        )}
+
         {/* Chapters */}
         <View style={styles.chapters}>
           <Text style={styles.sectionTitle}>Chapters</Text>
-          {arc.chapters.map((chapter, idx) => (
-            <Pressable
-              key={chapter.id}
-              style={styles.chapterCard}
-              onPress={() => router.push(`/arc/${id}/chapter/${chapter.id}`)}
-            >
-              <View style={[styles.chapterNumber, { backgroundColor: worldColor }]}>
-                <Text style={styles.chapterNumberText}>{chapter.order}</Text>
-              </View>
-              <View style={styles.chapterInfo}>
-                <Text style={styles.chapterTitle}>{chapter.title}</Text>
-                <View style={styles.chapterMeta}>
-                  <Text style={styles.chapterCoins}>🪙 {chapter.coinReward}</Text>
-                  {chapter.beforeYouGo?.bestTime && (
-                    <Text style={styles.chapterTime}>⏰ {chapter.beforeYouGo.bestTime}</Text>
+          {arc.chapters.map((chapter) => {
+            const captured = completedIds.has(chapter.id);
+            return (
+              <Pressable
+                key={chapter.id}
+                style={[styles.chapterCard, captured && styles.chapterCardCaptured]}
+                onPress={() => router.push(`/arc/${id}/chapter/${chapter.id}`)}
+              >
+                <View style={[
+                  styles.chapterNumber,
+                  { backgroundColor: captured ? worldColor : worldColor + '30' },
+                ]}>
+                  {captured ? (
+                    <Text style={styles.chapterCheckmark}>✓</Text>
+                  ) : (
+                    <Text style={[styles.chapterNumberText, { color: captured ? 'white' : worldColor }]}>
+                      {chapter.order}
+                    </Text>
                   )}
                 </View>
-              </View>
-              <Text style={styles.chapterArrow}>›</Text>
-            </Pressable>
-          ))}
+                <View style={styles.chapterInfo}>
+                  <Text style={[styles.chapterTitle, captured && styles.chapterTitleCaptured]}>
+                    {chapter.title}
+                  </Text>
+                  <View style={styles.chapterMeta}>
+                    <Text style={styles.chapterCoins}>🪙 {chapter.coinReward}</Text>
+                    {chapter.beforeYouGo?.bestTime && (
+                      <Text style={styles.chapterTime} numberOfLines={1}>⏰ {chapter.beforeYouGo.bestTime}</Text>
+                    )}
+                  </View>
+                </View>
+                {captured ? (
+                  <Text style={[styles.capturedTag, { color: worldColor }]}>Captured</Text>
+                ) : (
+                  <Text style={styles.chapterArrow}>›</Text>
+                )}
+              </Pressable>
+            );
+          })}
         </View>
       </ScrollView>
     </View>
@@ -191,9 +275,9 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: spacing.lg,
-    paddingTop: spacing.xxl,
+    paddingTop: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: '#E5DDD0',
     gap: spacing.sm,
   },
   backLink: {
@@ -251,9 +335,54 @@ const styles = StyleSheet.create({
   },
   statDivider: {
     width: 1,
-    backgroundColor: colors.border,
+    backgroundColor: '#E5DDD0',
     marginHorizontal: spacing.sm,
   },
+
+  // Enroll section
+  enrollSection: {
+    padding: spacing.lg,
+    paddingBottom: 0,
+  },
+  enrollButton: {
+    borderRadius: 14,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  enrollButtonDisabled: {
+    opacity: 0.7,
+  },
+  enrollButtonText: {
+    ...typography.h3,
+    color: 'white',
+  },
+  progressBlock: {
+    gap: spacing.sm,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  progressLabel: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  progressCount: {
+    ...typography.h3,
+  },
+  progressBarTrack: {
+    height: 6,
+    backgroundColor: '#E5DDD0',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+
+  // Chapters
   chapters: {
     padding: spacing.lg,
     gap: spacing.sm,
@@ -270,6 +399,12 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: spacing.md,
     gap: spacing.md,
+    borderWidth: 1,
+    borderColor: '#E5DDD0',
+  },
+  chapterCardCaptured: {
+    borderColor: colors.primary + '40',
+    backgroundColor: '#FFF8F0',
   },
   chapterNumber: {
     width: 32,
@@ -282,6 +417,10 @@ const styles = StyleSheet.create({
     ...typography.h3,
     color: 'white',
   },
+  chapterCheckmark: {
+    ...typography.h3,
+    color: 'white',
+  },
   chapterInfo: {
     flex: 1,
     gap: spacing.xs,
@@ -289,6 +428,9 @@ const styles = StyleSheet.create({
   chapterTitle: {
     ...typography.body,
     color: colors.textPrimary,
+  },
+  chapterTitleCaptured: {
+    color: colors.textSecondary,
   },
   chapterMeta: {
     flexDirection: 'row',
@@ -301,10 +443,15 @@ const styles = StyleSheet.create({
   chapterTime: {
     ...typography.caption,
     color: colors.textSecondary,
+    flex: 1,
   },
   chapterArrow: {
     ...typography.h2,
     color: colors.textTertiary,
+  },
+  capturedTag: {
+    ...typography.label,
+    fontSize: 10,
   },
   chapterSkeleton: {
     flexDirection: 'row',

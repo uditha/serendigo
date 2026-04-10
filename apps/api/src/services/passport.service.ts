@@ -1,5 +1,5 @@
 import { db } from '../db'
-import { captures, chapters, arcs, provinces, userArcs } from '../db/schema'
+import { captures, chapters, arcs, districts, userArcs } from '../db/schema'
 import { eq, sql } from 'drizzle-orm'
 
 export interface ProvinceStamp {
@@ -13,8 +13,18 @@ export interface ProvinceStamp {
   isComplete: boolean
 }
 
+function toDisplayName(slug: string): string {
+  return slug
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
+}
+
 export async function getUserPassport(userId: string): Promise<ProvinceStamp[]> {
-  const allProvinces = await db.select().from(provinces)
+  // Derive the 9 provinces from the districts table (already seeded)
+  const provinceRows = await db.execute(sql`
+    SELECT DISTINCT province FROM districts ORDER BY province
+  `) as Array<{ province: string }>
 
   const completedArcsPerProvince = await db.execute(sql`
     SELECT a.province, COUNT(DISTINCT ua.arc_id) AS completed
@@ -39,17 +49,19 @@ export async function getUserPassport(userId: string): Promise<ProvinceStamp[]> 
     totalArcsPerProvince.map((r) => [r.province, parseInt(r.total, 10)]),
   )
 
-  return allProvinces.map((p) => {
-    const slug = p.slug.toUpperCase().replace(/-/g, '_')
-    const total = totalMap[slug] ?? 0
-    const completed = completedMap[slug] ?? 0
+  return provinceRows.map((row) => {
+    // district.province is e.g. "north_western"
+    // arcs.province enum is e.g. "NORTH_WESTERN"
+    const arcKey = row.province.toUpperCase()
+    const total = totalMap[arcKey] ?? 0
+    const completed = completedMap[arcKey] ?? 0
 
     return {
-      provinceId: p.id,
-      provinceName: p.name,
-      provinceSlug: p.slug,
-      stampDesignKey: p.stampDesignKey,
-      fillColor: p.fillColor,
+      provinceId: row.province,
+      provinceName: toDisplayName(row.province),
+      provinceSlug: row.province,
+      stampDesignKey: null,
+      fillColor: null,
       totalArcs: total,
       completedArcs: completed,
       isComplete: total > 0 && completed >= total,

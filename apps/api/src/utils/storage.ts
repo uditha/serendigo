@@ -1,5 +1,5 @@
-// Photo upload to Cloudflare R2
-// R2 is S3-compatible — add @aws-sdk/client-s3 when Cloudflare credentials are ready
+import { mkdir, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 
 export async function uploadPhoto(file: File, userId: string): Promise<string> {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID
@@ -7,25 +7,21 @@ export async function uploadPhoto(file: File, userId: string): Promise<string> {
   const accessKeyId = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID
   const secretKey = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY
 
-  if (!accountId || !bucket || !accessKeyId || !secretKey) {
-    if (process.env.NODE_ENV === 'development') {
-      // Return a placeholder URL in dev so the endpoint still works
-      return `https://placeholder.serendigo.app/captures/${userId}/${Date.now()}.jpg`
-    }
-    throw new Error('Cloudflare R2 credentials not configured')
+  // ── Production: upload to Cloudflare R2 ──────────────────────────────────
+  if (accountId && bucket && accessKeyId && secretKey) {
+    // TODO: sign request with AWS Signature v4 using @aws-sdk/client-s3
+    throw new Error('R2 upload not yet implemented — add @aws-sdk/client-s3')
   }
 
-  // TODO: sign request with AWS Signature v4 using @aws-sdk/client-s3
-  // Example:
-  //   import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
-  //   const s3 = new S3Client({
-  //     region: 'auto',
-  //     endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-  //     credentials: { accessKeyId, secretAccessKey: secretKey },
-  //   })
-  //   const key = `captures/${userId}/${Date.now()}-${file.name}`
-  //   await s3.send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: ... }))
-  //   return `https://media.serendigo.app/${key}`
+  // ── Development: save to local disk, serve via /uploads route ────────────
+  const uploadsDir = join(process.cwd(), 'uploads')
+  await mkdir(uploadsDir, { recursive: true })
 
-  throw new Error('R2 upload not yet implemented — add @aws-sdk/client-s3')
+  const ext = file.name.split('.').pop() ?? 'jpg'
+  const filename = `${userId}-${Date.now()}.${ext}`
+  const buffer = Buffer.from(await file.arrayBuffer())
+  await writeFile(join(uploadsDir, filename), buffer)
+
+  const apiUrl = process.env.API_BASE_URL ?? `http://localhost:${process.env.PORT ?? 3000}`
+  return `${apiUrl}/uploads/${filename}`
 }

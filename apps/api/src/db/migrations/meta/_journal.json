@@ -29,6 +29,13 @@
       "when": 1775769945903,
       "tag": "0003_watery_salo",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1775799522767,
+      "tag": "0004_misty_jackal",
+      "breakpoints": true
     }
   ]
 }

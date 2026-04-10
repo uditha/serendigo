@@ -11,6 +11,7 @@ import {
 } from '@expo-google-fonts/space-grotesk';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
@@ -52,14 +53,21 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <StatusBar style="dark" />
       <GestureHandlerRootView style={{ flex: 1 }}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="profile" options={{ headerShown: false }} />
+          <Stack.Screen name="leaderboard" options={{ headerShown: false }} />
+          <Stack.Screen name="onboarding/welcome" options={{ headerShown: false }} />
           <Stack.Screen name="onboarding/quiz" options={{ headerShown: false }} />
+          <Stack.Screen name="arc/index" options={{ headerShown: false }} />
           <Stack.Screen name="arc/[id]/index" options={{ headerShown: false }} />
           <Stack.Screen name="arc/[id]/chapter/[chapterId]" options={{ headerShown: false }} />
+          <Stack.Screen name="arc/[id]/captures" options={{ headerShown: false }} />
           <Stack.Screen name="capture/[chapterId]" options={{ headerShown: false, animation: 'fade' }} />
+          <Stack.Screen name="capture/submit" options={{ headerShown: false, animation: 'fade' }} />
         </Stack>
       </GestureHandlerRootView>
     </QueryClientProvider>

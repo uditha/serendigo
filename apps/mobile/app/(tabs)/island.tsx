@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, Text, View, useWindowDimensions, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import Svg, { Path, Circle, G } from 'react-native-svg';
+import Svg, { Path, Circle, G, Text as SvgText } from 'react-native-svg';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Reanimated, {
   useSharedValue,
@@ -9,7 +10,7 @@ import Reanimated, {
   withSpring,
   clamp,
 } from 'react-native-reanimated';
-import { colors, spacing } from '@/src/theme';
+import { colors, spacing, typography } from '@/src/theme';
 import { DISTRICT_PATHS } from '@/src/data/sriLankaDistricts';
 import DistrictBottomSheet from '@/src/components/DistrictBottomSheet';
 import { useArcs } from '@/src/hooks/useArcs';
@@ -28,8 +29,25 @@ const WORLD_COLORS: Record<string, string> = {
   RESTORE: colors.restore,
 };
 
+const WORLD_EMOJI: Record<string, string> = {
+  TASTE:   '🍜',
+  WILD:    '🌿',
+  MOVE:    '⚡',
+  ROOTS:   '🏛️',
+  RESTORE: '🧘',
+};
+
+const LEGEND = [
+  { key: 'TASTE',   label: 'Taste',   color: colors.taste },
+  { key: 'WILD',    label: 'Wild',    color: colors.wild },
+  { key: 'MOVE',    label: 'Move',    color: colors.move },
+  { key: 'ROOTS',   label: 'Roots',   color: colors.roots },
+  { key: 'RESTORE', label: 'Restore', color: colors.restore },
+]
+
 export default function IslandScreen() {
   const { width, height } = useWindowDimensions();
+  const { top, bottom } = useSafeAreaInsets();
   const { data: arcs } = useArcs();
 
   const padding = spacing.xl * 2;
@@ -119,6 +137,23 @@ export default function IslandScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Floating header */}
+      {/* Floating title — top right */}
+      <View style={[styles.floatingHeader, { top: top + spacing.sm }]}>
+        <Text style={styles.floatingTitle}>The Island</Text>
+        <Text style={styles.floatingSubtitle}>Sri Lanka</Text>
+      </View>
+
+      {/* Pin legend — bottom left, hidden when bottom sheet is open */}
+      {!selectedDistrict && <View style={[styles.legend, { bottom: bottom + spacing.lg }]}>
+        {LEGEND.map((item) => (
+          <View key={item.key} style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: item.color }]} />
+            <Text style={styles.legendLabel}>{item.label}</Text>
+          </View>
+        ))}
+      </View>}
+
       <GestureDetector gesture={composed}>
         <Reanimated.View style={animatedStyle}>
           <Svg
@@ -131,7 +166,7 @@ export default function IslandScreen() {
               <Path
                 key={name}
                 d={d}
-                fill={selectedDistrict === name ? colors.primary + '55' : '#E5E5E0'}
+                fill={selectedDistrict === name ? colors.primary + '55' : '#DDD7CC'}
                 stroke={colors.primary}
                 strokeWidth={1.5}
                 strokeLinejoin="round"
@@ -139,25 +174,42 @@ export default function IslandScreen() {
               />
             ))}
 
-            {/* Arc pins — one pin per arc at first chapter position */}
+            {/* Arc pins — teardrop shape per arc */}
             {arcs?.map((arc) => {
               const firstChapter = arc.chapters?.[0];
               if (!firstChapter) return null;
               const pinColor = WORLD_COLORS[arc.worldType] ?? colors.primary;
+              const emoji = WORLD_EMOJI[arc.worldType] ?? '📍';
               const { x, y } = geoToSvg(firstChapter.lat, firstChapter.lng);
+
+              // Teardrop pin geometry — tip points down at (x, y)
+              const r = 11;
+              const tailH = 10;
+              const cy = y - r - tailH;
+              // Tangent points where the tail meets the circle (~±30° from bottom)
+              const lx = x - r * 0.5;
+              const rx = x + r * 0.5;
+              const ty = cy + r * 0.866;
+              const pinD = `M ${x} ${y} L ${lx} ${ty} A ${r} ${r} 0 1 1 ${rx} ${ty} Z`;
+
               return (
-                <G key={arc.id} onPress={() => router.push(`/arc/${arc.id}`)}>
-                  {/* Outer glow ring */}
-                  <Circle cx={x} cy={y} r={14} fill={pinColor + '25'} />
-                  {/* Pin dot */}
-                  <Circle
-                    cx={x}
-                    cy={y}
-                    r={8}
-                    fill={pinColor}
-                    stroke="white"
-                    strokeWidth={2}
-                  />
+                <G key={arc.id} onPress={() => router.push(`/arc/${arc.id}` as never)}>
+                  {/* Soft glow behind pin */}
+                  <Circle cx={x} cy={cy} r={r + 7} fill={pinColor + '22'} />
+                  {/* Teardrop body */}
+                  <Path d={pinD} fill={pinColor} />
+                  {/* White border on circle part */}
+                  <Circle cx={x} cy={cy} r={r} fill={pinColor} stroke="white" strokeWidth={1.5} />
+                  {/* World type emoji */}
+                  <SvgText
+                    x={x}
+                    y={cy + 4}
+                    textAnchor="middle"
+                    fontSize={11}
+                    fill="white"
+                  >
+                    {emoji}
+                  </SvgText>
                 </G>
               );
             })}
@@ -167,6 +219,7 @@ export default function IslandScreen() {
 
       <DistrictBottomSheet
         district={selectedDistrict}
+        arcs={arcs ?? []}
         onClose={() => setSelectedDistrict(null)}
       />
     </View>
@@ -180,5 +233,53 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.surface,
     overflow: 'hidden',
+  },
+
+  floatingHeader: {
+    position: 'absolute',
+    right: spacing.lg,
+    zIndex: 10,
+    gap: 2,
+    alignItems: 'flex-end',
+  },
+  floatingTitle: {
+    ...typography.h1,
+    color: colors.textPrimary,
+  },
+  floatingSubtitle: {
+    ...typography.label,
+    color: colors.textTertiary,
+    letterSpacing: 2,
+  },
+
+  legend: {
+    position: 'absolute',
+    left: spacing.lg,
+    zIndex: 10,
+    gap: 6,
+    backgroundColor: colors.surfaceWhite + 'E0',
+    borderRadius: 12,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  legendDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+  },
+  legendLabel: {
+    ...typography.label,
+    color: colors.textSecondary,
+    fontSize: 11,
   },
 });

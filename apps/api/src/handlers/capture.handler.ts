@@ -21,7 +21,8 @@ export async function createCapture(c: Context) {
   })
 
   if (!parsed.success) {
-    return c.json({ success: false, error: parsed.error.flatten() }, 400)
+    const firstError = Object.values(parsed.error.flatten().fieldErrors).flat()[0]
+    return c.json({ success: false, error: firstError ?? 'Invalid request' }, 400)
   }
 
   const photo = formData.get('photo')
@@ -29,14 +30,18 @@ export async function createCapture(c: Context) {
     return c.json({ success: false, error: 'Photo is required' }, 400)
   }
 
-  const result = await captureService.processCapture({
-    userId,
-    chapterId: parsed.data.chapterId,
-    photo,
-    lat: parsed.data.lat,
-    lng: parsed.data.lng,
-    note: parsed.data.note,
-  })
-
-  return c.json({ success: true, data: result }, 201)
+  try {
+    const result = await captureService.processCapture({
+      userId,
+      chapterId: parsed.data.chapterId,
+      photo,
+      lat: parsed.data.lat,
+      lng: parsed.data.lng,
+      note: parsed.data.note,
+    })
+    return c.json({ success: true, data: result }, 201)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Capture failed'
+    return c.json({ success: false, error: message }, 400)
+  }
 }

@@ -11,11 +11,13 @@ import {
   View,
 } from 'react-native';
 import { Link, router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography } from '@/src/theme';
 import { fetchFromApi } from '@/src/services/api';
 import { useAuthStore } from '@/src/stores/authStore';
 
 export default function RegisterScreen() {
+  const { top } = useSafeAreaInsets();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,7 +45,7 @@ export default function RegisterScreen() {
         body: JSON.stringify({ name, email, password }),
       });
       setAuth(res.token, res.user);
-      router.replace('/(tabs)');
+      router.replace('/onboarding/welcome');
     } catch (err: any) {
       setError(err.message ?? 'Registration failed. Please try again.');
     } finally {
@@ -57,7 +59,7 @@ export default function RegisterScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
-        contentContainerStyle={styles.container}
+        contentContainerStyle={[styles.container, { paddingTop: top + spacing.xl }]}
         keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
@@ -153,6 +155,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: spacing.lg,
+    paddingTop: spacing.xl,
     justifyContent: 'center',
   },
   header: {

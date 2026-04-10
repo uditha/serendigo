@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
+import { serveStatic } from 'hono/bun'
 import { auth } from './lib/auth'
 import { errorHandler } from './middleware/error'
 import { startWorkers } from './jobs'
@@ -9,6 +10,9 @@ import captureRoutes from './routes/capture'
 import passportRoutes from './routes/passport'
 import districtRoutes from './routes/districts'
 import userRoutes from './routes/user'
+import storyRoutes from './routes/story'
+import badgeRoutes from './routes/badges'
+import leaderboardRoutes from './routes/leaderboard'
 
 const app = new Hono<{ Variables: { userId: string } }>()
 
@@ -21,6 +25,9 @@ app.use(
     credentials: true,
   }),
 )
+
+// Serve locally uploaded photos (dev only — replaced by R2 URLs in production)
+app.use('/uploads/*', serveStatic({ root: './' }))
 
 // Health check
 app.get('/health', (c) =>
@@ -54,6 +61,9 @@ app.route('/api/capture', captureRoutes)
 app.route('/api/passport', passportRoutes)
 app.route('/api/districts', districtRoutes)
 app.route('/api/user', userRoutes)
+app.route('/api/story', storyRoutes)
+app.route('/api/badges', badgeRoutes)
+app.route('/api/leaderboard', leaderboardRoutes)
 
 // Error + 404 handlers
 app.onError(errorHandler)

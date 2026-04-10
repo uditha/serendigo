@@ -1,7 +1,10 @@
-import { ScrollView, StyleSheet, Text, View, Pressable, Linking } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, Pressable, Linking, Alert } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { fetchFromApi } from '@/src/services/api';
+import { fetchArcProgress } from '@/src/services/arcs';
+import { useAuthStore } from '@/src/stores/authStore';
 import { colors, spacing, typography } from '@/src/theme';
 
 const WORLD_COLORS: Record<string, string> = {
@@ -58,6 +61,8 @@ function SkeletonLine({ width, height = 16 }: { width: number | string; height?:
 
 export default function ChapterDetailScreen() {
   const { id, chapterId } = useLocalSearchParams<{ id: string; chapterId: string }>();
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+  const { top } = useSafeAreaInsets();
 
   const { data: arc, isLoading } = useQuery({
     queryKey: ['arc', id],
@@ -66,6 +71,15 @@ export default function ChapterDetailScreen() {
         (res) => res.data
       ),
   });
+
+  const { data: progress } = useQuery({
+    queryKey: ['arc-progress', id],
+    queryFn: () => fetchArcProgress(id!),
+    enabled: isLoggedIn && !!id,
+    retry: false,
+  });
+
+  const isEnrolled = !!progress;
 
   const chapter = arc?.chapters.find((c) => c.id === chapterId);
   const worldColor = arc ? (WORLD_COLORS[arc.worldType] ?? colors.primary) : colors.primary;
@@ -79,7 +93,7 @@ export default function ChapterDetailScreen() {
   if (isLoading || !chapter) {
     return (
       <View style={styles.container}>
-        <View style={{ padding: spacing.lg, paddingTop: spacing.xxl }}>
+        <View style={{ padding: spacing.lg, paddingTop: top + spacing.md }}>
           <SkeletonLine width={60} height={12} />
           <SkeletonLine width="90%" height={32} />
           <SkeletonLine width="100%" height={16} />
@@ -94,7 +108,7 @@ export default function ChapterDetailScreen() {
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={[styles.header, { borderBottomColor: worldColor + '40' }]}>
+        <View style={[styles.header, { borderBottomColor: worldColor + '40', paddingTop: top + spacing.md }]}>
           <Pressable onPress={() => router.back()} style={styles.backLink}>
             <Text style={styles.backLinkText}>← {arc.title}</Text>
           </Pressable>
@@ -154,13 +168,37 @@ export default function ChapterDetailScreen() {
 
         {/* Capture CTA */}
         <View style={styles.ctaContainer}>
-          <Text style={styles.ctaHint}>Visit this location to capture your moment</Text>
-          <Pressable
-            style={[styles.captureButton, { backgroundColor: worldColor }]}
-            onPress={() => router.push(`/capture/${chapterId}`)}
-          >
-            <Text style={styles.captureButtonText}>📸 Capture Moment</Text>
-          </Pressable>
+          {!isLoggedIn ? (
+            <>
+              <Text style={styles.ctaHint}>Sign in to capture this moment</Text>
+              <Pressable
+                style={[styles.captureButton, { backgroundColor: worldColor }]}
+                onPress={() => router.push('/(auth)/login')}
+              >
+                <Text style={styles.captureButtonText}>Sign In to Continue</Text>
+              </Pressable>
+            </>
+          ) : !isEnrolled ? (
+            <>
+              <Text style={styles.ctaHint}>Start this journey to unlock captures</Text>
+              <Pressable
+                style={[styles.captureButton, { backgroundColor: worldColor }]}
+                onPress={() => router.back()}
+              >
+                <Text style={styles.captureButtonText}>Start Journey First →</Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <Text style={styles.ctaHint}>Visit this location to capture your moment</Text>
+              <Pressable
+                style={[styles.captureButton, { backgroundColor: worldColor }]}
+                onPress={() => router.push(`/capture/${chapterId}`)}
+              >
+                <Text style={styles.captureButtonText}>📸 Capture Moment</Text>
+              </Pressable>
+            </>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -174,7 +212,7 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: spacing.lg,
-    paddingTop: spacing.xxl,
+    paddingTop: 0,
     borderBottomWidth: 1,
     gap: spacing.sm,
   },

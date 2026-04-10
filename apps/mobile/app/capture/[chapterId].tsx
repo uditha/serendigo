@@ -10,9 +10,11 @@ import {
 import { useLocalSearchParams, router } from 'expo-router';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as Location from 'expo-location';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography } from '@/src/theme';
 
 export default function CaptureScreen() {
+  const { top, bottom } = useSafeAreaInsets();
   const { chapterId } = useLocalSearchParams<{ chapterId: string }>();
   const [permission, requestPermission] = useCameraPermissions();
   const [locationPermission, requestLocationPermission] = Location.useForegroundPermissions();
@@ -56,7 +58,7 @@ export default function CaptureScreen() {
 
   if (!permission.granted) {
     return (
-      <View style={[styles.container, styles.center]}>
+      <View style={[styles.container, styles.center, { paddingTop: top }]}>
         <Text style={styles.permissionText}>Camera access is needed to capture moments</Text>
         <Pressable style={styles.permissionButton} onPress={requestPermission}>
           <Text style={styles.permissionButtonText}>Grant Camera Access</Text>
@@ -92,7 +94,7 @@ export default function CaptureScreen() {
       <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing={facing} />
 
       {/* Overlay: top bar */}
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, { paddingTop: top + spacing.sm }]}>
         <Pressable onPress={() => router.back()} style={styles.closeButton}>
           <Text style={styles.closeText}>✕</Text>
         </Pressable>
@@ -113,7 +115,7 @@ export default function CaptureScreen() {
       </View>
 
       {/* Overlay: bottom capture button */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { paddingBottom: (bottom || spacing.lg) + spacing.md }]}>
         <Text style={styles.hint}>Position the location in frame</Text>
         <Pressable
           style={[styles.captureButton, capturing && styles.captureButtonDisabled]}
@@ -150,7 +152,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: spacing.lg,
-    paddingTop: spacing.xxl,
   },
   closeButton: {
     width: 40,
@@ -247,6 +248,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#000',
     padding: spacing.lg,
+    paddingBottom: spacing.xxl,
     gap: spacing.md,
   },
   retakeButton: {
