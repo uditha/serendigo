@@ -111,9 +111,9 @@ const colors = {
 - Body/UI: Space Grotesk
 
 ## Current Session Memory
-- Last completed: Milestone 33 — Full badge system: badges + user_badges tables, 10 badge definitions seeded, inline condition checking after every capture (capture_count/arc_complete_count/world_diversity/province_count), badgesEarned in capture response, celebration overlay on submit screen, badge grid on profile screen; GET /api/badges endpoint
+- Last completed: Milestone 34 — Leaderboard (GET /api/leaderboard top 20 by coins, podium + ranked list screen, entry point in Your Story tab with top-3 name preview); Today tab active journeys capped at 3 with "See all" link; Your Story journeys split into In Progress / Completed; home layout fixes (coins below name, 44pt avatar, DM Serif on island title)
 - Current blocker: None
-- Next step: Milestone 34 — TBD
+- Next step: Milestone 35 — Polish sprint (loading states, error handling, edge cases, transitions)
 
 ## Milestones Completed
 - ✅ 1 — Expo app running
@@ -149,6 +149,7 @@ const colors = {
 - ✅ 31 — Arc browse screen (/arc): world type filter chips (ALL/TASTE/WILD/MOVE/ROOTS/RESTORE), arc cards with colored banners, fixed broken "See all →" link on Today tab; 9 sample arcs seeded across 7 provinces (Western, North Central, Southern, Sabaragamuwa, Uva, Central, Northern) covering all 5 world types
 - ✅ 32 — Island map SVG pins: teardrop shape per arc (glow + body + circle + emoji); enrollment enforcement (API checks userArcs before capture, chapter detail shows "Start Journey First" CTA if not enrolled)
 - ✅ 33 — Badge system: badges + user_badges tables, 10 badge definitions (capture milestones, arc completion, world diversity, province explorer), inline award logic after every capture, celebration overlay on submit screen, badge grid on profile screen
+- ✅ 34 — Leaderboard: GET /api/leaderboard (top 20 by coins), podium for top 3, ranked list with current user highlighted, entry point in Your Story tab
 
 ## Key Decisions & Notes
 - District name: "Mahanuvara" renamed to "Kandy" everywhere
@@ -180,6 +181,12 @@ const colors = {
 - Sample arcs: 9 total, seeded via `bun run src/db/seed-arcs.ts` from apps/api — idempotent (onConflictDoUpdate)
 - Capture requires enrollment: capture.service.ts checks userArcs record exists before allowing capture — removed auto-enroll; chapter detail screen shows "Start Journey First" CTA if not enrolled
 - Island map arc pins are teardrop SVG shapes: glow circle (r+7, 22% opacity) + teardrop Path + white-bordered circle + world type emoji via SvgText; world type → emoji mapping: TASTE=🍜, WILD=🌿, MOVE=⚡, ROOTS=🏛️, RESTORE=🧘; pin tip points down at chapter GPS coords via tangent math (sin30°=0.5, cos30°=0.866)
+- Today tab "Continue your journey" capped at 3 most recent, "See all (N) →" links to Your Story tab
+- Your Story "My Journeys" split into IN PROGRESS and COMPLETED subsections
+- Leaderboard is public (no auth required); entry point in Your Story tab shows top-3 name preview
+- Badge check runs inline in processCapture (not via queue) so badgesEarned is returned synchronously in capture response
+- reset-user-data.ts script resets game data only (captures, enrollments, badges, coins, XP) without deleting the account
+- Profile avatar button: 44×44pt (Apple minimum tap target)
 
 ## Environment Setup
 Copy env files before first run:
