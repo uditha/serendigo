@@ -10,7 +10,7 @@ serendigo/
 ├── apps/
 │   ├── mobile/          # React Native + Expo Router
 │   ├── api/             # Bun + Hono + Drizzle
-│   └── admin/           # Next.js 15 + Payload CMS
+│   └── admin/           # Next.js 15 App Router (custom, no CMS)
 ├── packages/
 │   └── shared/          # WorldType, Province, Arc, Chapter, Coordinates
 └── docs/                # Documentation
@@ -18,7 +18,7 @@ serendigo/
 
 ## Current Phase
 Phase 1 — Foundation
-Current Milestone: 25 — Next
+Current Milestone: 35 — Next
 
 ## Tech Stack
 
@@ -41,9 +41,12 @@ Current Milestone: 25 — Next
 - Better Auth
 
 ### Admin (apps/admin/)
-- Next.js 15 App Router
-- Payload CMS 3.x
-- TailwindCSS + shadcn/ui
+- Next.js 15 App Router (custom — no CMS)
+- Drizzle ORM (direct Supabase connection, same DB as API)
+- TailwindCSS (utility classes only, no component library)
+- Cookie-based auth via ADMIN_SECRET env var
+- Server Actions for all mutations (no separate API layer)
+- Runs on port 3001
 
 ## Code Conventions
 
@@ -111,9 +114,9 @@ const colors = {
 - Body/UI: Space Grotesk
 
 ## Current Session Memory
-- Last completed: Milestone 34 — Leaderboard (GET /api/leaderboard top 20 by coins, podium + ranked list screen, entry point in Your Story tab with top-3 name preview); Today tab active journeys capped at 3 with "See all" link; Your Story journeys split into In Progress / Completed; home layout fixes (coins below name, 44pt avatar, DM Serif on island title)
+- Last completed: Milestone 35 — Admin panel (custom Next.js 15, no CMS; arcs + chapters CRUD, users read-only, dashboard stats, cookie auth via ADMIN_SECRET, dark sidebar nav, server actions, Drizzle direct to Supabase, port 3001)
 - Current blocker: None
-- Next step: Milestone 35 — Polish sprint (loading states, error handling, edge cases, transitions)
+- Next step: Milestone 36 — Badge system UI polish (badge detail modal, earned date, progress toward unearned badges)
 
 ## Milestones Completed
 - ✅ 1 — Expo app running
@@ -150,6 +153,7 @@ const colors = {
 - ✅ 32 — Island map SVG pins: teardrop shape per arc (glow + body + circle + emoji); enrollment enforcement (API checks userArcs before capture, chapter detail shows "Start Journey First" CTA if not enrolled)
 - ✅ 33 — Badge system: badges + user_badges tables, 10 badge definitions (capture milestones, arc completion, world diversity, province explorer), inline award logic after every capture, celebration overlay on submit screen, badge grid on profile screen
 - ✅ 34 — Leaderboard: GET /api/leaderboard (top 20 by coins), podium for top 3, ranked list with current user highlighted, entry point in Your Story tab
+- ✅ 35 — Admin panel: custom Next.js 15 App Router (no CMS), arcs + chapters CRUD with forms, users list, dashboard stats, cookie auth (ADMIN_SECRET), dark sidebar, server actions, direct Drizzle → Supabase, port 3001
 
 ## Key Decisions & Notes
 - District name: "Mahanuvara" renamed to "Kandy" everywhere
@@ -187,6 +191,8 @@ const colors = {
 - Badge check runs inline in processCapture (not via queue) so badgesEarned is returned synchronously in capture response
 - reset-user-data.ts script resets game data only (captures, enrollments, badges, coins, XP) without deleting the account
 - Profile avatar button: 44×44pt (Apple minimum tap target)
+- Admin panel: custom Next.js 15 (rejected Payload CMS — too heavy for internal content tool); runs on port 3001; auth is a single ADMIN_SECRET cookie (no user table needed); schema defined in apps/admin/src/db/schema.ts (mirrors API schema, not imported from it — keeps admin self-contained); server actions handle all mutations (no separate API layer)
+- Admin DATABASE_URL (not DATABASE_URI) connects directly to Supabase — same instance as API
 
 ## Environment Setup
 Copy env files before first run:

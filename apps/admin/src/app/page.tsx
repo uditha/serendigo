@@ -1,0 +1,105 @@
+import { db } from '@/db'
+import { arcs, chapters, captures, user } from '@/db/schema'
+import { count, eq } from 'drizzle-orm'
+import Link from 'next/link'
+
+async function getStats() {
+  const [arcCount, chapterCount, userCount, captureCount, publishedCount] = await Promise.all([
+    db.select({ count: count() }).from(arcs),
+    db.select({ count: count() }).from(chapters),
+    db.select({ count: count() }).from(user),
+    db.select({ count: count() }).from(captures),
+    db.select({ count: count() }).from(arcs).where(eq(arcs.isPublished, true)),
+  ])
+  return {
+    arcs: arcCount[0]?.count ?? 0,
+    chapters: chapterCount[0]?.count ?? 0,
+    users: userCount[0]?.count ?? 0,
+    captures: captureCount[0]?.count ?? 0,
+    published: publishedCount[0]?.count ?? 0,
+  }
+}
+
+async function getRecentArcs() {
+  return db.select().from(arcs).orderBy(arcs.createdAt).limit(5)
+}
+
+export default async function DashboardPage() {
+  const [stats, recentArcs] = await Promise.all([getStats(), getRecentArcs()])
+
+  const statCards = [
+    { label: 'Total Arcs',    value: stats.arcs,      sub: `${stats.published} published`, icon: '🗺️',  color: 'text-[#E8832A]' },
+    { label: 'Chapters',      value: stats.chapters,  sub: 'across all arcs',              icon: '📍',  color: 'text-[#1A6B7A]' },
+    { label: 'Users',         value: stats.users,     sub: 'registered travellers',        icon: '👥',  color: 'text-purple-600' },
+    { label: 'Captures',      value: stats.captures,  sub: 'total moments captured',       icon: '📸',  color: 'text-green-600' },
+  ]
+
+  const WORLD_COLORS: Record<string, string> = {
+    TASTE: 'bg-orange-100 text-orange-700',
+    WILD: 'bg-green-100 text-green-700',
+    MOVE: 'bg-blue-100 text-blue-700',
+    ROOTS: 'bg-purple-100 text-purple-700',
+    RESTORE: 'bg-yellow-100 text-yellow-700',
+  }
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-500 text-sm mt-1">SerendiGO content overview</p>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCards.map((s) => (
+          <div key={s.label} className="card">
+            <p className="text-2xl mb-2">{s.icon}</p>
+            <p className={`text-3xl font-bold ${s.color}`}>{s.value}</p>
+            <p className="text-sm font-medium text-gray-700 mt-1">{s.label}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{s.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Recent arcs */}
+      <div className="card">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold text-gray-900">Recent Arcs</h2>
+          <Link href="/arcs" className="text-sm text-[#E8832A] hover:underline">View all →</Link>
+        </div>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-gray-400 border-b border-gray-100">
+              <th className="pb-2 font-medium">Title</th>
+              <th className="pb-2 font-medium">World</th>
+              <th className="pb-2 font-medium">Province</th>
+              <th className="pb-2 font-medium">Status</th>
+              <th className="pb-2 font-medium"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {recentArcs.map((arc) => (
+              <tr key={arc.id} className="hover:bg-gray-50">
+                <td className="py-3 font-medium text-gray-900">{arc.title}</td>
+                <td className="py-3">
+                  <span className={`badge ${WORLD_COLORS[arc.worldType] ?? 'bg-gray-100 text-gray-600'}`}>
+                    {arc.worldType}
+                  </span>
+                </td>
+                <td className="py-3 text-gray-500">{arc.province.replace('_', ' ')}</td>
+                <td className="py-3">
+                  <span className={`badge ${arc.isPublished ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {arc.isPublished ? 'Published' : 'Draft'}
+                  </span>
+                </td>
+                <td className="py-3 text-right">
+                  <Link href={`/arcs/${arc.id}`} className="text-[#E8832A] hover:underline">Edit</Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
