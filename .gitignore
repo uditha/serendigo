@@ -44,3 +44,4 @@ coverage/
 # Misc
 .turbo/
 apps/api/uploads/
+.cursor/
