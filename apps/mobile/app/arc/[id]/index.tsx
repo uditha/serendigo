@@ -1,4 +1,4 @@
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -90,8 +90,10 @@ export default function ArcDetailScreen() {
     mutationFn: () => enrollInArc(id!),
     onSuccess: (data) => {
       queryClient.setQueryData(['arc-progress', id], data);
-      // Invalidate story so active arcs refreshes
       queryClient.invalidateQueries({ queryKey: ['story'] });
+    },
+    onError: (err: Error) => {
+      Alert.alert('Could not start journey', err.message ?? 'Please try again.')
     },
   });
 

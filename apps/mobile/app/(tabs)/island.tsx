@@ -174,13 +174,30 @@ export default function IslandScreen() {
               />
             ))}
 
-            {/* Arc pins — teardrop shape per arc */}
-            {arcs?.map((arc) => {
+            {/* Arc pins — teardrop shape per arc, jitter overlapping pins */}
+            {arcs?.map((arc, index) => {
               const firstChapter = arc.chapters?.[0];
               if (!firstChapter) return null;
               const pinColor = WORLD_COLORS[arc.worldType] ?? colors.primary;
               const emoji = WORLD_EMOJI[arc.worldType] ?? '📍';
-              const { x, y } = geoToSvg(firstChapter.lat, firstChapter.lng);
+              const base = geoToSvg(firstChapter.lat, firstChapter.lng);
+
+              // Offset pins that are within 28px of an earlier pin
+              const JITTER_RADIUS = 28;
+              const priorPositions = arcs.slice(0, index).map((a) => {
+                const ch = a.chapters?.[0];
+                return ch ? geoToSvg(ch.lat, ch.lng) : null;
+              }).filter(Boolean) as { x: number; y: number }[];
+
+              let { x, y } = base;
+              let overlapping = priorPositions.filter(
+                (p) => Math.hypot(p.x - x, p.y - y) < JITTER_RADIUS
+              );
+              if (overlapping.length > 0) {
+                const angle = (index * 137.5 * Math.PI) / 180; // golden angle spread
+                x += Math.cos(angle) * JITTER_RADIUS * 0.8;
+                y += Math.sin(angle) * JITTER_RADIUS * 0.8;
+              }
 
               // Teardrop pin geometry — tip points down at (x, y)
               const r = 11;

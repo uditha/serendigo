@@ -1,6 +1,7 @@
-import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native'
+import { RefreshControl, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native'
+import { useState } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { router } from 'expo-router'
 import { colors, spacing, typography } from '@/src/theme'
 import { useAuthStore } from '@/src/stores/authStore'
@@ -20,12 +21,20 @@ function Skeleton({ width, height = 16, radius = 6 }: { width: number | string; 
 export default function LeaderboardScreen() {
   const { top } = useSafeAreaInsets()
   const { user } = useAuthStore()
+  const queryClient = useQueryClient()
+  const [refreshing, setRefreshing] = useState(false)
 
   const { data, isLoading } = useQuery({
     queryKey: ['leaderboard'],
     queryFn: fetchLeaderboard,
     staleTime: 2 * 60 * 1000,
   })
+
+  const onRefresh = async () => {
+    setRefreshing(true)
+    await queryClient.invalidateQueries({ queryKey: ['leaderboard'] })
+    setRefreshing(false)
+  }
 
   const myRank = data?.find((e) => e.id === user?.id)
 
@@ -34,6 +43,9 @@ export default function LeaderboardScreen() {
       style={styles.container}
       contentContainerStyle={[styles.content, { paddingTop: top + spacing.md }]}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+      }
     >
       {/* Header */}
       <Pressable style={styles.backLink} onPress={() => router.back()}>
@@ -82,8 +94,14 @@ export default function LeaderboardScreen() {
               <Skeleton width={50} height={14} />
             </View>
           ))
+        ) : !data || data.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyEmoji}>🏝️</Text>
+            <Text style={styles.emptyTitle}>No explorers yet</Text>
+            <Text style={styles.emptyBody}>Be the first to capture a moment and claim the top spot.</Text>
+          </View>
         ) : (
-          data?.map((entry) => (
+          data.map((entry) => (
             <LeaderboardRow
               key={entry.id}
               entry={entry}
@@ -300,6 +318,26 @@ const styles = StyleSheet.create({
   },
   rowCoinsMe: {
     color: colors.coinGold,
+  },
+
+  emptyState: {
+    padding: spacing.xl,
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.surfaceWhite,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E5DDD0',
+  },
+  emptyEmoji: { fontSize: 40 },
+  emptyTitle: {
+    ...typography.h3,
+    color: colors.textPrimary,
+  },
+  emptyBody: {
+    ...typography.body,
+    color: colors.textTertiary,
+    textAlign: 'center',
   },
 
   rowSkeleton: {

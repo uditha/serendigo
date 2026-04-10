@@ -1,6 +1,7 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { useState } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { router } from 'expo-router'
 import { colors, spacing, typography } from '@/src/theme'
 import { useAuthStore } from '@/src/stores/authStore'
@@ -41,6 +42,18 @@ function Skeleton({ width, height = 16, radius = 6 }: { width: number | string; 
 export default function StoryScreen() {
   const { top } = useSafeAreaInsets()
   const { isLoggedIn } = useAuthStore()
+  const queryClient = useQueryClient()
+  const [refreshing, setRefreshing] = useState(false)
+
+  const onRefresh = async () => {
+    setRefreshing(true)
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['story'] }),
+      queryClient.invalidateQueries({ queryKey: ['leaderboard'] }),
+    ])
+    setRefreshing(false)
+  }
+
   const { data, isLoading, error } = useQuery({
     queryKey: ['story'],
     queryFn: fetchStory,
@@ -74,6 +87,9 @@ export default function StoryScreen() {
       style={styles.container}
       contentContainerStyle={[styles.content, { paddingTop: top + spacing.md }]}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+      }
     >
       {/* Header */}
       <View style={styles.header}>

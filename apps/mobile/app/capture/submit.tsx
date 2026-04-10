@@ -221,10 +221,12 @@ export default function CaptureSubmitScreen() {
           )}
 
           {/* Lore reveal */}
-          <Animated.View style={[styles.loreCard, { opacity: loreOpacity }]}>
-            <Text style={styles.loreLabelText}>The Story Revealed</Text>
-            <Text style={styles.loreText}>{result.loreText}</Text>
-          </Animated.View>
+          {result.loreText ? (
+            <Animated.View style={[styles.loreCard, { opacity: loreOpacity }]}>
+              <Text style={styles.loreLabelText}>The Story Revealed</Text>
+              <Text style={styles.loreText}>{result.loreText}</Text>
+            </Animated.View>
+          ) : null}
 
           <Pressable style={styles.doneButton} onPress={handleDone}>
             <Text style={styles.doneButtonText}>Continue your journey →</Text>

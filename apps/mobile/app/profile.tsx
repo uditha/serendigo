@@ -113,21 +113,21 @@ export default function ProfileScreen() {
         <View style={styles.statDivider} />
         <StatCell
           icon="📸"
-          value={isLoading ? '—' : (data?.stats.totalCaptures ?? 0)}
+          value={isLoading ? '—' : (data?.stats?.totalCaptures ?? 0)}
           label="Captures"
           color={colors.primary}
         />
         <View style={styles.statDivider} />
         <StatCell
           icon="🗺️"
-          value={isLoading ? '—' : (data?.stats.arcsEnrolled ?? 0)}
+          value={isLoading ? '—' : (data?.stats?.arcsEnrolled ?? 0)}
           label="Journeys"
           color={colors.secondary}
         />
         <View style={styles.statDivider} />
         <StatCell
           icon="✓"
-          value={isLoading ? '—' : (data?.stats.arcsCompleted ?? 0)}
+          value={isLoading ? '—' : (data?.stats?.arcsCompleted ?? 0)}
           label="Completed"
           color={colors.success}
         />

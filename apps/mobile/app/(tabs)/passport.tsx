@@ -1,6 +1,7 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { useState } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { colors, spacing, typography } from '@/src/theme'
 import { fetchPassport, type ProvinceStamp } from '@/src/services/passport'
 
@@ -19,11 +20,20 @@ const PROVINCE_ICONS: Record<string, string> = {
 
 export default function PassportScreen() {
   const { top } = useSafeAreaInsets()
+  const queryClient = useQueryClient()
+  const [refreshing, setRefreshing] = useState(false)
+
   const { data, isLoading, error } = useQuery({
     queryKey: ['passport'],
     queryFn: fetchPassport,
     staleTime: 2 * 60 * 1000,
   })
+
+  const onRefresh = async () => {
+    setRefreshing(true)
+    await queryClient.invalidateQueries({ queryKey: ['passport'] })
+    setRefreshing(false)
+  }
 
   const stamped = data?.filter((p) => p.isComplete).length ?? 0
   const total = data?.length ?? 9
@@ -33,6 +43,9 @@ export default function PassportScreen() {
       style={styles.container}
       contentContainerStyle={[styles.content, { paddingTop: top + spacing.md }]}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+      }
     >
       {/* Header */}
       <View style={styles.header}>
