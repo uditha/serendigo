@@ -1,7 +1,8 @@
 import { db } from '@/db'
 import { arcs, chapters } from '@/db/schema'
-import { eq, count } from 'drizzle-orm'
+import { count, desc } from 'drizzle-orm'
 import Link from 'next/link'
+import { Plus, Pencil } from 'lucide-react'
 
 const WORLD_COLORS: Record<string, string> = {
   TASTE: 'bg-orange-100 text-orange-700',
@@ -12,14 +13,13 @@ const WORLD_COLORS: Record<string, string> = {
 }
 
 export default async function ArcsPage() {
-  const allArcs = await db.select().from(arcs).orderBy(arcs.createdAt)
+  const allArcs = await db.select().from(arcs).orderBy(desc(arcs.createdAt))
 
-  const chapterCounts = await Promise.all(
-    allArcs.map((arc) =>
-      db.select({ count: count() }).from(chapters).where(eq(chapters.arcId, arc.id))
-        .then((r) => ({ arcId: arc.id, count: r[0]?.count ?? 0 }))
-    )
-  )
+  // Single aggregation query instead of N+1
+  const chapterCounts = await db
+    .select({ arcId: chapters.arcId, count: count() })
+    .from(chapters)
+    .groupBy(chapters.arcId)
   const countMap = Object.fromEntries(chapterCounts.map((c) => [c.arcId, c.count]))
 
   return (
@@ -29,7 +29,10 @@ export default async function ArcsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Arcs</h1>
           <p className="text-gray-500 text-sm mt-1">{allArcs.length} total arcs</p>
         </div>
-        <Link href="/arcs/new" className="btn-primary">+ New Arc</Link>
+        <Link href="/arcs/new" className="btn-primary">
+          <Plus size={16} />
+          New Arc
+        </Link>
       </div>
 
       <div className="card p-0 overflow-hidden">
@@ -48,7 +51,8 @@ export default async function ArcsPage() {
             {allArcs.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
-                  No arcs yet. <Link href="/arcs/new" className="text-[#E8832A] hover:underline">Create your first arc →</Link>
+                  No arcs yet.{' '}
+                  <Link href="/arcs/new" className="text-[#E8832A] hover:underline">Create your first arc →</Link>
                 </td>
               </tr>
             ) : allArcs.map((arc) => (
@@ -59,15 +63,17 @@ export default async function ArcsPage() {
                     {arc.worldType}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-gray-500">{arc.province.replace('_', ' ')}</td>
+                <td className="px-6 py-4 text-gray-500">{arc.province.replace(/_/g, ' ')}</td>
                 <td className="px-6 py-4 text-gray-500">{countMap[arc.id] ?? 0}</td>
                 <td className="px-6 py-4">
                   <span className={`badge ${arc.isPublished ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
-                    {arc.isPublished ? '● Published' : '○ Draft'}
+                    {arc.isPublished ? 'Published' : 'Draft'}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <Link href={`/arcs/${arc.id}`} className="text-[#E8832A] hover:underline">Edit</Link>
+                  <Link href={`/arcs/${arc.id}`} className="inline-flex items-center gap-1 text-[#E8832A] hover:underline text-xs">
+                    <Pencil size={12} /> Edit
+                  </Link>
                 </td>
               </tr>
             ))}

@@ -1,21 +1,25 @@
 import { db } from '@/db'
 import { user, captures } from '@/db/schema'
-import { count, eq, desc } from 'drizzle-orm'
+import { count, desc } from 'drizzle-orm'
+import { Camera, CircleDollarSign } from 'lucide-react'
+
+const CHARACTER_COLORS: Record<string, string> = {
+  TASTE:   'bg-orange-100 text-orange-700',
+  WILD:    'bg-green-100  text-green-700',
+  MOVE:    'bg-blue-100   text-blue-700',
+  ROOTS:   'bg-purple-100 text-purple-700',
+  RESTORE: 'bg-yellow-100 text-yellow-700',
+}
 
 export default async function UsersPage() {
   const users = await db.select().from(user).orderBy(desc(user.createdAt)).limit(50)
 
-  const captureCounts = await Promise.all(
-    users.map((u) =>
-      db.select({ count: count() }).from(captures).where(eq(captures.userId, u.id))
-        .then((r) => ({ userId: u.id, count: r[0]?.count ?? 0 }))
-    )
-  )
+  // Single aggregation query instead of N+1
+  const captureCounts = await db
+    .select({ userId: captures.userId, count: count() })
+    .from(captures)
+    .groupBy(captures.userId)
   const countMap = Object.fromEntries(captureCounts.map((c) => [c.userId, c.count]))
-
-  const CHARACTER_EMOJI: Record<string, string> = {
-    TASTE: '🍛', WILD: '🐘', MOVE: '🏄', ROOTS: '🏛️', RESTORE: '🌿',
-  }
 
   return (
     <div className="space-y-6">
@@ -43,18 +47,37 @@ export default async function UsersPage() {
             ) : users.map((u) => (
               <tr key={u.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4">
-                  <p className="font-medium text-gray-900">{u.name ?? 'No name'}</p>
-                  <p className="text-gray-400 text-xs">{u.email}</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium text-xs">
+                      {u.name ? u.name[0].toUpperCase() : u.email[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{u.name ?? 'No name'}</p>
+                      <p className="text-gray-400 text-xs">{u.email}</p>
+                    </div>
+                  </div>
                 </td>
                 <td className="px-6 py-4">
                   {u.travellerCharacter ? (
-                    <span>{CHARACTER_EMOJI[u.travellerCharacter]} {u.travellerCharacter}</span>
+                    <span className={`badge ${CHARACTER_COLORS[u.travellerCharacter] ?? 'bg-gray-100 text-gray-600'}`}>
+                      {u.travellerCharacter}
+                    </span>
                   ) : (
                     <span className="text-gray-300">—</span>
                   )}
                 </td>
-                <td className="px-6 py-4 text-gray-700">🪙 {u.serendipityCoins ?? 0}</td>
-                <td className="px-6 py-4 text-gray-700">📸 {countMap[u.id] ?? 0}</td>
+                <td className="px-6 py-4">
+                  <span className="flex items-center gap-1 text-gray-700">
+                    <CircleDollarSign size={14} className="text-yellow-500" />
+                    {u.serendipityCoins ?? 0}
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  <span className="flex items-center gap-1 text-gray-700">
+                    <Camera size={14} className="text-gray-400" />
+                    {countMap[u.id] ?? 0}
+                  </span>
+                </td>
                 <td className="px-6 py-4 text-gray-400 text-xs">
                   {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}
                 </td>

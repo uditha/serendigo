@@ -6,10 +6,12 @@ import { eq } from 'drizzle-orm'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-export default async function EditChapterPage({ params }: { params: { id: string; chapterId: string } }) {
+export default async function EditChapterPage({ params }: { params: Promise<{ id: string; chapterId: string }> }) {
+  const { id, chapterId } = await params
+
   const [arc, chapter] = await Promise.all([
-    db.select().from(arcs).where(eq(arcs.id, params.id)).then((r) => r[0]),
-    db.select().from(chapters).where(eq(chapters.id, params.chapterId)).then((r) => r[0]),
+    db.select().from(arcs).where(eq(arcs.id, id)).then((r) => r[0]),
+    db.select().from(chapters).where(eq(chapters.id, chapterId)).then((r) => r[0]),
   ])
 
   if (!arc || !chapter) notFound()

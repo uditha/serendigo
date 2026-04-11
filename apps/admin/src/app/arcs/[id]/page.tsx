@@ -4,13 +4,22 @@ import { eq } from 'drizzle-orm'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import ArcForm from '@/components/ArcForm'
+import { DeleteButton } from '@/components/DeleteButton'
 import { updateArc, togglePublished, deleteArc } from '@/actions/arcs'
 import { deleteChapter } from '@/actions/chapters'
+import { Plus, Pencil, Globe, EyeOff, Check, AlertCircle, Coins } from 'lucide-react'
 
-export default async function ArcDetailPage({ params }: { params: { id: string } }) {
-  const arc = await db.query.arcs?.findFirst?.({ where: eq(arcs.id, params.id) })
-    ?? (await db.select().from(arcs).where(eq(arcs.id, params.id)))[0]
+const WORLD_COLORS: Record<string, string> = {
+  TASTE: 'bg-orange-100 text-orange-700',
+  WILD: 'bg-green-100 text-green-700',
+  MOVE: 'bg-blue-100 text-blue-700',
+  ROOTS: 'bg-purple-100 text-purple-700',
+  RESTORE: 'bg-yellow-100 text-yellow-700',
+}
 
+export default async function ArcDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const arc = (await db.select().from(arcs).where(eq(arcs.id, id)))[0]
   if (!arc) notFound()
 
   const arcChapters = await db
@@ -22,14 +31,6 @@ export default async function ArcDetailPage({ params }: { params: { id: string }
   const update = updateArc.bind(null, arc.id)
   const toggle = togglePublished.bind(null, arc.id, arc.isPublished)
   const remove = deleteArc.bind(null, arc.id)
-
-  const WORLD_COLORS: Record<string, string> = {
-    TASTE: 'bg-orange-100 text-orange-700',
-    WILD: 'bg-green-100 text-green-700',
-    MOVE: 'bg-blue-100 text-blue-700',
-    ROOTS: 'bg-purple-100 text-purple-700',
-    RESTORE: 'bg-yellow-100 text-yellow-700',
-  }
 
   return (
     <div className="space-y-8 max-w-3xl">
@@ -43,19 +44,20 @@ export default async function ArcDetailPage({ params }: { params: { id: string }
               {arc.worldType}
             </span>
             <span className={`badge ${arc.isPublished ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
-              {arc.isPublished ? '● Published' : '○ Draft'}
+              {arc.isPublished ? 'Published' : 'Draft'}
             </span>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <form action={toggle}>
-            <button className={arc.isPublished ? 'btn-danger' : 'btn-secondary'}>
-              {arc.isPublished ? 'Unpublish' : 'Publish'}
+            <button className={`btn ${arc.isPublished ? 'btn-secondary' : 'btn-primary'}`}>
+              {arc.isPublished ? <><EyeOff size={14} /> Unpublish</> : <><Globe size={14} /> Publish</>}
             </button>
           </form>
-          <form action={remove} onSubmit={(e) => !confirm('Delete this arc and all its chapters?') && e.preventDefault()}>
-            <button className="btn-danger">Delete</button>
-          </form>
+          <DeleteButton
+            action={remove}
+            confirmMessage="Delete this arc and all its chapters? This cannot be undone."
+          />
         </div>
       </div>
 
@@ -72,7 +74,7 @@ export default async function ArcDetailPage({ params }: { params: { id: string }
             Chapters <span className="text-gray-400 font-normal">({arcChapters.length})</span>
           </h2>
           <Link href={`/arcs/${arc.id}/chapters/new`} className="btn-primary text-xs px-3 py-1.5">
-            + Add Chapter
+            <Plus size={14} /> Add Chapter
           </Link>
         </div>
 
@@ -100,26 +102,43 @@ export default async function ArcDetailPage({ params }: { params: { id: string }
                 const delChapter = deleteChapter.bind(null, arc.id, ch.id)
                 return (
                   <tr key={ch.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 text-gray-400">{ch.order}</td>
+                    <td className="px-6 py-3 text-gray-400 font-medium">{ch.order}</td>
                     <td className="px-6 py-3 font-medium text-gray-900">{ch.title}</td>
                     <td className="px-6 py-3 text-gray-400 text-xs font-mono">
                       {ch.lat.toFixed(4)}, {ch.lng.toFixed(4)}
                     </td>
-                    <td className="px-6 py-3 text-gray-500">🪙 {ch.coinReward}</td>
+                    <td className="px-6 py-3 text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <Coins size={13} className="text-yellow-500" />
+                        {ch.coinReward}
+                      </span>
+                    </td>
                     <td className="px-6 py-3">
                       {ch.loreText ? (
-                        <span className="badge bg-green-100 text-green-700">✓ Has lore</span>
+                        <span className="badge bg-green-100 text-green-700 flex items-center gap-1 w-fit">
+                          <Check size={11} /> Lore
+                        </span>
                       ) : (
-                        <span className="badge bg-yellow-100 text-yellow-600">Missing</span>
+                        <span className="badge bg-yellow-100 text-yellow-600 flex items-center gap-1 w-fit">
+                          <AlertCircle size={11} /> Missing
+                        </span>
                       )}
                     </td>
-                    <td className="px-6 py-3 text-right flex items-center justify-end gap-3">
-                      <Link href={`/arcs/${arc.id}/chapters/${ch.id}`} className="text-[#E8832A] hover:underline">
-                        Edit
-                      </Link>
-                      <form action={delChapter} onSubmit={(e) => !confirm(`Delete "${ch.title}"?`) && e.preventDefault()}>
-                        <button className="text-red-400 hover:text-red-600">Delete</button>
-                      </form>
+                    <td className="px-6 py-3">
+                      <div className="flex items-center justify-end gap-3">
+                        <Link
+                          href={`/arcs/${arc.id}/chapters/${ch.id}`}
+                          className="inline-flex items-center gap-1 text-[#E8832A] hover:underline text-xs"
+                        >
+                          <Pencil size={12} /> Edit
+                        </Link>
+                        <DeleteButton
+                          action={delChapter}
+                          confirmMessage={`Delete chapter "${ch.title}"? This cannot be undone.`}
+                          label="Delete"
+                          className="inline-flex items-center gap-1 text-xs text-red-400 hover:text-red-600 transition-colors"
+                        />
+                      </div>
                     </td>
                   </tr>
                 )

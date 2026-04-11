@@ -1,6 +1,6 @@
 'use server'
 import { db } from '@/db'
-import { arcs } from '@/db/schema'
+import { arcs, chapters } from '@/db/schema'
 import { eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -65,6 +65,7 @@ export async function togglePublished(id: string, current: boolean) {
 }
 
 export async function deleteArc(id: string) {
+  await db.delete(chapters).where(eq(chapters.arcId, id))
   await db.delete(arcs).where(eq(arcs.id, id))
   revalidatePath('/arcs')
   redirect('/arcs')

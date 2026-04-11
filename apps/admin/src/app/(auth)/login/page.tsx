@@ -9,22 +9,38 @@ async function login(formData: FormData) {
     cookieStore.set('admin_auth', password, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
       path: '/',
     })
     redirect('/')
   }
+  redirect('/login?error=1')
 }
 
-export default function LoginPage({ searchParams }: { searchParams: { error?: string } }) {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
+  const params = await searchParams
+  const hasError = !!params.error
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#1A1A2E]">
       <div className="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl">
         <div className="text-center mb-8">
-          <p className="text-3xl mb-2">🌴</p>
+          <div className="w-12 h-12 rounded-xl bg-[#E8832A] flex items-center justify-center mx-auto mb-3">
+            <span className="text-white font-bold text-xl">S</span>
+          </div>
           <h1 className="text-2xl font-bold text-gray-900">SerendiGO</h1>
           <p className="text-gray-500 text-sm mt-1">Admin Panel</p>
         </div>
+
+        {hasError && (
+          <div className="mb-4 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+            Incorrect password. Try again.
+          </div>
+        )}
 
         <form action={login} className="space-y-4">
           <div>
