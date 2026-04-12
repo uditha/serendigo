@@ -10,6 +10,7 @@ import { useThemeStore, type ThemeMode } from '@/src/stores/themeStore'
 import { useAuthStore } from '@/src/stores/authStore'
 import { fetchStory, type StoryXP } from '@/src/services/story'
 import { fetchBadges, type UserBadge } from '@/src/services/badges'
+import { WORLD_COLORS } from '@/src/constants/world'
 
 // ─── Config — brand colors, same in light & dark ──────────────────────────
 const CHARACTER_CONFIG: Record<string, { emoji: string; label: string; color: string }> = {
@@ -18,10 +19,6 @@ const CHARACTER_CONFIG: Record<string, { emoji: string; label: string; color: st
   MOVE:    { emoji: '🏄', label: 'The Adventurer', color: '#1A5F8A' },
   ROOTS:   { emoji: '🏛️', label: 'The Historian',  color: '#614A9E' },
   RESTORE: { emoji: '🌿', label: 'The Wanderer',   color: '#5E8C6E' },
-}
-
-const WORLD_COLORS: Record<string, string> = {
-  TASTE: '#B85C1A', WILD: '#2D6E4E', MOVE: '#1A5F8A', ROOTS: '#614A9E', RESTORE: '#5E8C6E',
 }
 
 const XP_KEYS = ['taste', 'wild', 'move', 'roots', 'restore'] as const

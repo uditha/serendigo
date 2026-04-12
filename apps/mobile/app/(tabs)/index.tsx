@@ -10,6 +10,7 @@ import { useTheme } from '@/src/hooks/useTheme'
 import { useAuthStore } from '@/src/stores/authStore'
 import { useArcs, type ArcPin } from '@/src/hooks/useArcs'
 import { fetchStory, type Journey } from '@/src/services/story'
+import { WORLD_COLORS, WORLD_EMOJI } from '@/src/constants/world'
 
 // ─── Character config — brand colors, same in light & dark ────────────────
 const CHARACTER_CONFIG: Record<string, { emoji: string; label: string; color: string }> = {
@@ -18,14 +19,6 @@ const CHARACTER_CONFIG: Record<string, { emoji: string; label: string; color: st
   MOVE:    { emoji: '🏄', label: 'The Adventurer', color: '#1A5F8A' },
   ROOTS:   { emoji: '🏛️', label: 'The Historian',  color: '#614A9E' },
   RESTORE: { emoji: '🌿', label: 'The Wanderer',   color: '#5E8C6E' },
-}
-
-const WORLD_COLORS: Record<string, string> = {
-  TASTE: '#B85C1A', WILD: '#2D6E4E', MOVE: '#1A5F8A', ROOTS: '#614A9E', RESTORE: '#5E8C6E',
-}
-
-const WORLD_EMOJI: Record<string, string> = {
-  TASTE: '🍜', WILD: '🌿', MOVE: '⚡', ROOTS: '🏛️', RESTORE: '🧘',
 }
 
 function getGreeting() {

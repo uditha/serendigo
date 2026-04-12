@@ -17,11 +17,19 @@ export const WORLD_LABELS: Record<WorldType, string> = {
 }
 
 export const WORLD_COLORS: Record<WorldType, string> = {
-  TASTE: '#E67E22',
-  WILD: '#27AE60',
-  MOVE: '#2980B9',
-  ROOTS: '#8E44AD',
-  RESTORE: '#F39C12',
+  TASTE:   '#B85C1A',  // Cinnamon
+  WILD:    '#2D6E4E',  // Jungle
+  MOVE:    '#1A5F8A',  // Indian Ocean
+  ROOTS:   '#614A9E',  // Kandyan
+  RESTORE: '#5E8C6E',  // Ayurveda sage
+}
+
+export const WORLD_EMOJI: Record<WorldType, string> = {
+  TASTE:   '🍛',
+  WILD:    '🌿',
+  MOVE:    '⚡',
+  ROOTS:   '🏛️',
+  RESTORE: '🧘',
 }
 
 export const Province = {

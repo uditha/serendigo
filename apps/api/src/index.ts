@@ -21,10 +21,17 @@ const app = new Hono<{ Variables: { userId: string } }>()
 
 // Global middleware
 app.use('*', logger())
+const allowedOrigins = (
+  process.env.CORS_ORIGIN ?? 'http://localhost:3001,http://localhost:3000'
+)
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean)
+
 app.use(
   '*',
   cors({
-    origin: process.env.CORS_ORIGIN ?? '*',
+    origin: (origin) => (allowedOrigins.includes(origin) ? origin : allowedOrigins[0]),
     credentials: true,
   }),
 )
@@ -77,7 +84,8 @@ app.notFound((c) => c.json({ success: false, error: 'Not found' }, 404))
 
 // Start background workers (skip if Redis not configured)
 const redisUrl = process.env.REDIS_URL
-if (redisUrl && !redisUrl.includes('[')) {
+const redisReady = Boolean(redisUrl && redisUrl.startsWith('redis'))
+if (redisReady) {
   startWorkers().catch(console.error)
 } else {
   console.warn('[Jobs] REDIS_URL not configured — workers disabled')

@@ -12,11 +12,7 @@ import { CommunityGrid } from '@/src/components/CommunityStrip';
 import { useAuthStore } from '@/src/stores/authStore';
 import { spacing, typography, AppColors } from '@/src/theme'
 import { useTheme } from '@/src/hooks/useTheme'
-
-// World colors — brand colors, same in light & dark
-const WORLD_COLORS: Record<string, string> = {
-  TASTE: '#B85C1A', WILD: '#2D6E4E', MOVE: '#1A5F8A', ROOTS: '#614A9E', RESTORE: '#5E8C6E',
-};
+import { WORLD_COLORS } from '@/src/constants/world'
 
 const WORLD_LABELS: Record<string, string> = {
   TASTE: 'Taste', WILD: 'Wild', MOVE: 'Move', ROOTS: 'Roots', RESTORE: 'Restore',

@@ -8,9 +8,16 @@ export const auth = betterAuth({
     provider: 'pg',
     schema,
   }),
-  secret: process.env.BETTER_AUTH_SECRET ?? 'dev-secret-change-in-production',
+  secret: (() => {
+    const s = process.env.BETTER_AUTH_SECRET
+    if (!s) throw new Error('BETTER_AUTH_SECRET env var is required')
+    return s
+  })(),
   baseURL: process.env.BETTER_AUTH_URL ?? 'http://localhost:3000',
-  trustedOrigins: ['http://localhost:3000', 'http://192.168.86.22:3000'],
+  trustedOrigins: (process.env.TRUSTED_ORIGINS ?? 'http://localhost:3000,http://localhost:3001')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean),
 
   emailAndPassword: {
     enabled: true,

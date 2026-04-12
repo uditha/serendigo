@@ -18,16 +18,12 @@ import { spacing, typography, AppColors } from '@/src/theme'
 import { useTheme } from '@/src/hooks/useTheme'
 import { getDiscoveryFeed, likeCapture, unlikeCapture, type CommunityCapture } from '@/src/services/community'
 import { useAuthStore } from '@/src/stores/authStore'
+import { WORLD_COLORS } from '@/src/constants/world'
 
 const { width: SW } = Dimensions.get('window')
 const CARD_W = (SW - spacing.lg * 2 - spacing.sm) / 2
 
 type WorldFilter = 'ALL' | 'TASTE' | 'WILD' | 'MOVE' | 'ROOTS' | 'RESTORE'
-
-// World colors — brand colors, same in light & dark
-const WORLD_COLORS: Record<string, string> = {
-  TASTE: '#B85C1A', WILD: '#2D6E4E', MOVE: '#1A5F8A', ROOTS: '#614A9E', RESTORE: '#5E8C6E',
-}
 
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime()

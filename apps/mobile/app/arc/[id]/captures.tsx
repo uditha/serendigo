@@ -6,15 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchFromApi } from '@/src/services/api'
 import { spacing, typography, AppColors } from '@/src/theme'
 import { useTheme } from '@/src/hooks/useTheme'
-
-// World colors — brand colors, same in light & dark
-const WORLD_COLORS: Record<string, string> = {
-  TASTE: '#B85C1A', WILD: '#2D6E4E', MOVE: '#1A5F8A', ROOTS: '#614A9E', RESTORE: '#5E8C6E',
-}
-
-const WORLD_EMOJI: Record<string, string> = {
-  TASTE: '🍛', WILD: '🐘', MOVE: '🏄', ROOTS: '🏛️', RESTORE: '🌿',
-}
+import { WORLD_COLORS, WORLD_EMOJI } from '@/src/constants/world'
 
 interface CaptureEntry {
   id: string

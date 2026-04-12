@@ -4,9 +4,9 @@ import * as captureService from '../services/capture.service'
 
 const captureSchema = z.object({
   chapterId: z.string().min(1),
-  lat: z.string().transform(Number),
-  lng: z.string().transform(Number),
-  note: z.string().optional(),
+  lat: z.coerce.number().finite().min(-90).max(90),
+  lng: z.coerce.number().finite().min(-180).max(180),
+  note: z.string().max(500).optional(),
 })
 
 export async function createCapture(c: Context) {

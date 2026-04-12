@@ -16,23 +16,11 @@ import { useTheme } from '@/src/hooks/useTheme'
 import { PROVINCES } from '@/src/data/sriLankaProvinces';
 import { getProvincePartners, type PartnerSummary } from '@/src/services/partners';
 import type { ArcPin } from '@/src/hooks/useArcs';
+import { WORLD_COLORS, WORLD_EMOJI } from '@/src/constants/world'
 
 // Build district → province lookup once
 const DISTRICT_TO_PROVINCE: Record<string, string> = {}
 PROVINCES.forEach((p) => p.districts.forEach((d) => { DISTRICT_TO_PROVINCE[d] = p.id }))
-
-// World colors are brand colors — same in light & dark
-const WORLD_COLORS: Record<string, string> = {
-  TASTE: '#B85C1A',
-  WILD:  '#2D6E4E',
-  MOVE:  '#1A5F8A',
-  ROOTS: '#614A9E',
-  RESTORE: '#5E8C6E',
-}
-
-const WORLD_EMOJI: Record<string, string> = {
-  TASTE: '🍛', WILD: '🐘', MOVE: '🏄', ROOTS: '🏛️', RESTORE: '🌿',
-}
 
 interface Props {
   district: string | null;

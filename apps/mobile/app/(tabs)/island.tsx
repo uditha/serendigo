@@ -16,28 +16,12 @@ import { DISTRICT_PATHS } from '@/src/data/sriLankaDistricts';
 import DistrictBottomSheet from '@/src/components/DistrictBottomSheet';
 import { useArcs } from '@/src/hooks/useArcs';
 import { geoToSvg } from '@/src/utils/geoToSvg';
+import { WORLD_COLORS, WORLD_EMOJI } from '@/src/constants/world';
 
 const VIEW_BOX_WIDTH = 449.68774;
 const VIEW_BOX_HEIGHT = 792.54926;
 const MIN_SCALE_FACTOR = 1;
 const MAX_SCALE_FACTOR = 8;
-
-// World colors are brand colors — same in light & dark
-const WORLD_COLORS: Record<string, string> = {
-  TASTE:   '#B85C1A',
-  WILD:    '#2D6E4E',
-  MOVE:    '#1A5F8A',
-  ROOTS:   '#614A9E',
-  RESTORE: '#5E8C6E',
-};
-
-const WORLD_EMOJI: Record<string, string> = {
-  TASTE:   '🍜',
-  WILD:    '🌿',
-  MOVE:    '⚡',
-  ROOTS:   '🏛️',
-  RESTORE: '🧘',
-};
 
 const LEGEND_ITEMS = [
   { key: 'TASTE',   label: 'Taste',   color: '#B85C1A' },
