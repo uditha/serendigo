@@ -7,7 +7,9 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchFromApi } from '@/src/services/api';
 import { fetchArcProgress } from '@/src/services/arcs';
 import { getChapterCommunity } from '@/src/services/community';
+import { getChapterPartners } from '@/src/services/partners';
 import { CommunityStrip } from '@/src/components/CommunityStrip';
+import { PartnerCard } from '@/src/components/PartnerCard';
 import { useAuthStore } from '@/src/stores/authStore';
 import { spacing, typography, AppColors } from '@/src/theme'
 import { useTheme } from '@/src/hooks/useTheme'
@@ -317,6 +319,19 @@ export default function ChapterDetailScreen() {
     enabled: !!chapterId,
     staleTime: 2 * 60 * 1000,
   });
+
+  // Partners nearby this chapter — only fetched once we have the chapter coords
+  const { data: chapterPartners } = useQuery({
+    queryKey: ['chapter-partners', chapterId],
+    queryFn: () => getChapterPartners(chapterId!, chapter!.lat, chapter!.lng),
+    enabled: !!chapter,
+    staleTime: 5 * 60 * 1000,
+  });
+  const allPartners = [
+    ...(chapterPartners?.featured ?? []),
+    ...(chapterPartners?.nearby ?? []),
+  ];
+
   const worldColor = arc ? (WORLD_COLORS[arc.worldType] ?? colors.primary) : colors.primary;
 
   const openMaps = () => {
@@ -443,6 +458,20 @@ export default function ChapterDetailScreen() {
           queryKey={communityQueryKey}
           title="Others who visited"
         />
+
+        {/* Places nearby */}
+        {allPartners.length > 0 && (
+          <View style={{ paddingBottom: spacing.lg, gap: spacing.sm }}>
+            <Text style={[styles.sectionTitle, { paddingHorizontal: spacing.lg }]}>
+              Places nearby
+            </Text>
+            <View style={{ paddingHorizontal: spacing.lg, gap: spacing.sm }}>
+              {allPartners.map((p) => (
+                <PartnerCard key={p.id} partner={p} showDistance />
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* Capture CTA */}
         <View style={styles.ctaContainer}>

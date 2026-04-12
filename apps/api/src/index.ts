@@ -13,6 +13,9 @@ import userRoutes from './routes/user'
 import storyRoutes from './routes/story'
 import badgeRoutes from './routes/badges'
 import leaderboardRoutes from './routes/leaderboard'
+import communityRoutes from './routes/community'
+import partnerRoutes from './routes/partners'
+import redeemRoute from './routes/redeem'
 
 const app = new Hono<{ Variables: { userId: string } }>()
 
@@ -64,6 +67,9 @@ app.route('/api/user', userRoutes)
 app.route('/api/story', storyRoutes)
 app.route('/api/badges', badgeRoutes)
 app.route('/api/leaderboard', leaderboardRoutes)
+app.route('/api/community', communityRoutes)
+app.route('/api/partners', partnerRoutes)
+app.route('/api/redeem', redeemRoute)
 
 // Error + 404 handlers
 app.onError(errorHandler)

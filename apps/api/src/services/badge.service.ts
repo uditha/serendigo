@@ -95,21 +95,69 @@ function conditionMet(
   }
 }
 
-export async function getUserBadges(userId: string): Promise<(Badge & { earnedAt: Date })[]> {
-  const rows = await db
-    .select({
-      id: badges.id,
-      name: badges.name,
-      description: badges.description,
-      icon: badges.icon,
-      conditionType: badges.conditionType,
-      conditionValue: badges.conditionValue,
-      earnedAt: userBadges.earnedAt,
-    })
-    .from(userBadges)
-    .innerJoin(badges, eq(userBadges.badgeId, badges.id))
-    .where(eq(userBadges.userId, userId))
-    .orderBy(userBadges.earnedAt)
+export interface BadgeWithProgress {
+  id: string
+  name: string
+  description: string
+  icon: string
+  conditionType: string
+  conditionValue: string
+  earned: boolean
+  earnedAt: Date | null
+  progress: number
+  target: number
+}
 
-  return rows
+export async function getUserBadges(userId: string): Promise<BadgeWithProgress[]> {
+  const [allBadges, earnedRows] = await Promise.all([
+    db.select().from(badges).orderBy(badges.conditionType, badges.conditionValue),
+    db
+      .select({ badgeId: userBadges.badgeId, earnedAt: userBadges.earnedAt })
+      .from(userBadges)
+      .where(eq(userBadges.userId, userId)),
+  ])
+
+  const earnedMap = new Map(earnedRows.map((r) => [r.badgeId, r.earnedAt]))
+
+  // Get user stats for progress
+  const [captureCountRow, arcCompleteCountRow, worldTypesRow, provincesRow] = await Promise.all([
+    db.select({ count: count() }).from(captures).where(eq(captures.userId, userId)),
+    db.select({ count: count() }).from(userArcs)
+      .where(and(eq(userArcs.userId, userId), sql`${userArcs.completedAt} IS NOT NULL`)),
+    db.execute(sql`
+      SELECT COUNT(DISTINCT a.world_type)::int AS count
+      FROM captures c
+      JOIN chapters ch ON c.chapter_id = ch.id
+      JOIN arcs a ON ch.arc_id = a.id
+      WHERE c.user_id = ${userId}
+    `),
+    db.execute(sql`
+      SELECT COUNT(DISTINCT a.province)::int AS count
+      FROM captures c
+      JOIN chapters ch ON c.chapter_id = ch.id
+      JOIN arcs a ON ch.arc_id = a.id
+      WHERE c.user_id = ${userId}
+    `),
+  ])
+
+  const stats = {
+    capture_count: captureCountRow[0]?.count ?? 0,
+    arc_complete_count: arcCompleteCountRow[0]?.count ?? 0,
+    world_diversity: (worldTypesRow as Array<{ count: number }>)[0]?.count ?? 0,
+    province_count: (provincesRow as Array<{ count: number }>)[0]?.count ?? 0,
+  }
+
+  return allBadges.map((badge) => {
+    const earned = earnedMap.has(badge.id)
+    const target = parseInt(badge.conditionValue, 10)
+    const progress = stats[badge.conditionType as keyof typeof stats] ?? 0
+
+    return {
+      ...badge,
+      earned,
+      earnedAt: earnedMap.get(badge.id) ?? null,
+      progress: Math.min(progress, target),
+      target,
+    }
+  })
 }

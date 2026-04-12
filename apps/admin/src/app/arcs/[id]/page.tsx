@@ -33,7 +33,7 @@ export default async function ArcDetailPage({ params }: { params: Promise<{ id: 
   const remove = deleteArc.bind(null, arc.id)
 
   return (
-    <div className="space-y-8 max-w-3xl">
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
@@ -61,91 +61,81 @@ export default async function ArcDetailPage({ params }: { params: Promise<{ id: 
         </div>
       </div>
 
-      {/* Edit arc form */}
-      <div className="card">
-        <h2 className="font-semibold text-gray-900 mb-4">Arc Details</h2>
-        <ArcForm action={update} defaultValues={arc} />
-      </div>
-
-      {/* Chapters */}
-      <div className="card p-0 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="font-semibold text-gray-900">
-            Chapters <span className="text-gray-400 font-normal">({arcChapters.length})</span>
-          </h2>
-          <Link href={`/arcs/${arc.id}/chapters/new`} className="btn-primary text-xs px-3 py-1.5">
-            <Plus size={14} /> Add Chapter
-          </Link>
+      {/* Two-column layout: left 2/3 form, right 1/3 chapters */}
+      <div className="grid grid-cols-3 gap-6 items-start">
+        {/* Left — Arc form */}
+        <div className="col-span-2">
+          <div className="card">
+            <h2 className="font-semibold text-gray-900 mb-4">Arc Details</h2>
+            <ArcForm action={update} defaultValues={arc} />
+          </div>
         </div>
 
-        {arcChapters.length === 0 ? (
-          <div className="px-6 py-10 text-center text-gray-400 text-sm">
-            No chapters yet.{' '}
-            <Link href={`/arcs/${arc.id}/chapters/new`} className="text-[#E8832A] hover:underline">
-              Add the first chapter →
-            </Link>
-          </div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr className="text-left text-gray-400">
-                <th className="px-6 py-3 font-medium">#</th>
-                <th className="px-6 py-3 font-medium">Title</th>
-                <th className="px-6 py-3 font-medium">Location</th>
-                <th className="px-6 py-3 font-medium">Coins</th>
-                <th className="px-6 py-3 font-medium">Lore</th>
-                <th className="px-6 py-3 font-medium"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {arcChapters.map((ch) => {
-                const delChapter = deleteChapter.bind(null, arc.id, ch.id)
-                return (
-                  <tr key={ch.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 text-gray-400 font-medium">{ch.order}</td>
-                    <td className="px-6 py-3 font-medium text-gray-900">{ch.title}</td>
-                    <td className="px-6 py-3 text-gray-400 text-xs font-mono">
-                      {ch.lat.toFixed(4)}, {ch.lng.toFixed(4)}
-                    </td>
-                    <td className="px-6 py-3 text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Coins size={13} className="text-yellow-500" />
-                        {ch.coinReward}
-                      </span>
-                    </td>
-                    <td className="px-6 py-3">
-                      {ch.loreText ? (
-                        <span className="badge bg-green-100 text-green-700 flex items-center gap-1 w-fit">
-                          <Check size={11} /> Lore
-                        </span>
-                      ) : (
-                        <span className="badge bg-yellow-100 text-yellow-600 flex items-center gap-1 w-fit">
-                          <AlertCircle size={11} /> Missing
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-3">
-                      <div className="flex items-center justify-end gap-3">
+        {/* Right — Chapters list */}
+        <div>
+          <div className="table-container">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white">
+              <h2 className="font-semibold text-gray-900">
+                Chapters <span className="text-gray-400 font-normal">({arcChapters.length})</span>
+              </h2>
+              <Link href={`/arcs/${arc.id}/chapters/new`} className="btn-primary text-xs px-3 py-1.5">
+                <Plus size={14} /> Add
+              </Link>
+            </div>
+
+            {arcChapters.length === 0 ? (
+              <div className="px-6 py-10 text-center text-gray-400 text-sm">
+                No chapters yet.{' '}
+                <Link href={`/arcs/${arc.id}/chapters/new`} className="text-[#E8832A] hover:underline">
+                  Add the first →
+                </Link>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {arcChapters.map((ch) => {
+                  const delChapter = deleteChapter.bind(null, arc.id, ch.id)
+                  return (
+                    <div key={ch.id} className="px-4 py-3 hover:bg-gray-50 flex items-start gap-3">
+                      <span className="text-gray-400 font-medium text-xs w-5 shrink-0 pt-0.5">{ch.order}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 text-sm truncate">{ch.title}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-gray-400 text-xs font-mono">{ch.lat.toFixed(3)},{ch.lng.toFixed(3)}</span>
+                          <span className="flex items-center gap-0.5 text-xs text-gray-400">
+                            <Coins size={11} className="text-yellow-500" />{ch.coinReward}
+                          </span>
+                          {ch.loreText ? (
+                            <span className="badge bg-green-100 text-green-700 flex items-center gap-0.5">
+                              <Check size={10} /> Lore
+                            </span>
+                          ) : (
+                            <span className="badge bg-yellow-100 text-yellow-600 flex items-center gap-0.5">
+                              <AlertCircle size={10} /> Missing
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
                         <Link
                           href={`/arcs/${arc.id}/chapters/${ch.id}`}
-                          className="inline-flex items-center gap-1 text-[#E8832A] hover:underline text-xs"
+                          className="text-[#E8832A] hover:underline text-xs"
                         >
-                          <Pencil size={12} /> Edit
+                          <Pencil size={12} />
                         </Link>
                         <DeleteButton
                           action={delChapter}
                           confirmMessage={`Delete chapter "${ch.title}"? This cannot be undone.`}
-                          label="Delete"
-                          className="inline-flex items-center gap-1 text-xs text-red-400 hover:text-red-600 transition-colors"
+                          label=""
+                          className="text-xs text-red-400 hover:text-red-600 transition-colors"
                         />
                       </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )

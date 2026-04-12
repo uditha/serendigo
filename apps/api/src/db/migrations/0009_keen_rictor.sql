@@ -1,0 +1,1 @@
+ALTER TABLE "partners" ADD COLUMN "is_local" boolean DEFAULT false NOT NULL;

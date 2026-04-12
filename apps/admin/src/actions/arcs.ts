@@ -16,6 +16,7 @@ export async function createArc(formData: FormData) {
   const province = formData.get('province') as string
   const narratorName = (formData.get('narratorName') as string) || null
   const introText = (formData.get('introText') as string) || null
+  const coverImage = (formData.get('coverImage') as string) || null
 
   const [arc] = await db.insert(arcs).values({
     id: createId(),
@@ -25,6 +26,7 @@ export async function createArc(formData: FormData) {
     province,
     narratorName,
     introText,
+    coverImage,
     isPublished: false,
     isSeasonal: false,
   }).returning()
@@ -39,6 +41,7 @@ export async function updateArc(id: string, formData: FormData) {
   const province = formData.get('province') as string
   const narratorName = (formData.get('narratorName') as string) || null
   const introText = (formData.get('introText') as string) || null
+  const coverImage = (formData.get('coverImage') as string) || null
 
   await db.update(arcs).set({
     title,
@@ -47,6 +50,7 @@ export async function updateArc(id: string, formData: FormData) {
     province,
     narratorName,
     introText,
+    coverImage,
     updatedAt: new Date(),
   }).where(eq(arcs.id, id))
 

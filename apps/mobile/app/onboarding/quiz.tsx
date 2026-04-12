@@ -331,7 +331,7 @@ export default function QuizScreen() {
           Your SerendiGO journey is shaped around your character. The island will reveal itself to you in your own way.
         </Text>
         <Pressable
-          style={[styles.button, { backgroundColor: character.color }]}
+          style={[styles.button, { backgroundColor: character.color, alignSelf: 'stretch', marginHorizontal: spacing.lg }]}
           onPress={handleContinue}
         >
           <Text style={styles.buttonText}>Begin the journey →</Text>

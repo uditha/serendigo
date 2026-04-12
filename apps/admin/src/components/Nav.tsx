@@ -1,19 +1,20 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Map, Users, LogOut } from 'lucide-react'
+import { LayoutDashboard, Map, Users, Store, LogOut } from 'lucide-react'
 
 const links = [
-  { href: '/',      label: 'Dashboard', Icon: LayoutDashboard },
-  { href: '/arcs',  label: 'Arcs',      Icon: Map },
-  { href: '/users', label: 'Users',     Icon: Users },
+  { href: '/',         label: 'Dashboard', Icon: LayoutDashboard },
+  { href: '/arcs',     label: 'Arcs',      Icon: Map },
+  { href: '/partners', label: 'Partners',  Icon: Store },
+  { href: '/users',    label: 'Users',     Icon: Users },
 ]
 
-export default function Nav() {
+export default function Nav({ pendingCount = 0 }: { pendingCount?: number }) {
   const pathname = usePathname()
 
   return (
-    <aside className="w-56 bg-[#1A1A2E] min-h-screen flex flex-col">
+    <aside className="w-56 bg-[#1A1A2E] min-h-screen flex flex-col shrink-0">
       <div className="px-6 py-5 border-b border-white/10">
         <p className="text-white font-bold text-lg">SerendiGO</p>
         <p className="text-white/40 text-xs mt-0.5">Admin Panel</p>
@@ -34,6 +35,11 @@ export default function Nav() {
             >
               <Icon size={16} />
               <span>{label}</span>
+              {label === 'Partners' && pendingCount > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-none">
+                  {pendingCount}
+                </span>
+              )}
             </Link>
           )
         })}

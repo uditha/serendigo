@@ -19,6 +19,7 @@ export const user = pgTable('user', {
   rootsXP: integer('roots_xp').default(0),
   restoreXP: integer('restore_xp').default(0),
   travellerCharacter: text('traveller_character'),
+  pushToken: text('push_token'),
 })
 
 export const session = pgTable('session', {

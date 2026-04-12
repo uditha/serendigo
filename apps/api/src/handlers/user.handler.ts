@@ -27,6 +27,27 @@ export async function updateCharacter(c: Context) {
   }
 }
 
+export async function updatePushToken(c: Context) {
+  try {
+    const userId = c.get('userId')
+    const { token } = await c.req.json()
+
+    if (!token || typeof token !== 'string') {
+      return c.json({ success: false, error: 'Invalid token' }, 400)
+    }
+
+    await db
+      .update(user)
+      .set({ pushToken: token })
+      .where(eq(user.id, userId))
+
+    return c.json({ success: true })
+  } catch (error) {
+    console.error('updatePushToken error:', error)
+    return c.json({ success: false, error: 'Failed to save push token' }, 500)
+  }
+}
+
 export async function getMe(c: Context) {
   try {
     const userId = c.get('userId')

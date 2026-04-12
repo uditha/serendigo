@@ -1,4 +1,5 @@
 import type { Chapter } from '@/db/schema'
+import ImageUpload from './ImageUpload'
 
 const WORLD_TYPES = ['TASTE', 'WILD', 'MOVE', 'ROOTS', 'RESTORE']
 
@@ -17,6 +18,14 @@ export default function ChapterForm({
 
   return (
     <form action={action} className="space-y-6">
+      {/* Cover image */}
+      <ImageUpload
+        name="coverImage"
+        defaultValue={defaultValues?.coverImage}
+        folder="chapter-covers"
+        label="Cover Image"
+      />
+
       {/* Basic info */}
       <div className="grid grid-cols-2 gap-4">
         <div>

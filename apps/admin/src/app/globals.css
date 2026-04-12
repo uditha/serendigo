@@ -34,3 +34,27 @@ body {
 .badge {
   @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
 }
+
+.filter-bar {
+  @apply flex flex-wrap gap-3 items-center p-4 bg-white rounded-xl border border-gray-200;
+}
+
+.filter-select {
+  @apply px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#E8832A] focus:border-transparent;
+}
+
+.filter-input {
+  @apply px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#E8832A] focus:border-transparent w-56;
+}
+
+.table-container {
+  @apply bg-white rounded-xl border border-gray-200 overflow-hidden;
+}
+
+.page-header {
+  @apply flex items-center justify-between mb-6;
+}
+
+.page-title {
+  @apply text-2xl font-bold text-gray-900;
+}

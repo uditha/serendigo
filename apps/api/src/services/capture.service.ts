@@ -5,6 +5,7 @@ import { eq, and, sql, count } from 'drizzle-orm'
 import { uploadPhoto } from '../utils/storage'
 import { badgeQueue, leaderboardQueue } from '../jobs'
 import { checkAndAwardBadges, type BadgeAwarded } from './badge.service'
+import { sendPushNotification } from '../utils/push'
 
 interface CaptureInput {
   userId: string
@@ -13,6 +14,7 @@ interface CaptureInput {
   lat: number
   lng: number
   note?: string | null
+  isPublic?: boolean
 }
 
 export async function processCapture(input: CaptureInput) {
@@ -67,6 +69,7 @@ export async function processCapture(input: CaptureInput) {
       lat: input.lat,
       lng: input.lng,
       coinsEarned: chapter.coinReward,
+      isPublic: input.isPublic ?? true,
     })
     .returning()
 
@@ -90,6 +93,40 @@ export async function processCapture(input: CaptureInput) {
   await Promise.all([
     leaderboardQueue?.add('update', { userId: input.userId, coins: chapter.coinReward }),
   ])
+
+  // 10. Push notifications (fire-and-forget, never block response)
+  const userRecord = await db.query.user.findFirst({
+    where: eq(user.id, input.userId),
+    columns: { pushToken: true },
+  })
+  const token = userRecord?.pushToken
+  if (token) {
+    const notifications: Promise<void>[] = []
+
+    if (badgesEarned.length > 0) {
+      const badge = badgesEarned[0]
+      notifications.push(
+        sendPushNotification(token, {
+          title: `${badge.icon} Badge Unlocked!`,
+          body: `You earned "${badge.name}" — ${badge.description}`,
+          data: { type: 'badge', badgeId: badge.id },
+        })
+      )
+    }
+
+    if (arcComplete) {
+      notifications.push(
+        sendPushNotification(token, {
+          title: '🎯 Journey Complete!',
+          body: `You've completed all chapters. Time to find your next arc.`,
+          data: { type: 'arc_complete', arcId: chapter.arcId },
+        })
+      )
+    }
+
+    // Fire-and-forget — don't await
+    Promise.all(notifications).catch(() => {})
+  }
 
   return {
     captureId: capture.id,

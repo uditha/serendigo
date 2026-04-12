@@ -13,6 +13,8 @@ export async function createCapture(c: Context) {
   const userId = c.get('userId')
   const formData = await c.req.formData()
 
+  const isPublic = formData.get('isPublic') !== 'false'
+
   const parsed = captureSchema.safeParse({
     chapterId: formData.get('chapterId'),
     lat: formData.get('lat'),
@@ -38,6 +40,7 @@ export async function createCapture(c: Context) {
       lat: parsed.data.lat,
       lng: parsed.data.lng,
       note: parsed.data.note,
+      isPublic,
     })
     return c.json({ success: true, data: result }, 201)
   } catch (err) {

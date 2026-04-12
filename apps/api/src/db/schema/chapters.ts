@@ -23,6 +23,7 @@ export const chapters = pgTable('chapters', {
   xpCategory: text('xp_category', {
     enum: ['TASTE', 'WILD', 'MOVE', 'ROOTS', 'RESTORE'],
   }).notNull(),
+  coverImage: text('cover_image'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 

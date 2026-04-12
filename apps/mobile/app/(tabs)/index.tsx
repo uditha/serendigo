@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { useQueryClient, useQuery } from '@tanstack/react-query'
-import { CircleDollarSign, ChevronRight, Compass } from 'lucide-react-native'
+import { CircleDollarSign, ChevronRight, Compass, QrCode } from 'lucide-react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { spacing, typography, AppColors } from '@/src/theme'
 import { useTheme } from '@/src/hooks/useTheme'
@@ -397,6 +397,35 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     color: 'white',
   },
 
+  // ─── Redeem banner ─────────────────────────────────────────────
+  redeemBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: '#FBF7F0',
+    borderRadius: 14,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: '#C4956A30',
+  },
+  redeemIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#E8832A18',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  redeemTitle: {
+    ...typography.body,
+    fontFamily: 'SpaceGrotesk_600SemiBold',
+    color: '#5C3D1E',
+  },
+  redeemSub: {
+    ...typography.caption,
+    color: '#7A5230',
+  },
+
   // ─── Empty + Error ──────────────────────────────────────────────
   emptyCard: {
     padding: spacing.xl,
@@ -534,6 +563,20 @@ export default function TodayScreen() {
           <Text style={styles.quizPromptText}>Discover your traveller type →</Text>
         </Pressable>
       ) : null}
+
+      {/* Redeem coins banner — shown to logged-in users */}
+      {isLoggedIn && (
+        <Pressable style={styles.redeemBanner} onPress={() => router.push('/redeem/scan')}>
+          <View style={styles.redeemIconWrap}>
+            <QrCode size={20} color="#E8832A" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.redeemTitle}>Redeem your coins</Text>
+            <Text style={styles.redeemSub}>Scan a partner QR code for discounts</Text>
+          </View>
+          <ChevronRight size={16} color="#8B5E3C" />
+        </Pressable>
+      )}
 
       {/* Active journeys */}
       {activeJourneys.length > 0 && (

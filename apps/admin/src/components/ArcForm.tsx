@@ -1,4 +1,5 @@
 import type { Arc } from '@/db/schema'
+import ImageUpload from './ImageUpload'
 
 const WORLD_TYPES = ['TASTE', 'WILD', 'MOVE', 'ROOTS', 'RESTORE']
 const PROVINCES = [
@@ -15,6 +16,14 @@ export default function ArcForm({
 }) {
   return (
     <form action={action} className="space-y-5">
+      {/* Cover image */}
+      <ImageUpload
+        name="coverImage"
+        defaultValue={defaultValues?.coverImage}
+        folder="arc-covers"
+        label="Cover Image"
+      />
+
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
           <label className="label">Title *</label>

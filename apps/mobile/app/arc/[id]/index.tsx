@@ -1,5 +1,5 @@
-import { ActivityIndicator, Alert, ImageBackground, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
-import { Check, CircleDollarSign, Clock, ChevronRight } from 'lucide-react-native';
+import { ActivityIndicator, Alert, FlatList, Image, ImageBackground, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { Check, CircleDollarSign, Clock, ChevronRight, Star } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchFromApi } from '@/src/services/api';
 import { fetchArcProgress, enrollInArc } from '@/src/services/arcs';
 import { getArcCommunity } from '@/src/services/community';
+import { getProvincePartners, type PartnerSummary } from '@/src/services/partners';
 import { CommunityGrid } from '@/src/components/CommunityStrip';
 import { useAuthStore } from '@/src/stores/authStore';
 import { spacing, typography, AppColors } from '@/src/theme'
@@ -278,6 +279,163 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
   },
 })
 
+const CATEGORY_COLOR: Record<string, string> = {
+  FOOD: '#B85C1A', STAY: '#1A5F8A', EXPERIENCE: '#614A9E',
+}
+// FOOD — compact horizontal row, menu-list feel
+function FoodRow({ partner }: { partner: PartnerSummary }) {
+  const { colors } = useTheme()
+  const hasPhoto = partner.photos.length > 0
+  return (
+    <Pressable
+      onPress={() => router.push(`/partner/${partner.id}`)}
+      style={{
+        flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+        backgroundColor: colors.surfaceWhite, borderRadius: 14,
+        borderWidth: 1, borderColor: colors.border,
+        padding: spacing.sm, paddingRight: spacing.md,
+      }}
+    >
+      {/* Photo or emoji */}
+      {hasPhoto ? (
+        <Image
+          source={{ uri: partner.photos[0] }}
+          style={{ width: 56, height: 56, borderRadius: 10 }}
+          resizeMode="cover"
+        />
+      ) : (
+        <View style={{
+          width: 56, height: 56, borderRadius: 10,
+          backgroundColor: CATEGORY_COLOR.FOOD + '18',
+          alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Text style={{ fontSize: 24 }}>🍛</Text>
+        </View>
+      )}
+      {/* Info */}
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary }} numberOfLines={1}>
+          {partner.name}
+        </Text>
+        <Text style={{ fontSize: 12, color: colors.textSecondary }} numberOfLines={1}>
+          {partner.tagline}
+        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 2 }}>
+          {partner.avgRating !== null && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+              <Star size={10} color="#C9920A" fill="#C9920A" />
+              <Text style={{ fontSize: 11, color: colors.textSecondary }}>{partner.avgRating}</Text>
+            </View>
+          )}
+          {partner.priceMin && (
+            <Text style={{ fontSize: 11, color: colors.textTertiary }}>
+              USD {partner.priceMin}{partner.priceMax ? `–${partner.priceMax}` : '+'}
+            </Text>
+          )}
+        </View>
+      </View>
+      <ChevronRight size={16} color={colors.textTertiary} />
+    </Pressable>
+  )
+}
+
+// STAY — photo-dominant card with gradient overlay
+function StayCard({ partner }: { partner: PartnerSummary }) {
+  const { colors } = useTheme()
+  const hasPhoto = partner.photos.length > 0
+  return (
+    <Pressable
+      onPress={() => router.push(`/partner/${partner.id}`)}
+      style={{ width: 200, height: 160, borderRadius: 16, overflow: 'hidden' }}
+    >
+      {hasPhoto ? (
+        <ImageBackground source={{ uri: partner.photos[0] }} style={{ flex: 1 }} resizeMode="cover">
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.72)']}
+            style={{ flex: 1, justifyContent: 'flex-end', padding: spacing.sm }}
+          >
+            <Text style={{ fontSize: 13, fontWeight: '700', color: 'white' }} numberOfLines={2}>
+              {partner.name}
+            </Text>
+            {partner.priceMin && (
+              <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>
+                From USD {partner.priceMin}
+              </Text>
+            )}
+          </LinearGradient>
+        </ImageBackground>
+      ) : (
+        <LinearGradient
+          colors={[CATEGORY_COLOR.STAY + 'CC', CATEGORY_COLOR.STAY + '99']}
+          style={{ flex: 1, justifyContent: 'space-between', padding: spacing.md }}
+        >
+          <Text style={{ fontSize: 32 }}>🏨</Text>
+          <View>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: 'white' }} numberOfLines={2}>
+              {partner.name}
+            </Text>
+            {partner.priceMin && (
+              <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>
+                From USD {partner.priceMin}
+              </Text>
+            )}
+          </View>
+        </LinearGradient>
+      )}
+    </Pressable>
+  )
+}
+
+// EXPERIENCE — wide banner with bold left accent stripe
+function ExperienceCard({ partner }: { partner: PartnerSummary }) {
+  const { colors } = useTheme()
+  const accentColor = CATEGORY_COLOR.EXPERIENCE
+  const hasPhoto = partner.photos.length > 0
+  return (
+    <Pressable
+      onPress={() => router.push(`/partner/${partner.id}`)}
+      style={{
+        width: 260, flexDirection: 'row',
+        backgroundColor: colors.surfaceWhite, borderRadius: 14,
+        borderWidth: 1, borderColor: colors.border, overflow: 'hidden',
+      }}
+    >
+      {/* Left accent stripe */}
+      <View style={{ width: 4, backgroundColor: accentColor }} />
+      {/* Photo or emoji */}
+      {hasPhoto ? (
+        <Image
+          source={{ uri: partner.photos[0] }}
+          style={{ width: 72, height: 88 }}
+          resizeMode="cover"
+        />
+      ) : (
+        <View style={{
+          width: 72, height: 88,
+          backgroundColor: accentColor + '15',
+          alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Text style={{ fontSize: 28 }}>🎭</Text>
+        </View>
+      )}
+      {/* Text */}
+      <View style={{ flex: 1, padding: spacing.sm, justifyContent: 'center', gap: 3 }}>
+        <Text style={{ fontSize: 13, fontWeight: '700', color: colors.textPrimary }} numberOfLines={2}>
+          {partner.name}
+        </Text>
+        <Text style={{ fontSize: 11, color: colors.textSecondary }} numberOfLines={1}>
+          {partner.tagline}
+        </Text>
+        {partner.priceMin && (
+          <Text style={{ fontSize: 11, color: accentColor, fontWeight: '600', marginTop: 2 }}>
+            USD {partner.priceMin}{partner.priceMax ? `–${partner.priceMax}` : '+'}
+          </Text>
+        )}
+      </View>
+    </Pressable>
+  )
+}
+
 export default function ArcDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { top } = useSafeAreaInsets();
@@ -322,6 +480,23 @@ export default function ArcDetailScreen() {
     enabled: !!id,
     staleTime: 2 * 60 * 1000,
   });
+
+  const { data: provincePartners = {} } = useQuery({
+    queryKey: ['province-partners', arc?.province],
+    queryFn: () => getProvincePartners(arc!.province),
+    enabled: !!arc?.province,
+    staleTime: 10 * 60 * 1000,
+  });
+  // Show FOOD, STAY, EXPERIENCE — most relevant for arc planning
+  const PLAN_CATEGORIES: { key: string; label: string }[] = [
+    { key: 'FOOD', label: 'Food & Drink' },
+    { key: 'STAY', label: 'Where to Stay' },
+    { key: 'EXPERIENCE', label: 'Experiences' },
+  ];
+  const planSections = PLAN_CATEGORIES
+    .map((c) => ({ ...c, partners: provincePartners[c.key] ?? [] }))
+    .filter((s) => s.partners.length > 0);
+
   const completedIds = new Set(progress?.completedChapterIds ?? []);
   const progressPct = progress && progress.totalChapters > 0
     ? (progress.completedChapters / progress.totalChapters) * 100
@@ -530,6 +705,63 @@ export default function ArcDetailScreen() {
             );
           })}
         </View>
+        {/* Along this arc — plan your visit */}
+        {planSections.length > 0 && (
+          <View style={{ paddingBottom: spacing.lg }}>
+            <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.md }}>
+              <Text style={styles.sectionTitle}>Plan your visit</Text>
+            </View>
+            {/* Philosophy framing */}
+            <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.md, flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm }}>
+              <Text style={{ fontSize: 14 }}>🏠</Text>
+              <Text style={{ fontSize: 12, color: colors.textSecondary, lineHeight: 18, flex: 1 }}>
+                We recommend family-run and independently owned places first — your visit makes a real difference to them.
+              </Text>
+            </View>
+            {planSections.map((section) => (
+              <View key={section.key} style={{ marginBottom: spacing.lg }}>
+                <Text style={{
+                  fontSize: 13, fontWeight: '600', letterSpacing: 0.5,
+                  paddingHorizontal: spacing.lg, paddingBottom: spacing.sm,
+                  color: CATEGORY_COLOR[section.key] ?? colors.textSecondary,
+                  textTransform: 'uppercase',
+                }}>
+                  {section.label}
+                </Text>
+
+                {section.key === 'FOOD' ? (
+                  // Vertical compact rows — menu-list feel
+                  <View style={{ paddingHorizontal: spacing.lg, gap: spacing.sm }}>
+                    {section.partners.slice(0, 5).map((p) => (
+                      <FoodRow key={p.id} partner={p} />
+                    ))}
+                  </View>
+                ) : section.key === 'STAY' ? (
+                  // Horizontal photo-dominant cards
+                  <FlatList
+                    horizontal
+                    data={section.partners.slice(0, 6)}
+                    keyExtractor={(p) => p.id}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ paddingHorizontal: spacing.lg, gap: spacing.sm }}
+                    renderItem={({ item }) => <StayCard partner={item} />}
+                  />
+                ) : (
+                  // EXPERIENCE — horizontal wide banner cards
+                  <FlatList
+                    horizontal
+                    data={section.partners.slice(0, 6)}
+                    keyExtractor={(p) => p.id}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ paddingHorizontal: spacing.lg, gap: spacing.sm }}
+                    renderItem={({ item }) => <ExperienceCard partner={item} />}
+                  />
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+
       </ScrollView>
     </View>
   );

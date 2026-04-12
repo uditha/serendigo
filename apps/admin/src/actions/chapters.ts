@@ -29,6 +29,7 @@ export async function createChapter(arcId: string, formData: FormData) {
   const radiusMeters = parseInt(formData.get('radiusMeters') as string, 10)
   const coinReward = parseInt(formData.get('coinReward') as string, 10)
   const xpCategory = formData.get('xpCategory') as string
+  const coverImage = (formData.get('coverImage') as string) || null
   const beforeYouGo = parseBeforeYouGo(formData)
 
   await db.insert(chapters).values({
@@ -42,6 +43,7 @@ export async function createChapter(arcId: string, formData: FormData) {
     radiusMeters,
     coinReward,
     xpCategory,
+    coverImage,
     beforeYouGo,
   })
 
@@ -58,10 +60,11 @@ export async function updateChapter(arcId: string, chapterId: string, formData: 
   const radiusMeters = parseInt(formData.get('radiusMeters') as string, 10)
   const coinReward = parseInt(formData.get('coinReward') as string, 10)
   const xpCategory = formData.get('xpCategory') as string
+  const coverImage = (formData.get('coverImage') as string) || null
   const beforeYouGo = parseBeforeYouGo(formData)
 
   await db.update(chapters).set({
-    order, title, loreText, lat, lng, radiusMeters, coinReward, xpCategory, beforeYouGo,
+    order, title, loreText, lat, lng, radiusMeters, coinReward, xpCategory, coverImage, beforeYouGo,
   }).where(eq(chapters.id, chapterId))
 
   revalidatePath(`/arcs/${arcId}`)

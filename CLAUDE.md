@@ -18,7 +18,7 @@ serendigo/
 
 ## Current Phase
 Phase 1 — Foundation
-Current Milestone: 37 — Next
+Current Milestone: 44 — Next
 
 ## Tech Stack
 
@@ -114,9 +114,9 @@ const colors = {
 - Body/UI: Space Grotesk
 
 ## Current Session Memory
-- Last completed: Milestone 36 — Dark mode system (makeStyles factory pattern across all 20+ screens, light/dark/system ThemeMode store with zustand + AsyncStorage, useTheme hook combining system + override, 3-way toggle on Profile screen)
+- Last completed: M43 QR coin redemption system (coin_offers + coin_redemptions tables, /api/redeem route, mobile scan + redeem screens, admin QR generator + coin offers CRUD, family-run feature with isLocal sort priority); M44 Admin polish (full-width layout, 3-col PartnerForm, client-side filtering on partners/arcs/users, dashboard with pending partners + recent redemptions, Nav pending badge)
 - Current blocker: None
-- Next step: Milestone 37 — Badge system UI polish (badge detail modal, earned date, progress toward unearned badges)
+- Next step: Milestone 45 — Flash Deals mobile (post-capture "While you're here" slide-up, Today tab flash deal banner, push notification for deals)
 
 ## Milestones Completed
 - ✅ 1 — Expo app running
@@ -155,6 +155,14 @@ const colors = {
 - ✅ 34 — Leaderboard: GET /api/leaderboard (top 20 by coins), podium for top 3, ranked list with current user highlighted, entry point in Your Story tab
 - ✅ 35 — Admin panel: custom Next.js 15 App Router (no CMS), arcs + chapters CRUD with forms, users list, dashboard stats, cookie auth (ADMIN_SECRET), dark sidebar, server actions, direct Drizzle → Supabase, port 3001
 - ✅ 36 — Dark mode: makeStyles(colors) factory pattern across all 20+ screens, light/dark/system ThemeMode store (zustand + AsyncStorage), useTheme hook, 3-way theme toggle on Profile screen (System/Light/Dark); world/brand colors hardcoded at module level, surface/text/border colors from useTheme()
+- ✅ 37 — Badge system UI polish: badge detail modal (tap badge on profile grid), earned date display, progress bar toward unearned badges (e.g. "3/10 captures")
+- ✅ 38 — Community feed: capture_likes table, discovery feed screen (world-type filter chips, masonry grid, photo modal), like/unlike with optimistic updates, CommunityStrip (horizontal) on chapter detail, CommunityGrid (3-col) on arc detail, Discover banner on Today tab
+- ✅ 39 — Push notifications: Expo push token registration + PATCH /api/user/push-token, push_token on user table (migration 0007), sendPushNotification util, badge earn + arc completion pushes from capture.service.ts, deep link routing (badge→/profile, arc_complete→/arc/:id)
+- ✅ 40 — Admin image upload: ImageUpload component (drag/drop + file picker), /api/upload route → Cloudflare R2 (S3-compatible), cover_image on chapters table (migration 0005), wired into ArcForm + ChapterForm; graceful 503 fallback if R2 not configured
+- ✅ 41 — Partner listings foundation: partners + chapter_featured_partners + flash_deals + partner_reviews (migration 0008); API: /api/partners/nearby (PostGIS, category-aware radius, expand-if-empty), /chapter/:id, /province/:province, /:id, /flash-deals, POST /:id/reviews (verified visitor via capture history); admin: PartnerForm, partners list/new/edit pages, flash deal create/toggle, Nav updated with Partners link
+- ✅ 42 — Partners in mobile: services/partners.ts, PartnerCard (photo/emoji fallback, category badge, featured badge, rating, distance, WhatsApp/Call button), partner detail screen (/partner/:id — photo carousel, contact buttons, hours, tags, reviews with verified badge, star review modal), chapter detail "Places nearby" section (featured first then proximity), arc detail "Plan your visit" horizontal scroll (FOOD/STAY/EXPERIENCE), registered in _layout.tsx
+- ✅ 43 — QR coin redemption system: coin_offers + coin_redemptions tables (migration 0010), isLocal + coinBalance on partners (migration 0009); API /api/redeem (GET /:partnerId for offers, POST / to redeem); mobile redeem/scan.tsx (CameraView QR scanner parsing serendigo://redeem/{id}), redeem/[partnerId].tsx (offer selection, affordability gating, receipt screen with 6-char code); admin: QRCodeCard component (qrcode.react, download PNG + print), coin offers CRUD (createCoinOffer/deleteCoinOffer/toggleCoinOffer actions); family-run feature: isLocal sort priority in all partner queries (family-run first silently), 🏠 badge on PartnerCard + full-width warm card on partner detail; Today tab "Redeem your coins" banner → scan screen
+- ✅ 44 — Admin panel polish: full-width layout (max-w-7xl on pages, removed sidebar max-w), PartnerForm 3-col grid (2/3 content + 1/3 sidebar, opening hours Mon-Sun fields, useTransition with success/error banners, MultiImageUpload), PartnersClient + ArcsClient + UsersClient (client-side filtering — search + category/status/province filters + result count), dashboard 6 stat cards + pending partners table + recent redemptions, Nav pending badge (red dot when unapproved partners > 0)
 
 ## Key Decisions & Notes
 - District name: "Mahanuvara" renamed to "Kandy" everywhere
@@ -194,6 +202,10 @@ const colors = {
 - Profile avatar button: 44×44pt (Apple minimum tap target)
 - Admin panel: custom Next.js 15 (rejected Payload CMS — too heavy for internal content tool); runs on port 3001; auth is a single ADMIN_SECRET cookie (no user table needed); schema defined in apps/admin/src/db/schema.ts (mirrors API schema, not imported from it — keeps admin self-contained); server actions handle all mutations (no separate API layer)
 - Admin DATABASE_URL (not DATABASE_URI) connects directly to Supabase — same instance as API
+- QR coin flow: static QR per partner (printed once) = `serendigo://redeem/{partnerId}`; scanner parses deep link → offer selection → confirmation code (6 uppercase chars); partner coinBalance incremented atomically via Drizzle sql template; user serendipityCoins deducted; redemption logged in coin_redemptions
+- `isLocal` on partners = "family-run / independently owned small operation" (NOT about nationality); sorted first in all partner queries via `CASE WHEN isLocal THEN 0 ELSE 1 END`; shown as 🏠 "Family run" badge on cards
+- TanStack Query: per-query `staleTime: 0, refetchOnMount: 'always'` needed for coin offers (global 5min staleTime caused stale empty results); applies to redeem/[partnerId].tsx query
+- Admin client components (PartnersClient, ArcsClient, UsersClient): server fetches all → passes to client for in-memory filtering; pattern avoids server round-trips on filter change
 
 ## Environment Setup
 Copy env files before first run:

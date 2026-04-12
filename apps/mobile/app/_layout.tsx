@@ -107,6 +107,9 @@ export default function RootLayout() {
           <Stack.Screen name="capture/[chapterId]" options={{ headerShown: false, animation: 'fade' }} />
           <Stack.Screen name="capture/submit" options={{ headerShown: false, animation: 'fade' }} />
           <Stack.Screen name="discover" options={{ headerShown: false }} />
+          <Stack.Screen name="partner/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="redeem/scan" options={{ headerShown: false }} />
+          <Stack.Screen name="redeem/[partnerId]" options={{ headerShown: false }} />
         </Stack>
       </GestureHandlerRootView>
     </QueryClientProvider>
