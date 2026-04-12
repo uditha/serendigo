@@ -557,13 +557,6 @@ export default function Home() {
               justifyContent: 'center',
             }}
           >
-            {/* Fixed island map — desktop */}
-            <div className="hidden xl:block" style={{ position: 'fixed', right: 48, top: '50%', transform: 'translateY(-50%)', width: 160, zIndex: 10 }}>
-              <SriLankaMap activeProvinces={activeProvinces} width={160} height={282} />
-              <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 10, letterSpacing: 3, color: 'rgba(247,240,227,0.3)', textAlign: 'center', marginTop: 8, textTransform: 'uppercase' }}>
-                The Island
-              </p>
-            </div>
 
             <div className="px-8 md:px-20 mb-8">
               <p
