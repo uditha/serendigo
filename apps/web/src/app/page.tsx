@@ -409,7 +409,7 @@ export default function HomePage() {
           </div>
 
           <p className="font-sans text-xs" style={{ color: '#5A5A7A', opacity: 0.7 }}>
-            Currently in beta — launching 2025
+            Currently in beta — launching 2026
           </p>
         </div>
       </section>
@@ -465,7 +465,7 @@ export default function HomePage() {
               hello@serendigo.app
             </a>
             <p className="font-sans text-xs" style={{ color: '#F7F0E3', opacity: 0.3 }}>
-              &copy; 2025 SerendiGO
+              &copy; 2026 SerendiGO
             </p>
           </div>
         </div>

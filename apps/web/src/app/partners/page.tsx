@@ -467,7 +467,7 @@ export default function PartnersPage() {
               hello@serendigo.app
             </a>
             <p className="font-sans text-xs" style={{ color: '#F7F0E3', opacity: 0.3 }}>
-              &copy; 2025 SerendiGO
+              &copy; 2026 SerendiGO
             </p>
           </div>
         </div>
