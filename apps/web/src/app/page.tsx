@@ -363,7 +363,7 @@ export default function Home() {
         </section>
 
         {/* ── TWO PATHS ──────────────────────────────────────────── */}
-        <section className="py-24 px-8 md:px-20" style={{ background: 'rgba(0,0,0,0.35)' }}>
+        <section className="py-24 px-8 md:px-20" style={{ background: '#0D1520' }}>
           <div className="max-w-6xl mx-auto">
             <p
               className="reveal mb-4"
@@ -533,7 +533,7 @@ export default function Home() {
         </section>
 
         {/* ── HORIZONTAL ARC SCROLL ──────────────────────────────── */}
-        <div ref={arcSectionRef} id="how-it-works" style={{ height: '400vh', position: 'relative' }}>
+        <div ref={arcSectionRef} id="how-it-works" style={{ height: '400vh', position: 'relative', background: '#080C14' }}>
           <div
             style={{
               position: 'sticky',
@@ -541,6 +541,7 @@ export default function Home() {
               height: '100vh',
               overflow: 'hidden',
               display: 'flex',
+              background: '#080C14',
               flexDirection: 'column',
               justifyContent: 'center',
             }}
@@ -729,7 +730,7 @@ export default function Home() {
         </div>
 
         {/* ── GAMIFICATION LOOP ──────────────────────────────────── */}
-        <section className="py-28 px-8 md:px-20" style={{ background: 'rgba(0,0,0,0.4)' }}>
+        <section className="py-28 px-8 md:px-20" style={{ background: '#0D1A2A' }}>
           <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
             <div>
               <p
