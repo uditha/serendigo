@@ -221,13 +221,28 @@ export default function Home() {
           {/* Stars */}
           <div id="star-field" className="absolute inset-0 pointer-events-none" />
 
-          {/* Island watermark */}
-          <div className="absolute right-0 top-0 bottom-0 hidden lg:flex items-center pr-16 opacity-15 pointer-events-none">
-            <SriLankaMap width={280} height={494} />
+          {/* Island — hero right column */}
+          <div
+            className="hidden lg:flex items-center justify-center pointer-events-none"
+            style={{
+              position: 'absolute',
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width: '48%',
+              animation: 'islandFloat 7s ease-in-out infinite',
+            }}
+          >
+            <SriLankaMap
+              animated
+              width={420}
+              height={740}
+              style={{ filter: 'drop-shadow(0 0 60px rgba(26,107,122,0.25))' }}
+            />
           </div>
 
-          {/* Content */}
-          <div className="relative z-10 px-8 md:px-20 max-w-4xl pt-32 pb-20">
+          {/* Content — left half only on desktop */}
+          <div className="relative z-10 px-8 md:px-20 pt-32 pb-20 lg:w-1/2">
             <p
               className="mb-6"
               style={{
@@ -1161,7 +1176,7 @@ export default function Home() {
           <div className="max-w-3xl mx-auto">
             {/* Island with all provinces lit */}
             <div className="flex justify-center mb-10">
-              <SriLankaMap activeProvinces={['western','central','southern','northern','eastern','north_western','north_central','uva','sabaragamuwa']} width={140} height={247} />
+              <SriLankaMap allLit width={160} height={282} style={{ filter: 'drop-shadow(0 0 30px rgba(232,131,42,0.4))' }} />
             </div>
             <h2
               className="reveal mb-5"

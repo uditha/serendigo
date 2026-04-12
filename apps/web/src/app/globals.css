@@ -69,6 +69,12 @@ body { background-color: var(--sky); transition: background-color 0.1s linear; }
   50%       { transform: translateY(10px); opacity: 0.3; }
 }
 
+@keyframes islandFloat {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  40%       { transform: translateY(-20px) scale(1.012); }
+  70%       { transform: translateY(-8px) scale(1.006); }
+}
+
 /* ── Reveal on scroll ───────────────────────────────────────────────── */
 .reveal {
   opacity: 0;
