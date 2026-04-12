@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import SriLankaMap from '@/components/SriLankaMap'
 
 /* ── Sri Lanka simplified province data ─────────────────────────────── */
 const PROVINCES = [
@@ -16,11 +17,11 @@ const PROVINCES = [
 ]
 
 const ARCS = [
-  { world: 'TASTE',   emoji: '🍛', color: '#B85C1A', title: 'The Colombo Street Food Circuit',  province: 'Western',      chapters: 6, desc: 'From Pettah to Slave Island. The real city, eaten slowly.' },
-  { world: 'WILD',    emoji: '🌿', color: '#2D6E4E', title: 'The Elephant Circuit',              province: 'North Central', chapters: 5, desc: 'Minneriya, Kaudulla, Hurulu. Three parks, one ancient migration.' },
-  { world: 'MOVE',    emoji: '⚡', color: '#1A5F8A', title: 'The Great Train Journey',           province: 'Central',      chapters: 7, desc: 'Colombo Fort to Badulla. Nine hours. A thousand views.' },
-  { world: 'ROOTS',   emoji: '🏛️', color: '#614A9E', title: 'The Ancient Kingdoms',              province: 'Northern',     chapters: 8, desc: 'Anuradhapura to Polonnaruwa. Kingdoms under the banyan.' },
-  { world: 'RESTORE', emoji: '🧘', color: '#5E8C6E', title: 'Ayurveda & the Hill Country',       province: 'Uva',          chapters: 5, desc: 'Nuwara Eliya to Haputale. Rest was never this earned.' },
+  { world: 'TASTE',   emoji: '🍛', color: '#B85C1A', title: 'The Colombo Street Food Circuit',  province: 'western',       chapters: 6, desc: 'From Pettah to Slave Island. The real city, eaten slowly.' },
+  { world: 'WILD',    emoji: '🌿', color: '#2D6E4E', title: 'The Elephant Circuit',              province: 'north_central', chapters: 5, desc: 'Minneriya, Kaudulla, Hurulu. Three parks, one ancient migration.' },
+  { world: 'MOVE',    emoji: '⚡', color: '#1A5F8A', title: 'The Great Train Journey',           province: 'central',       chapters: 7, desc: 'Colombo Fort to Badulla. Nine hours. A thousand views.' },
+  { world: 'ROOTS',   emoji: '🏛️', color: '#614A9E', title: 'The Ancient Kingdoms',              province: 'northern',      chapters: 8, desc: 'Anuradhapura to Polonnaruwa. Kingdoms under the banyan.' },
+  { world: 'RESTORE', emoji: '🧘', color: '#5E8C6E', title: 'Ayurveda & the Hill Country',       province: 'uva',           chapters: 5, desc: 'Nuwara Eliya to Haputale. Rest was never this earned.' },
 ]
 
 const ORBIT_NODES = [
@@ -105,7 +106,7 @@ export default function Home() {
         : 0
       const arcIdx = Math.floor(arcProgress * ARCS.length)
       const arc = ARCS[Math.min(arcIdx, ARCS.length - 1)]
-      setActiveProvinces(arc ? [arc.province.toLowerCase().replace(/\s/g, '_')] : [])
+      setActiveProvinces(arc ? [arc.province] : [])
     }
 
     window.addEventListener('scroll', handler, { passive: true })
@@ -221,13 +222,8 @@ export default function Home() {
           <div id="star-field" className="absolute inset-0 pointer-events-none" />
 
           {/* Island watermark */}
-          <div className="absolute right-0 top-0 bottom-0 hidden lg:flex items-center pr-16 opacity-10 pointer-events-none">
-            <svg width="220" height="280" viewBox="0 0 200 250" fill="none">
-              <path
-                d="M100,12 C115,8 132,14 143,28 C158,46 164,70 163,96 C162,122 154,146 142,167 C130,188 114,205 96,216 C78,227 58,228 42,216 C26,204 18,184 16,162 C14,140 20,118 30,98 C40,78 54,62 64,46 C74,30 80,18 100,12 Z"
-                fill="#F7F0E3"
-              />
-            </svg>
+          <div className="absolute right-0 top-0 bottom-0 hidden lg:flex items-center pr-16 opacity-15 pointer-events-none">
+            <SriLankaMap width={280} height={494} />
           </div>
 
           {/* Content */}
@@ -547,58 +543,9 @@ export default function Home() {
             }}
           >
             {/* Fixed island map — desktop */}
-            <div
-              className="hidden xl:block"
-              style={{
-                position: 'fixed',
-                right: 48,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: 180,
-                zIndex: 10,
-              }}
-            >
-              <svg width="180" height="230" viewBox="0 0 200 250" fill="none">
-                {/* Island outline */}
-                <path
-                  d="M100,12 C115,8 132,14 143,28 C158,46 164,70 163,96 C162,122 154,146 142,167 C130,188 114,205 96,216 C78,227 58,228 42,216 C26,204 18,184 16,162 C14,140 20,118 30,98 C40,78 54,62 64,46 C74,30 80,18 100,12 Z"
-                  stroke="rgba(247,240,227,0.2)"
-                  strokeWidth="1.5"
-                  fill="rgba(247,240,227,0.03)"
-                />
-                {/* Province dots */}
-                {PROVINCES.map((p) => (
-                  <circle
-                    key={p.id}
-                    cx={p.cx}
-                    cy={p.cy}
-                    r={p.r * 0.5}
-                    fill={
-                      activeProvinces.includes(p.id)
-                        ? p.worldColor
-                        : 'rgba(247,240,227,0.15)'
-                    }
-                    className="province-region"
-                    style={{
-                      filter: activeProvinces.includes(p.id)
-                        ? `drop-shadow(0 0 6px ${p.worldColor})`
-                        : 'none',
-                      transition: 'all 0.5s ease',
-                    }}
-                  />
-                ))}
-              </svg>
-              <p
-                style={{
-                  fontFamily: 'Space Grotesk, sans-serif',
-                  fontSize: 10,
-                  letterSpacing: 3,
-                  color: 'rgba(247,240,227,0.3)',
-                  textAlign: 'center',
-                  marginTop: 8,
-                  textTransform: 'uppercase',
-                }}
-              >
+            <div className="hidden xl:block" style={{ position: 'fixed', right: 48, top: '50%', transform: 'translateY(-50%)', width: 160, zIndex: 10 }}>
+              <SriLankaMap activeProvinces={activeProvinces} width={160} height={282} />
+              <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 10, letterSpacing: 3, color: 'rgba(247,240,227,0.3)', textAlign: 'center', marginTop: 8, textTransform: 'uppercase' }}>
                 The Island
               </p>
             </div>
@@ -1213,24 +1160,8 @@ export default function Home() {
         >
           <div className="max-w-3xl mx-auto">
             {/* Island with all provinces lit */}
-            <div className="flex justify-center mb-10 opacity-40">
-              <svg width="120" height="150" viewBox="0 0 200 250" fill="none">
-                <path
-                  d="M100,12 C115,8 132,14 143,28 C158,46 164,70 163,96 C162,122 154,146 142,167 C130,188 114,205 96,216 C78,227 58,228 42,216 C26,204 18,184 16,162 C14,140 20,118 30,98 C40,78 54,62 64,46 C74,30 80,18 100,12 Z"
-                  fill="#E8832A"
-                  opacity="0.6"
-                />
-                {PROVINCES.map((p) => (
-                  <circle
-                    key={p.id}
-                    cx={p.cx * 0.95}
-                    cy={p.cy * 0.95}
-                    r={3}
-                    fill="#F7F0E3"
-                    opacity="0.8"
-                  />
-                ))}
-              </svg>
+            <div className="flex justify-center mb-10">
+              <SriLankaMap activeProvinces={['western','central','southern','northern','eastern','north_western','north_central','uva','sabaragamuwa']} width={140} height={247} />
             </div>
             <h2
               className="reveal mb-5"
