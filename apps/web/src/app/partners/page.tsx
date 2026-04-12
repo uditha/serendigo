@@ -1,477 +1,1071 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 
-export default function PartnersPage() {
-  const [scrolled, setScrolled] = useState(false)
+const INPUT_STYLE: React.CSSProperties = {
+  width: '100%',
+  fontFamily: 'Space Grotesk, sans-serif',
+  fontSize: 15,
+  color: '#1A1A2E',
+  background: '#fff',
+  border: '1.5px solid #E5DDD0',
+  borderRadius: 12,
+  padding: '14px 18px',
+  outline: 'none',
+  boxSizing: 'border-box',
+}
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+function Field({
+  label,
+  required,
+  children,
+}: {
+  label: string
+  required?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <div>
+      <label
+        style={{
+          display: 'block',
+          fontFamily: 'Space Grotesk, sans-serif',
+          fontSize: 13,
+          fontWeight: 600,
+          color: '#1A1A2E',
+          marginBottom: 8,
+          letterSpacing: 0.3,
+        }}
+      >
+        {label}
+        {required && <span style={{ color: '#E8832A', marginLeft: 4 }}>*</span>}
+      </label>
+      {children}
+    </div>
+  )
+}
+
+export default function PartnersPage() {
+  const [familyRun, setFamilyRun] = useState<'yes' | 'no' | null>(null)
+  const [submitted, setSubmitted] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
+
+  const focusBorder = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    e.currentTarget.style.borderColor = '#E8832A'
+  }
+  const blurBorder = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    e.currentTarget.style.borderColor = '#E5DDD0'
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitted(true)
+  }
 
   return (
-    <main>
-      {/* NAV */}
+    <>
+      {/* ── Nav ─────────────────────────────────────────────────── */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? 'shadow-md bg-white/95 backdrop-blur-sm' : 'bg-transparent'
-        }`}
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-5"
+        style={{ background: 'rgba(13,11,24,0.85)', backdropFilter: 'blur(12px)' }}
       >
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="font-serif text-xl text-dark flex items-center gap-2">
-            SerendiGO <span>🌴</span>
+        <Link
+          href="/"
+          style={{ fontFamily: 'DM Serif Display, serif', fontSize: 22, color: '#F7F0E3', textDecoration: 'none' }}
+        >
+          SerendiGO <span style={{ color: '#E8832A' }}>🌴</span>
+        </Link>
+        <div className="flex items-center gap-6">
+          <Link
+            href="/"
+            style={{
+              fontFamily: 'Space Grotesk, sans-serif',
+              fontSize: 14,
+              color: '#F7F0E3',
+              opacity: 0.65,
+              textDecoration: 'none',
+            }}
+            className="hidden md:inline hover:opacity-100 transition-opacity"
+          >
+            ← Back to home
           </Link>
-          <div className="flex items-center gap-6">
-            <Link
-              href="/#experience"
-              className="font-sans text-sm transition-colors hidden md:inline"
-              style={{ color: 'rgba(26,26,46,0.7)' }}
-            >
-              For Explorers
-            </Link>
-            <Link
-              href="/"
-              className="font-sans text-sm px-4 py-2 rounded-full text-white transition-colors"
-              style={{ backgroundColor: '#1A6B7A' }}
-            >
-              Back to Home
-            </Link>
-          </div>
+          <a
+            href="#apply"
+            style={{
+              fontFamily: 'Space Grotesk, sans-serif',
+              fontSize: 14,
+              background: '#E8832A',
+              color: '#fff',
+              padding: '8px 20px',
+              borderRadius: 100,
+              textDecoration: 'none',
+            }}
+            className="hover:opacity-90 transition-opacity"
+          >
+            Apply now
+          </a>
         </div>
       </nav>
 
-      {/* HERO */}
-      <section
-        className="min-h-screen flex items-center justify-center px-6 pt-20"
-        style={{ backgroundColor: '#1A6B7A' }}
-      >
-        <div className="max-w-4xl mx-auto text-center">
+      <main>
+        {/* ── HERO ────────────────────────────────────────────────── */}
+        <section
+          className="relative min-h-screen flex items-center overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, #0D0B18 0%, #0D2B38 60%, #0D1F12 100%)' }}
+        >
+          {/* Radial accent */}
           <div
-            className="inline-block font-sans text-xs tracking-widest uppercase px-4 py-2 rounded-full mb-8"
-            style={{ backgroundColor: 'rgba(232,131,42,0.2)', color: '#E8832A' }}
-          >
-            Partner with SerendiGO
-          </div>
+            className="absolute pointer-events-none"
+            style={{
+              inset: 0,
+              background:
+                'radial-gradient(ellipse 60% 50% at 80% 50%, rgba(26,107,122,0.18) 0%, transparent 70%)',
+            }}
+          />
 
-          <h1 className="font-serif text-5xl md:text-7xl leading-tight mb-8" style={{ color: '#F7F0E3' }}>
-            Join the explorers&apos; map.
-          </h1>
-
-          <p className="font-sans text-lg md:text-xl leading-relaxed max-w-2xl mx-auto mb-10" style={{ color: '#F7F0E3', opacity: 0.8 }}>
-            SerendiGO connects your business with travellers who specifically seek out local,
-            family-run experiences. Not bus-tour crowds — curious, intentional explorers
-            who want the real Sri Lanka.
-          </p>
-
-          <a
-            href="#apply"
-            className="inline-block font-sans font-semibold text-sm px-8 py-4 rounded-full transition-opacity hover:opacity-90"
-            style={{ backgroundColor: '#E8832A', color: '#FFFFFF' }}
-          >
-            Apply to Join →
-          </a>
-        </div>
-      </section>
-
-      {/* WHAT YOU GET */}
-      <section className="py-24 px-6" style={{ backgroundColor: '#F7F0E3' }}>
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="font-sans text-xs tracking-widest uppercase mb-4" style={{ color: '#E8832A' }}>
-              What&apos;s included
-            </p>
-            <h2 className="font-serif text-4xl md:text-5xl mb-4" style={{ color: '#1A1A2E' }}>
-              Everything you need.<br />None of the complexity.
-            </h2>
-            <p className="font-sans text-base max-w-xl mx-auto" style={{ color: '#5A5A7A' }}>
-              We built SerendiGO so local businesses could benefit from digital discovery
-              without needing a tech team, a marketing budget, or a social media strategy.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {[
-              {
-                icon: '🗺️',
-                title: 'Visibility on the island map',
-                body: 'Your business appears on SerendiGO\'s interactive Sri Lanka map — discoverable by every explorer in your province. We feature you in story arcs whenever your location is relevant to a chapter.',
-                tag: 'Discovery',
-                tagColor: '#1A5F8A',
-                tagBg: 'rgba(26,95,138,0.1)',
-              },
-              {
-                icon: '📖',
-                title: 'Chapter featuring',
-                body: 'The best local businesses get woven into our story arcs directly. Your kottu stall becomes part of a Colombo food trail. Your guesthouse becomes a chapter in a Ella mountain arc. You become the story.',
-                tag: 'Story Arcs',
-                tagColor: '#614A9E',
-                tagBg: 'rgba(97,74,158,0.1)',
-              },
-              {
-                icon: '🪙',
-                title: 'QR coin redemptions',
-                body: 'Explorers earn Serendipity Coins through travel and spend them with you as real discounts. We provide a printed QR code for your counter and a clean dashboard to track every redemption in real time.',
-                tag: 'Revenue',
-                tagColor: '#B85C1A',
-                tagBg: 'rgba(184,92,26,0.1)',
-              },
-              {
-                icon: '🏠',
-                title: 'Family-run badge',
-                body: 'Independently owned and operated? We give you a family-run badge and sort you above chain businesses in every search result, nearby list, and discovery feed. Small will always come first on SerendiGO.',
-                tag: 'Recognition',
-                tagColor: '#2D6E4E',
-                tagBg: 'rgba(45,110,78,0.1)',
-              },
-            ].map((feature) => (
-              <article key={feature.title} className="bg-white rounded-2xl p-8 shadow-sm border border-black/5">
-                <div className="text-4xl mb-5">{feature.icon}</div>
-                <h3 className="font-serif text-2xl mb-3" style={{ color: '#1A1A2E' }}>
-                  {feature.title}
-                </h3>
-                <p className="font-sans text-sm leading-relaxed mb-6" style={{ color: '#5A5A7A' }}>
-                  {feature.body}
-                </p>
+          <div className="relative z-10 px-8 md:px-20 max-w-5xl pt-36 pb-24">
+            {/* Stat pills */}
+            <div className="flex flex-wrap gap-3 mb-10">
+              {[
+                { label: '66+ active partners', icon: '🏠' },
+                { label: 'Launching 2026', icon: '🚀' },
+              ].map((pill) => (
                 <span
-                  className="font-sans text-xs tracking-wide uppercase font-semibold px-3 py-1 rounded-full"
-                  style={{ color: feature.tagColor, backgroundColor: feature.tagBg }}
+                  key={pill.label}
+                  style={{
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    letterSpacing: 1,
+                    color: '#E8832A',
+                    background: 'rgba(232,131,42,0.12)',
+                    border: '1px solid rgba(232,131,42,0.3)',
+                    padding: '6px 16px',
+                    borderRadius: 100,
+                  }}
                 >
-                  {feature.tag}
+                  {pill.icon} {pill.label}
                 </span>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
+              ))}
+            </div>
 
-      {/* HOW IT WORKS FOR PARTNERS */}
-      <section className="py-24 px-6" style={{ backgroundColor: '#1A1A2E' }}>
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="font-sans text-xs tracking-widest uppercase mb-4" style={{ color: '#E8832A' }}>
+            <h1
+              style={{
+                fontFamily: 'DM Serif Display, serif',
+                fontSize: 'clamp(48px, 7vw, 88px)',
+                color: '#F7F0E3',
+                lineHeight: 1.05,
+                marginBottom: 28,
+              }}
+            >
+              Grow with people
+              <br />
+              <span style={{ color: '#E8832A' }}>who travel with purpose.</span>
+            </h1>
+
+            <p
+              style={{
+                fontFamily: 'Space Grotesk, sans-serif',
+                fontSize: 'clamp(16px, 1.8vw, 20px)',
+                color: '#F7F0E3',
+                opacity: 0.7,
+                maxWidth: 580,
+                lineHeight: 1.75,
+                marginBottom: 44,
+              }}
+            >
+              SerendiGO connects your business with travellers who specifically seek out local,
+              family-run experiences — and rewards them with coins to spend with you.
+            </p>
+
+            <div className="flex flex-wrap gap-4">
+              <a
+                href="#apply"
+                className="pulse-cta"
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontWeight: 700,
+                  fontSize: 16,
+                  background: '#E8832A',
+                  color: '#fff',
+                  padding: '16px 36px',
+                  borderRadius: 100,
+                  textDecoration: 'none',
+                }}
+              >
+                Apply to join SerendiGO →
+              </a>
+              <a
+                href="#how-it-works"
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 15,
+                  color: '#F7F0E3',
+                  opacity: 0.6,
+                  padding: '16px 28px',
+                  border: '1px solid rgba(247,240,227,0.2)',
+                  borderRadius: 100,
+                  textDecoration: 'none',
+                }}
+                className="hover:opacity-100 transition-opacity"
+              >
+                See how it works
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* ── BENEFIT 1: VISIBILITY ───────────────────────────────── */}
+        <section className="py-28 px-8 md:px-20" style={{ background: '#0D1526' }}>
+          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <p
+                className="reveal mb-4"
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 11,
+                  letterSpacing: 5,
+                  color: '#E8832A',
+                  textTransform: 'uppercase',
+                }}
+              >
+                01 — Visibility
+              </p>
+              <h2
+                className="reveal reveal-delay-1 mb-6"
+                style={{
+                  fontFamily: 'DM Serif Display, serif',
+                  fontSize: 'clamp(32px, 4vw, 52px)',
+                  color: '#F7F0E3',
+                  lineHeight: 1.1,
+                }}
+              >
+                Pinned on the island.
+                <br />
+                Curated by hand.
+              </h2>
+              <p
+                className="reveal reveal-delay-2"
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 17,
+                  color: '#F7F0E3',
+                  opacity: 0.65,
+                  lineHeight: 1.8,
+                }}
+              >
+                Your business appears on SerendiGO&apos;s interactive Sri Lanka map — discoverable
+                by every explorer in your province. We feature you in story arcs whenever your
+                location is relevant to a chapter. No algorithm games, no bidding wars. We curate
+                every listing by hand.
+              </p>
+            </div>
+
+            {/* Map pin graphic */}
+            <div className="reveal flex items-center justify-center">
+              <div style={{ position: 'relative', width: 200, height: 200 }}>
+                {/* Glow rings */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: 160,
+                    height: 160,
+                    borderRadius: '50%',
+                    background: 'rgba(232,131,42,0.06)',
+                    border: '1px solid rgba(232,131,42,0.15)',
+                    animation: 'pulseRing 3s ease-out infinite',
+                  }}
+                />
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: 110,
+                    height: 110,
+                    borderRadius: '50%',
+                    background: 'rgba(232,131,42,0.08)',
+                    border: '1px solid rgba(232,131,42,0.2)',
+                    animation: 'pulseRing 3s ease-out infinite 0.8s',
+                  }}
+                />
+                {/* Teardrop pin */}
+                <div className="float-pin" style={{ position: 'absolute', top: '20%', left: '50%', transform: 'translateX(-50%)' }}>
+                  <svg width="56" height="72" viewBox="0 0 56 72" fill="none">
+                    <path
+                      d="M28 2 C14 2 4 12 4 26 C4 44 28 70 28 70 C28 70 52 44 52 26 C52 12 42 2 28 2 Z"
+                      fill="#E8832A"
+                      style={{ filter: 'drop-shadow(0 0 12px rgba(232,131,42,0.8))' }}
+                    />
+                    <circle cx="28" cy="26" r="8" fill="white" opacity="0.9" />
+                  </svg>
+                </div>
+                <p
+                  style={{
+                    position: 'absolute',
+                    bottom: 20,
+                    left: 0,
+                    right: 0,
+                    textAlign: 'center',
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    fontSize: 11,
+                    letterSpacing: 2,
+                    color: 'rgba(247,240,227,0.35)',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Your location
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── BENEFIT 2: COIN REDEMPTIONS ─────────────────────────── */}
+        <section className="py-28 px-8 md:px-20" style={{ background: '#08070F' }}>
+          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+            {/* QR mock graphic */}
+            <div className="reveal flex items-center justify-center order-2 md:order-1">
+              <div
+                style={{
+                  background: 'rgba(247,240,227,0.04)',
+                  border: '1px solid rgba(247,240,227,0.1)',
+                  borderRadius: 20,
+                  padding: 32,
+                  textAlign: 'center',
+                }}
+              >
+                {/* CSS QR code grid */}
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(9, 1fr)',
+                    gap: 3,
+                    width: 160,
+                    marginBottom: 16,
+                  }}
+                >
+                  {Array.from({ length: 81 }).map((_, i) => {
+                    // Create a QR-like pattern (corners + random middle)
+                    const row = Math.floor(i / 9)
+                    const col = i % 9
+                    const isCornerBlock =
+                      (row < 3 && col < 3) ||
+                      (row < 3 && col > 5) ||
+                      (row > 5 && col < 3)
+                    const isCornerInner =
+                      (row === 1 && col === 1) ||
+                      (row === 1 && col === 7) ||
+                      (row === 7 && col === 1)
+                    const filled = isCornerBlock && !isCornerInner
+                      ? true
+                      : !isCornerBlock && Math.random() > 0.5
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          width: '100%',
+                          aspectRatio: '1',
+                          background: filled ? '#F7F0E3' : 'transparent',
+                          borderRadius: 1,
+                          opacity: filled ? 0.85 : 0,
+                        }}
+                      />
+                    )
+                  })}
+                </div>
+                <p
+                  style={{
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    fontSize: 11,
+                    letterSpacing: 2,
+                    color: 'rgba(247,240,227,0.35)',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  serendigo://redeem/your-id
+                </p>
+                <div
+                  style={{
+                    marginTop: 12,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: 'rgba(232,131,42,0.12)',
+                    border: '1px solid rgba(232,131,42,0.3)',
+                    padding: '6px 14px',
+                    borderRadius: 100,
+                  }}
+                >
+                  <span style={{ fontSize: 14 }}>🪙</span>
+                  <span
+                    style={{
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      fontSize: 12,
+                      color: '#E8832A',
+                      fontWeight: 700,
+                    }}
+                  >
+                    Printed once. Works forever.
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="order-1 md:order-2">
+              <p
+                className="reveal mb-4"
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 11,
+                  letterSpacing: 5,
+                  color: '#E8832A',
+                  textTransform: 'uppercase',
+                }}
+              >
+                02 — Coin Redemptions
+              </p>
+              <h2
+                className="reveal reveal-delay-1 mb-6"
+                style={{
+                  fontFamily: 'DM Serif Display, serif',
+                  fontSize: 'clamp(32px, 4vw, 52px)',
+                  color: '#F7F0E3',
+                  lineHeight: 1.1,
+                }}
+              >
+                One QR code.
+                <br />
+                Real discounts.
+              </h2>
+              <p
+                className="reveal reveal-delay-2"
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 17,
+                  color: '#F7F0E3',
+                  opacity: 0.65,
+                  lineHeight: 1.8,
+                }}
+              >
+                Explorers earn Serendipity Coins as they travel and spend them with you as genuine
+                discounts. We send you a printed QR code for your counter and a clean admin dashboard
+                to track every redemption in real time. One QR. Zero ongoing complexity.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── BENEFIT 3: FAMILY-RUN ───────────────────────────────── */}
+        <section className="py-28 px-8 md:px-20" style={{ background: '#0D2B38' }}>
+          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <p
+                className="reveal mb-4"
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 11,
+                  letterSpacing: 5,
+                  color: '#E8832A',
+                  textTransform: 'uppercase',
+                }}
+              >
+                03 — Family-run badge
+              </p>
+              <h2
+                className="reveal reveal-delay-1 mb-6"
+                style={{
+                  fontFamily: 'DM Serif Display, serif',
+                  fontSize: 'clamp(32px, 4vw, 52px)',
+                  color: '#F7F0E3',
+                  lineHeight: 1.1,
+                }}
+              >
+                Small should always
+                <br />
+                come first.
+              </h2>
+              <p
+                className="reveal reveal-delay-2"
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 17,
+                  color: '#F7F0E3',
+                  opacity: 0.65,
+                  lineHeight: 1.8,
+                }}
+              >
+                Independently owned? We give you the family-run badge and sort you above chain
+                businesses in every search result, nearby list, and discovery feed. No extra cost.
+                No extra effort. Just recognition — because the island&apos;s soul lives in the
+                people who give it everything.
+              </p>
+            </div>
+
+            {/* Family-run badge graphic */}
+            <div className="reveal flex items-center justify-center">
+              <div style={{ textAlign: 'center' }}>
+                <div
+                  className="float-pin"
+                  style={{
+                    display: 'inline-flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 16,
+                    background: 'linear-gradient(135deg, #1A3322, #1F3D2A)',
+                    border: '2px solid rgba(45,110,78,0.4)',
+                    borderRadius: 28,
+                    padding: '40px 48px',
+                  }}
+                >
+                  <span style={{ fontSize: 64 }}>🏠</span>
+                  <div
+                    style={{
+                      background: 'rgba(232,131,42,0.15)',
+                      border: '1.5px solid rgba(232,131,42,0.4)',
+                      borderRadius: 100,
+                      padding: '8px 20px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: 'Space Grotesk, sans-serif',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        letterSpacing: 1,
+                        color: '#E8832A',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Family run
+                    </span>
+                  </div>
+                  <p
+                    style={{
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      fontSize: 13,
+                      color: 'rgba(247,240,227,0.5)',
+                      marginTop: 4,
+                    }}
+                  >
+                    Sorted first. Always.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── HOW IT WORKS ────────────────────────────────────────── */}
+        <section
+          id="how-it-works"
+          className="py-28 px-8 md:px-20"
+          style={{ background: '#0D0B18' }}
+        >
+          <div className="max-w-6xl mx-auto">
+            <p
+              className="reveal mb-4 text-center"
+              style={{
+                fontFamily: 'Space Grotesk, sans-serif',
+                fontSize: 11,
+                letterSpacing: 5,
+                color: '#E8832A',
+                textTransform: 'uppercase',
+              }}
+            >
               The process
             </p>
-            <h2 className="font-serif text-4xl md:text-5xl mb-4" style={{ color: '#F7F0E3' }}>
+            <h2
+              className="reveal reveal-delay-1 mb-20 text-center"
+              style={{
+                fontFamily: 'DM Serif Display, serif',
+                fontSize: 'clamp(30px, 4vw, 48px)',
+                color: '#F7F0E3',
+              }}
+            >
               Three steps to going live.
             </h2>
-            <p className="font-sans text-base max-w-xl mx-auto" style={{ color: '#F7F0E3', opacity: 0.6 }}>
-              We keep it personal. No automated approval queues, no anonymous onboarding.
-              Every partner on SerendiGO has been reviewed by a real human.
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                step: '01',
-                title: 'Apply online',
-                body: 'Fill in the short form below. Tell us about your business, your location, and what makes you special. It takes five minutes.',
-                icon: '✏️',
-              },
-              {
-                step: '02',
-                title: 'We visit & verify',
-                body: 'Our team reviews every application personally. For family-run businesses, we may arrange a brief visit or call to understand your story and how best to feature you.',
-                icon: '🤝',
-              },
-              {
-                step: '03',
-                title: 'You go live on the map',
-                body: 'Once approved, your business appears on the SerendiGO island map. We send your QR redemption code, and explorers can start finding you immediately.',
-                icon: '🗺️',
-              },
-            ].map((step) => (
-              <div key={step.step} className="text-center">
-                <div className="text-4xl mb-4">{step.icon}</div>
-                <p className="font-sans text-xs tracking-widest font-semibold mb-3" style={{ color: '#E8832A' }}>
-                  {step.step}
-                </p>
-                <h3 className="font-serif text-xl mb-4" style={{ color: '#F7F0E3' }}>
-                  {step.title}
-                </h3>
-                <p className="font-sans text-sm leading-relaxed" style={{ color: '#F7F0E3', opacity: 0.6 }}>
-                  {step.body}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* APPLICATION FORM */}
-      <section id="apply" className="py-24 px-6" style={{ backgroundColor: '#FDFAF5' }}>
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="font-sans text-xs tracking-widest uppercase mb-4" style={{ color: '#E8832A' }}>
-              Apply now
-            </p>
-            <h2 className="font-serif text-4xl md:text-5xl mb-4" style={{ color: '#1A1A2E' }}>
-              Tell us about<br />your business.
-            </h2>
-            <p className="font-sans text-sm" style={{ color: '#5A5A7A' }}>
-              We review every application personally and will be in touch within 3 business days.
-            </p>
-          </div>
-
-          <form action="#" className="space-y-6">
-            {/* Business name */}
-            <div>
-              <label className="block font-sans text-sm font-semibold mb-2" style={{ color: '#1A1A2E' }}>
-                Business name <span style={{ color: '#E8832A' }}>*</span>
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Amara Family Guesthouse"
-                className="w-full px-4 py-3 rounded-xl border font-sans text-sm outline-none transition-all"
+            {/* Timeline */}
+            <div className="grid md:grid-cols-3 gap-0 relative">
+              {/* Connecting line */}
+              <div
+                className="hidden md:block absolute"
                 style={{
-                  borderColor: 'rgba(26,26,46,0.15)',
-                  backgroundColor: '#FFFFFF',
-                  color: '#1A1A2E',
+                  top: 32,
+                  left: '16.66%',
+                  right: '16.66%',
+                  height: 1,
+                  background: 'linear-gradient(to right, rgba(232,131,42,0.3), rgba(232,131,42,0.3))',
                 }}
-                onFocus={(e) => (e.target.style.borderColor = '#E8832A')}
-                onBlur={(e) => (e.target.style.borderColor = 'rgba(26,26,46,0.15)')}
               />
-            </div>
 
-            {/* Category + Province row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block font-sans text-sm font-semibold mb-2" style={{ color: '#1A1A2E' }}>
-                  Category <span style={{ color: '#E8832A' }}>*</span>
-                </label>
-                <select
-                  className="w-full px-4 py-3 rounded-xl border font-sans text-sm outline-none appearance-none cursor-pointer"
-                  style={{
-                    borderColor: 'rgba(26,26,46,0.15)',
-                    backgroundColor: '#FFFFFF',
-                    color: '#1A1A2E',
-                  }}
-                >
-                  <option value="">Select category</option>
-                  <option value="food">Food &amp; Drink</option>
-                  <option value="stay">Accommodation</option>
-                  <option value="experience">Experience / Activity</option>
-                  <option value="shop">Shop / Retail</option>
-                  <option value="transport">Transport</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-sans text-sm font-semibold mb-2" style={{ color: '#1A1A2E' }}>
-                  Province <span style={{ color: '#E8832A' }}>*</span>
-                </label>
-                <select
-                  className="w-full px-4 py-3 rounded-xl border font-sans text-sm outline-none appearance-none cursor-pointer"
-                  style={{
-                    borderColor: 'rgba(26,26,46,0.15)',
-                    backgroundColor: '#FFFFFF',
-                    color: '#1A1A2E',
-                  }}
-                >
-                  <option value="">Select province</option>
-                  <option value="western">Western</option>
-                  <option value="central">Central</option>
-                  <option value="southern">Southern</option>
-                  <option value="northern">Northern</option>
-                  <option value="eastern">Eastern</option>
-                  <option value="north_western">North Western</option>
-                  <option value="north_central">North Central</option>
-                  <option value="uva">Uva</option>
-                  <option value="sabaragamuwa">Sabaragamuwa</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Contact name + Email row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block font-sans text-sm font-semibold mb-2" style={{ color: '#1A1A2E' }}>
-                  Your name <span style={{ color: '#E8832A' }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Dilani Perera"
-                  className="w-full px-4 py-3 rounded-xl border font-sans text-sm outline-none transition-all"
-                  style={{
-                    borderColor: 'rgba(26,26,46,0.15)',
-                    backgroundColor: '#FFFFFF',
-                    color: '#1A1A2E',
-                  }}
-                  onFocus={(e) => (e.target.style.borderColor = '#E8832A')}
-                  onBlur={(e) => (e.target.style.borderColor = 'rgba(26,26,46,0.15)')}
-                />
-              </div>
-
-              <div>
-                <label className="block font-sans text-sm font-semibold mb-2" style={{ color: '#1A1A2E' }}>
-                  Email address <span style={{ color: '#E8832A' }}>*</span>
-                </label>
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  className="w-full px-4 py-3 rounded-xl border font-sans text-sm outline-none transition-all"
-                  style={{
-                    borderColor: 'rgba(26,26,46,0.15)',
-                    backgroundColor: '#FFFFFF',
-                    color: '#1A1A2E',
-                  }}
-                  onFocus={(e) => (e.target.style.borderColor = '#E8832A')}
-                  onBlur={(e) => (e.target.style.borderColor = 'rgba(26,26,46,0.15)')}
-                />
-              </div>
-            </div>
-
-            {/* Phone / WhatsApp */}
-            <div>
-              <label className="block font-sans text-sm font-semibold mb-2" style={{ color: '#1A1A2E' }}>
-                Phone / WhatsApp
-              </label>
-              <input
-                type="tel"
-                placeholder="+94 77 123 4567"
-                className="w-full px-4 py-3 rounded-xl border font-sans text-sm outline-none transition-all"
-                style={{
-                  borderColor: 'rgba(26,26,46,0.15)',
-                  backgroundColor: '#FFFFFF',
-                  color: '#1A1A2E',
-                }}
-                onFocus={(e) => (e.target.style.borderColor = '#E8832A')}
-                onBlur={(e) => (e.target.style.borderColor = 'rgba(26,26,46,0.15)')}
-              />
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="block font-sans text-sm font-semibold mb-2" style={{ color: '#1A1A2E' }}>
-                Tell us about your business <span style={{ color: '#E8832A' }}>*</span>
-              </label>
-              <textarea
-                rows={5}
-                placeholder="What do you offer? What makes your place special? What kind of traveller would love it?"
-                className="w-full px-4 py-3 rounded-xl border font-sans text-sm outline-none transition-all resize-none"
-                style={{
-                  borderColor: 'rgba(26,26,46,0.15)',
-                  backgroundColor: '#FFFFFF',
-                  color: '#1A1A2E',
-                }}
-                onFocus={(e) => (e.target.style.borderColor = '#E8832A')}
-                onBlur={(e) => (e.target.style.borderColor = 'rgba(26,26,46,0.15)')}
-              />
-            </div>
-
-            {/* Family-run radio */}
-            <div>
-              <label className="block font-sans text-sm font-semibold mb-3" style={{ color: '#1A1A2E' }}>
-                Is your business family-run or independently owned?{' '}
-                <span style={{ color: '#E8832A' }}>*</span>
-              </label>
-              <p className="font-sans text-xs mb-4" style={{ color: '#5A5A7A' }}>
-                Family-run means you own and operate it yourself — not a franchise, chain, or corporate-backed property.
-              </p>
-              <div className="flex gap-6">
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <input
-                    type="radio"
-                    name="family_run"
-                    value="yes"
-                    className="w-4 h-4 cursor-pointer accent-amber"
-                    style={{ accentColor: '#E8832A' }}
-                  />
-                  <span className="font-sans text-sm" style={{ color: '#1A1A2E' }}>
-                    Yes — family-run 🏠
-                  </span>
-                </label>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="family_run"
-                    value="no"
-                    className="w-4 h-4 cursor-pointer"
-                    style={{ accentColor: '#E8832A' }}
-                  />
-                  <span className="font-sans text-sm" style={{ color: '#1A1A2E' }}>
-                    No
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            {/* Submit */}
-            <div className="pt-4">
-              <button
-                type="submit"
-                className="w-full font-sans font-semibold text-sm py-4 rounded-full text-white transition-opacity hover:opacity-90"
-                style={{ backgroundColor: '#E8832A' }}
-              >
-                Apply to join SerendiGO
-              </button>
-              <p className="font-sans text-xs text-center mt-4" style={{ color: '#5A5A7A' }}>
-                We review every application personally and will be in touch within 3 business days.
-              </p>
-            </div>
-          </form>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="py-16 px-6" style={{ backgroundColor: '#1A1A2E' }}>
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
-          <div>
-            <p className="font-serif text-xl mb-3" style={{ color: '#F7F0E3' }}>
-              SerendiGO 🌴
-            </p>
-            <p className="font-sans text-sm mb-4" style={{ color: '#F7F0E3', opacity: 0.5 }}>
-              The living guide to Sri Lanka
-            </p>
-            <p className="font-sans text-xs" style={{ color: '#F7F0E3', opacity: 0.35 }}>
-              Made with ❤️ for Sri Lanka
-            </p>
-          </div>
-
-          <div>
-            <p className="font-sans text-xs tracking-widest uppercase mb-6 font-semibold" style={{ color: '#E8832A' }}>
-              Links
-            </p>
-            <ul className="space-y-3">
               {[
-                { label: 'For Explorers', href: '/#experience' },
-                { label: 'For Partners', href: '/partners' },
-                { label: 'Download', href: '#' },
-                { label: 'About', href: '#' },
-              ].map((link) => (
-                <li key={link.label}>
-                  <Link
-                    href={link.href}
-                    className="font-sans text-sm transition-opacity hover:opacity-100"
-                    style={{ color: '#F7F0E3', opacity: 0.55 }}
+                {
+                  num: '01',
+                  icon: '✏️',
+                  title: 'Apply online',
+                  body: 'Fill in the short form below. Tell us about your business, what makes you special, and how you\'d like to be featured. It takes five minutes.',
+                },
+                {
+                  num: '02',
+                  icon: '🤝',
+                  title: 'We review & verify',
+                  body: 'Every application is reviewed by a real person. For family-run businesses we may arrange a brief call to understand your story and how best to feature you.',
+                },
+                {
+                  num: '03',
+                  icon: '🗺️',
+                  title: 'You go live on the map',
+                  body: 'Once approved, you\'re on the island map. We send your QR redemption code and explorers can start finding you immediately.',
+                },
+              ].map((step, i) => (
+                <div
+                  key={step.num}
+                  className="reveal text-center px-8"
+                  style={{ transitionDelay: `${i * 0.15}s` }}
+                >
+                  {/* Number circle */}
+                  <div
+                    style={{
+                      width: 64,
+                      height: 64,
+                      borderRadius: '50%',
+                      background: 'rgba(232,131,42,0.12)',
+                      border: '2px solid rgba(232,131,42,0.4)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 24px',
+                    }}
                   >
-                    {link.label}
-                  </Link>
-                </li>
+                    <span style={{ fontSize: 24 }}>{step.icon}</span>
+                  </div>
+                  <p
+                    style={{
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      fontSize: 11,
+                      letterSpacing: 3,
+                      color: '#E8832A',
+                      textTransform: 'uppercase',
+                      marginBottom: 12,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {step.num}
+                  </p>
+                  <h3
+                    style={{
+                      fontFamily: 'DM Serif Display, serif',
+                      fontSize: 24,
+                      color: '#F7F0E3',
+                      marginBottom: 12,
+                    }}
+                  >
+                    {step.title}
+                  </h3>
+                  <p
+                    style={{
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      fontSize: 14,
+                      color: '#F7F0E3',
+                      opacity: 0.55,
+                      lineHeight: 1.7,
+                    }}
+                  >
+                    {step.body}
+                  </p>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
+        </section>
 
-          <div>
-            <p className="font-sans text-xs tracking-widest uppercase mb-6 font-semibold" style={{ color: '#E8832A' }}>
-              Contact
-            </p>
-            <a
-              href="mailto:hello@serendigo.app"
-              className="font-sans text-sm block mb-6 transition-opacity hover:opacity-100"
-              style={{ color: '#F7F0E3', opacity: 0.55 }}
-            >
-              hello@serendigo.app
-            </a>
-            <p className="font-sans text-xs" style={{ color: '#F7F0E3', opacity: 0.3 }}>
-              &copy; 2026 SerendiGO
-            </p>
+        {/* ── APPLICATION FORM ─────────────────────────────────────── */}
+        <section
+          id="apply"
+          className="py-28 px-8 md:px-20"
+          style={{ background: '#F7F0E3' }}
+        >
+          <div className="max-w-2xl mx-auto">
+            {submitted ? (
+              <div className="text-center py-16">
+                <div style={{ fontSize: 64, marginBottom: 20 }}>🌴</div>
+                <h2
+                  style={{
+                    fontFamily: 'DM Serif Display, serif',
+                    fontSize: 40,
+                    color: '#1A1A2E',
+                    marginBottom: 16,
+                  }}
+                >
+                  Application received!
+                </h2>
+                <p
+                  style={{
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    fontSize: 16,
+                    color: '#5A5A7A',
+                    lineHeight: 1.7,
+                    marginBottom: 32,
+                  }}
+                >
+                  Thank you for applying to join SerendiGO. We review every application
+                  personally and will be in touch within 3 working days.
+                </p>
+                <Link
+                  href="/"
+                  style={{
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    fontWeight: 600,
+                    fontSize: 15,
+                    background: '#E8832A',
+                    color: '#fff',
+                    padding: '14px 32px',
+                    borderRadius: 100,
+                    textDecoration: 'none',
+                  }}
+                >
+                  Back to home
+                </Link>
+              </div>
+            ) : (
+              <>
+                <div className="mb-12">
+                  <p
+                    style={{
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      fontSize: 11,
+                      letterSpacing: 5,
+                      color: '#E8832A',
+                      textTransform: 'uppercase',
+                      marginBottom: 12,
+                    }}
+                  >
+                    Apply now
+                  </p>
+                  <h2
+                    style={{
+                      fontFamily: 'DM Serif Display, serif',
+                      fontSize: 'clamp(32px, 4vw, 48px)',
+                      color: '#1A1A2E',
+                      marginBottom: 12,
+                      lineHeight: 1.1,
+                    }}
+                  >
+                    Tell us about
+                    <br />
+                    your business.
+                  </h2>
+                  <p
+                    style={{
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      fontSize: 15,
+                      color: '#5A5A7A',
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    We review every application personally and will be in touch within 3 working days.
+                  </p>
+                </div>
+
+                <form ref={formRef} onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+                  {/* Business name */}
+                  <Field label="Business name" required>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Amara Family Guesthouse"
+                      style={INPUT_STYLE}
+                      onFocus={focusBorder}
+                      onBlur={blurBorder}
+                    />
+                  </Field>
+
+                  {/* Category + Province */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <Field label="Category" required>
+                      <select
+                        required
+                        style={{ ...INPUT_STYLE, cursor: 'pointer', appearance: 'none' }}
+                        onFocus={focusBorder}
+                        onBlur={blurBorder}
+                      >
+                        <option value="">Select category</option>
+                        <option value="food">Food &amp; Drink</option>
+                        <option value="stay">Accommodation</option>
+                        <option value="experience">Experience / Activity</option>
+                        <option value="shop">Shop / Retail</option>
+                        <option value="transport">Transport</option>
+                      </select>
+                    </Field>
+                    <Field label="Province" required>
+                      <select
+                        required
+                        style={{ ...INPUT_STYLE, cursor: 'pointer', appearance: 'none' }}
+                        onFocus={focusBorder}
+                        onBlur={blurBorder}
+                      >
+                        <option value="">Select province</option>
+                        <option value="western">Western</option>
+                        <option value="central">Central</option>
+                        <option value="southern">Southern</option>
+                        <option value="northern">Northern</option>
+                        <option value="eastern">Eastern</option>
+                        <option value="north_western">North Western</option>
+                        <option value="north_central">North Central</option>
+                        <option value="uva">Uva</option>
+                        <option value="sabaragamuwa">Sabaragamuwa</option>
+                      </select>
+                    </Field>
+                  </div>
+
+                  {/* Contact name + Email */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <Field label="Contact name" required>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Dilani Perera"
+                        style={INPUT_STYLE}
+                        onFocus={focusBorder}
+                        onBlur={blurBorder}
+                      />
+                    </Field>
+                    <Field label="Email address" required>
+                      <input
+                        type="email"
+                        required
+                        placeholder="you@example.com"
+                        style={INPUT_STYLE}
+                        onFocus={focusBorder}
+                        onBlur={blurBorder}
+                      />
+                    </Field>
+                  </div>
+
+                  {/* Phone / WhatsApp */}
+                  <Field label="Phone / WhatsApp">
+                    <input
+                      type="tel"
+                      placeholder="+94 77 123 4567"
+                      style={INPUT_STYLE}
+                      onFocus={focusBorder}
+                      onBlur={blurBorder}
+                    />
+                  </Field>
+
+                  {/* Description */}
+                  <Field label="Tell us about your business" required>
+                    <textarea
+                      required
+                      rows={4}
+                      placeholder="What do you offer? What makes your place special? What kind of traveller would love it?"
+                      style={{ ...INPUT_STYLE, resize: 'none' }}
+                      onFocus={focusBorder}
+                      onBlur={blurBorder}
+                    />
+                  </Field>
+
+                  {/* Family-run toggle */}
+                  <Field label="Are you family-run / independently owned?" required>
+                    <p
+                      style={{
+                        fontFamily: 'Space Grotesk, sans-serif',
+                        fontSize: 12,
+                        color: '#5A5A7A',
+                        marginBottom: 12,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      Family-run means you own and operate it yourself — not a franchise, chain, or
+                      corporate-backed property.
+                    </p>
+                    <div className="flex flex-wrap gap-3">
+                      {[
+                        { value: 'yes' as const, label: 'Yes, we are 🏠' },
+                        { value: 'no' as const, label: "We're a larger operation" },
+                      ].map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setFamilyRun(opt.value)}
+                          style={{
+                            fontFamily: 'Space Grotesk, sans-serif',
+                            fontSize: 14,
+                            fontWeight: familyRun === opt.value ? 700 : 500,
+                            padding: '12px 24px',
+                            borderRadius: 100,
+                            border: familyRun === opt.value
+                              ? '2px solid #E8832A'
+                              : '1.5px solid #E5DDD0',
+                            background: familyRun === opt.value
+                              ? 'rgba(232,131,42,0.08)'
+                              : '#fff',
+                            color: familyRun === opt.value ? '#E8832A' : '#5A5A7A',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </Field>
+
+                  {/* Submit */}
+                  <div style={{ paddingTop: 8 }}>
+                    <button
+                      type="submit"
+                      style={{
+                        width: '100%',
+                        fontFamily: 'Space Grotesk, sans-serif',
+                        fontWeight: 700,
+                        fontSize: 16,
+                        background: '#E8832A',
+                        color: '#fff',
+                        padding: '16px',
+                        borderRadius: 100,
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: 'opacity 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.88')}
+                      onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+                    >
+                      Apply to join SerendiGO →
+                    </button>
+                    <p
+                      style={{
+                        fontFamily: 'Space Grotesk, sans-serif',
+                        fontSize: 12,
+                        color: '#5A5A7A',
+                        textAlign: 'center',
+                        marginTop: 16,
+                        opacity: 0.7,
+                      }}
+                    >
+                      We review every application personally and will be in touch within 3 working days.
+                    </p>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
-        </div>
-      </footer>
-    </main>
+        </section>
+
+        {/* ── FOOTER ──────────────────────────────────────────────── */}
+        <footer
+          className="py-16 px-8 md:px-20"
+          style={{ background: '#08070F', borderTop: '1px solid rgba(247,240,227,0.06)' }}
+        >
+          <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-12">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <svg width="32" height="40" viewBox="0 0 200 250" fill="none">
+                  <path
+                    d="M100,12 C115,8 132,14 143,28 C158,46 164,70 163,96 C162,122 154,146 142,167 C130,188 114,205 96,216 C78,227 58,228 42,216 C26,204 18,184 16,162 C14,140 20,118 30,98 C40,78 54,62 64,46 C74,30 80,18 100,12 Z"
+                    stroke="rgba(247,240,227,0.3)"
+                    strokeWidth="3"
+                    fill="none"
+                  />
+                </svg>
+                <span
+                  style={{
+                    fontFamily: 'DM Serif Display, serif',
+                    fontSize: 20,
+                    color: '#F7F0E3',
+                  }}
+                >
+                  SerendiGO
+                </span>
+              </div>
+              <p
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 13,
+                  color: 'rgba(247,240,227,0.4)',
+                  lineHeight: 1.7,
+                }}
+              >
+                The living guide to Sri Lanka.
+                <br />
+                Made with ❤️ for the island.
+              </p>
+            </div>
+            <div>
+              <p
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 11,
+                  letterSpacing: 3,
+                  color: 'rgba(247,240,227,0.3)',
+                  textTransform: 'uppercase',
+                  marginBottom: 16,
+                }}
+              >
+                Explore
+              </p>
+              {['For Explorers', 'For Partners', 'Download', 'About'].map((l) => (
+                <Link
+                  key={l}
+                  href={l === 'For Partners' ? '/partners' : '/'}
+                  className="block mb-3"
+                  style={{
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    fontSize: 14,
+                    color: 'rgba(247,240,227,0.55)',
+                    textDecoration: 'none',
+                  }}
+                >
+                  {l}
+                </Link>
+              ))}
+            </div>
+            <div>
+              <p
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 11,
+                  letterSpacing: 3,
+                  color: 'rgba(247,240,227,0.3)',
+                  textTransform: 'uppercase',
+                  marginBottom: 16,
+                }}
+              >
+                Contact
+              </p>
+              <a
+                href="mailto:hello@serendigo.app"
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 14,
+                  color: '#E8832A',
+                  textDecoration: 'none',
+                }}
+              >
+                hello@serendigo.app
+              </a>
+              <p
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 12,
+                  color: 'rgba(247,240,227,0.25)',
+                  marginTop: 24,
+                }}
+              >
+                © 2026 SerendiGO
+              </p>
+            </div>
+          </div>
+        </footer>
+      </main>
+    </>
   )
 }

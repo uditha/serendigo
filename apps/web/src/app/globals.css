@@ -5,9 +5,148 @@
 :root {
   --font-serif: 'DM Serif Display', serif;
   --font-sans: 'Space Grotesk', sans-serif;
+  --sky: #0D0B18;
 }
 
 html { scroll-behavior: smooth; }
+body { background-color: var(--sky); transition: background-color 0.1s linear; }
 
-.font-serif { font-family: var(--font-serif); }
-.font-sans  { font-family: var(--font-sans); }
+/* ── Keyframes ──────────────────────────────────────────────────────── */
+
+@keyframes drawPath {
+  from { stroke-dashoffset: 1200; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; }
+  50%       { opacity: 0.9; }
+}
+
+@keyframes floatPin {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+@keyframes pulseRing {
+  0%   { box-shadow: 0 0 0 0 rgba(232,131,42,0.5); }
+  70%  { box-shadow: 0 0 0 14px rgba(232,131,42,0); }
+  100% { box-shadow: 0 0 0 0 rgba(232,131,42,0); }
+}
+
+@keyframes orbit {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes counterOrbit {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes stampReveal {
+  from { opacity: 0.15; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes scrollIndicator {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50%       { transform: translateY(10px); opacity: 0.3; }
+}
+
+/* ── Reveal on scroll ───────────────────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.9s ease, transform 0.9s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.15s; }
+.reveal-delay-2 { transition-delay: 0.30s; }
+.reveal-delay-3 { transition-delay: 0.45s; }
+.reveal-delay-4 { transition-delay: 0.60s; }
+
+/* ── Preloader ──────────────────────────────────────────────────────── */
+#preloader {
+  position: fixed; inset: 0; z-index: 100;
+  background: #0D0B18;
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity 0.6s ease;
+}
+#preloader.hidden { opacity: 0; pointer-events: none; }
+#preloader svg path {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  animation: drawPath 1.4s ease forwards 0.2s;
+}
+
+/* ── Stars ──────────────────────────────────────────────────────────── */
+.star {
+  position: absolute;
+  border-radius: 50%;
+  background: white;
+  animation: twinkle var(--dur, 3s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+/* ── Pin float ──────────────────────────────────────────────────────── */
+.float-pin { animation: floatPin 3s ease-in-out infinite; }
+
+/* ── CTA pulse ──────────────────────────────────────────────────────── */
+.pulse-cta { animation: pulseRing 2.5s ease-out infinite; }
+
+/* ── Orbit ──────────────────────────────────────────────────────────── */
+.orbit-container { animation: orbit 18s linear infinite; }
+.orbit-label     { animation: counterOrbit 18s linear infinite; }
+
+/* ── Province map ───────────────────────────────────────────────────── */
+.province-region {
+  transition: fill 0.4s ease, filter 0.4s ease;
+}
+.province-region.active {
+  filter: drop-shadow(0 0 6px rgba(232,131,42,0.8));
+}
+
+/* ── Horizontal arc track ───────────────────────────────────────────── */
+#arc-track {
+  transition: transform 0.05s linear;
+  will-change: transform;
+}
+
+/* ── Split card hover ───────────────────────────────────────────────── */
+.path-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.path-card:hover {
+  transform: scale(1.02) translateY(-4px);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+}
+
+/* ── Province stamp ─────────────────────────────────────────────────── */
+.stamp {
+  transition: all 0.4s ease;
+}
+.stamp.earned {
+  animation: stampReveal 0.5s ease forwards;
+}
+.stamp:hover {
+  animation: floatPin 0.4s ease-in-out 2;
+}
+
+/* ── Scroll indicator ───────────────────────────────────────────────── */
+.scroll-dot { animation: scrollIndicator 2s ease-in-out infinite; }
