@@ -18,7 +18,7 @@ serendigo/
 
 ## Current Phase
 Phase 1 — Foundation
-Current Milestone: 35 — Next
+Current Milestone: 37 — Next
 
 ## Tech Stack
 
@@ -114,9 +114,9 @@ const colors = {
 - Body/UI: Space Grotesk
 
 ## Current Session Memory
-- Last completed: Milestone 35 — Admin panel (custom Next.js 15, no CMS; arcs + chapters CRUD, users read-only, dashboard stats, cookie auth via ADMIN_SECRET, dark sidebar nav, server actions, Drizzle direct to Supabase, port 3001)
+- Last completed: Milestone 36 — Dark mode system (makeStyles factory pattern across all 20+ screens, light/dark/system ThemeMode store with zustand + AsyncStorage, useTheme hook combining system + override, 3-way toggle on Profile screen)
 - Current blocker: None
-- Next step: Milestone 36 — Badge system UI polish (badge detail modal, earned date, progress toward unearned badges)
+- Next step: Milestone 37 — Badge system UI polish (badge detail modal, earned date, progress toward unearned badges)
 
 ## Milestones Completed
 - ✅ 1 — Expo app running
@@ -154,6 +154,7 @@ const colors = {
 - ✅ 33 — Badge system: badges + user_badges tables, 10 badge definitions (capture milestones, arc completion, world diversity, province explorer), inline award logic after every capture, celebration overlay on submit screen, badge grid on profile screen
 - ✅ 34 — Leaderboard: GET /api/leaderboard (top 20 by coins), podium for top 3, ranked list with current user highlighted, entry point in Your Story tab
 - ✅ 35 — Admin panel: custom Next.js 15 App Router (no CMS), arcs + chapters CRUD with forms, users list, dashboard stats, cookie auth (ADMIN_SECRET), dark sidebar, server actions, direct Drizzle → Supabase, port 3001
+- ✅ 36 — Dark mode: makeStyles(colors) factory pattern across all 20+ screens, light/dark/system ThemeMode store (zustand + AsyncStorage), useTheme hook, 3-way theme toggle on Profile screen (System/Light/Dark); world/brand colors hardcoded at module level, surface/text/border colors from useTheme()
 
 ## Key Decisions & Notes
 - District name: "Mahanuvara" renamed to "Kandy" everywhere

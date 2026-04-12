@@ -12,12 +12,114 @@ import {
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, typography } from '@/src/theme';
+import { Eye, EyeOff } from 'lucide-react-native';
+import { spacing, typography, AppColors } from '@/src/theme'
+import { useTheme } from '@/src/hooks/useTheme'
 import { fetchFromApi } from '@/src/services/api';
 import { useAuthStore } from '@/src/stores/authStore';
 
+const makeStyles = (colors: AppColors) => StyleSheet.create({
+  flex: {
+    flex: 1,
+    backgroundColor: colors.surface,
+  },
+  container: {
+    flexGrow: 1,
+    padding: spacing.lg,
+    paddingTop: spacing.xl,
+    justifyContent: 'center',
+  },
+  header: {
+    marginBottom: spacing.xl,
+  },
+  title: {
+    ...typography.h1,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  subtitle: {
+    ...typography.body,
+    color: colors.textSecondary,
+  },
+  form: {
+    gap: spacing.md,
+  },
+  field: {
+    gap: spacing.xs,
+  },
+  label: {
+    ...typography.label,
+    color: colors.textSecondary,
+  },
+  input: {
+    backgroundColor: colors.surfaceWhite,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    ...typography.body,
+    color: colors.textPrimary,
+  },
+  passwordRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  passwordInput: {
+    flex: 1,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+    borderRightWidth: 0,
+  },
+  eyeButton: {
+    backgroundColor: colors.surfaceWhite,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderTopRightRadius: 12,
+    borderBottomRightRadius: 12,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  error: {
+    ...typography.caption,
+    color: colors.error,
+    marginTop: -spacing.xs,
+  },
+  button: {
+    backgroundColor: colors.primary,
+    borderRadius: 14,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    marginTop: spacing.sm,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    ...typography.h3,
+    color: colors.surfaceWhite,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: spacing.xl,
+  },
+  footerText: {
+    ...typography.body,
+    color: colors.textSecondary,
+  },
+  footerLink: {
+    ...typography.body,
+    color: colors.primary,
+  },
+})
+
 export default function LoginScreen() {
   const { top } = useSafeAreaInsets();
+  const { colors } = useTheme()
+  const styles = makeStyles(colors)
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -95,7 +197,9 @@ export default function LoginScreen() {
                 style={styles.eyeButton}
                 onPress={() => setShowPassword((v) => !v)}
               >
-                <Text style={styles.eyeText}>{showPassword ? '🙈' : '👁️'}</Text>
+                {showPassword
+                  ? <EyeOff size={18} color={colors.textTertiary} />
+                  : <Eye size={18} color={colors.textTertiary} />}
               </Pressable>
             </View>
           </View>
@@ -128,104 +232,3 @@ export default function LoginScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  container: {
-    flexGrow: 1,
-    padding: spacing.lg,
-    paddingTop: spacing.xl,
-    justifyContent: 'center',
-  },
-  header: {
-    marginBottom: spacing.xl,
-  },
-  title: {
-    ...typography.h1,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  form: {
-    gap: spacing.md,
-  },
-  field: {
-    gap: spacing.xs,
-  },
-  label: {
-    ...typography.label,
-    color: colors.textSecondary,
-  },
-  input: {
-    backgroundColor: colors.surfaceWhite,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    ...typography.body,
-    color: colors.textPrimary,
-  },
-  passwordRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  passwordInput: {
-    flex: 1,
-    borderTopRightRadius: 0,
-    borderBottomRightRadius: 0,
-    borderRightWidth: 0,
-  },
-  eyeButton: {
-    backgroundColor: colors.surfaceWhite,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderTopRightRadius: 12,
-    borderBottomRightRadius: 12,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  eyeText: {
-    fontSize: 16,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.error,
-    marginTop: -spacing.xs,
-  },
-  button: {
-    backgroundColor: colors.primary,
-    borderRadius: 14,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    marginTop: spacing.sm,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    ...typography.h3,
-    color: colors.surfaceWhite,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: spacing.xl,
-  },
-  footerText: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  footerLink: {
-    ...typography.body,
-    color: colors.primary,
-  },
-});

@@ -1,32 +1,49 @@
-export const colors = {
-  // Primary
-  primary: '#E8832A',        // Temple Amber
-  secondary: '#1A6B7A',      // Ocean Teal
+const baseColors = {
+  primary: '#E8832A',     // Temple Amber
+  secondary: '#1A6B7A',   // Ocean Teal
 
-  // Surfaces
-  surface: '#F7F0E3',        // Coconut Cream (main bg)
-  surfaceWhite: '#FDFAF5',   // Warm White (cards)
-  backgroundDark: '#1C1A2E', // Night (dark mode)
-  border: '#E5E5E0',          // Subtle border
+  taste: '#B85C1A',       // Cinnamon
+  wild: '#2D6E4E',        // Jungle
+  move: '#1A5F8A',        // Indian Ocean
+  roots: '#614A9E',       // Kandyan
+  restore: '#5E8C6E',     // Ayurveda sage
 
-  // Text
+  coinGold: '#C9920A',    // Antique gold
+  error: '#C0392B',
+} as const;
+
+export const lightColors = {
+  ...baseColors,
+  surface: '#F7F0E3',
+  surfaceWhite: '#FDFAF5',
+  surfaceElevated: '#FFFFFF',
+  border: '#E5DDD0',
   textPrimary: '#1A1A2E',
   textSecondary: '#5A5A7A',
   textTertiary: '#9A9AB0',
-
-  // World Colors
-  taste: '#E67E22',
-  wild: '#27AE60',
-  move: '#2980B9',
-  roots: '#8E44AD',
-  restore: '#F39C12',
-
-  // Gamification
-  coinGold: '#F1C40F',
-  success: '#27AE60',
-  warning: '#E67E22',
-  error: '#E74C3C',
+  success: '#2D6E4E',
+  warning: '#B85C1A',
 } as const;
+
+export const darkColors = {
+  ...baseColors,
+  secondary: '#2A9AAD',   // Lighter teal for dark bg visibility
+  surface: '#13111E',
+  surfaceWhite: '#1E1B2E',
+  surfaceElevated: '#252238',
+  border: '#2A2740',
+  textPrimary: '#F0EDE8',
+  textSecondary: '#9896B5',
+  textTertiary: '#5E5C78',
+  coinGold: '#D4A012',    // Slightly brighter on dark
+  success: '#3A8A63',
+  warning: '#C9692A',
+} as const;
+
+// Static fallback — used for non-reactive contexts (e.g. module-level constants)
+export const colors = lightColors;
+
+export type AppColors = typeof lightColors;
 
 export const fonts = {
   dmSerif: 'DMSerifDisplay_400Regular',

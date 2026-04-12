@@ -7,136 +7,18 @@ import {
   Text,
   View,
 } from 'react-native';
+import { X, FlipHorizontal2 } from 'lucide-react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, typography } from '@/src/theme';
-
-export default function CaptureScreen() {
-  const { top, bottom } = useSafeAreaInsets();
-  const { chapterId } = useLocalSearchParams<{ chapterId: string }>();
-  const [permission, requestPermission] = useCameraPermissions();
-  const [locationPermission, requestLocationPermission] = Location.useForegroundPermissions();
-  const [facing, setFacing] = useState<CameraType>('back');
-  const [capturing, setCapturing] = useState(false);
-  const [photo, setPhoto] = useState<string | null>(null);
-  const cameraRef = useRef<CameraView>(null);
-
-  useEffect(() => {
-    requestLocationPermission();
-  }, []);
-
-  const handleCapture = async () => {
-    if (!cameraRef.current || capturing) return;
-    setCapturing(true);
-    try {
-      const result = await cameraRef.current.takePictureAsync({ quality: 0.7 });
-      if (result) setPhoto(result.uri);
-    } catch (e) {
-      console.error('Capture error:', e);
-    } finally {
-      setCapturing(false);
-    }
-  };
-
-  const handleRetake = () => setPhoto(null);
-
-  const handleSubmit = async () => {
-    if (!photo) return;
-    // Navigate to submit screen with photo + chapterId
-    router.push({
-      pathname: '/capture/submit',
-      params: { chapterId, photoUri: photo },
-    });
-  };
-
-  // Permission request
-  if (!permission) {
-    return <View style={styles.container} />;
-  }
-
-  if (!permission.granted) {
-    return (
-      <View style={[styles.container, styles.center, { paddingTop: top }]}>
-        <Text style={styles.permissionText}>Camera access is needed to capture moments</Text>
-        <Pressable style={styles.permissionButton} onPress={requestPermission}>
-          <Text style={styles.permissionButtonText}>Grant Camera Access</Text>
-        </Pressable>
-        <Pressable onPress={() => router.back()} style={styles.cancelLink}>
-          <Text style={styles.cancelLinkText}>Go back</Text>
-        </Pressable>
-      </View>
-    );
-  }
-
-  // Photo preview
-  if (photo) {
-    return (
-      <View style={styles.container}>
-        <Image source={{ uri: photo }} style={styles.previewImage} resizeMode="cover" />
-        <View style={styles.previewActions}>
-          <Pressable style={styles.retakeButton} onPress={handleRetake}>
-            <Text style={styles.retakeText}>Retake</Text>
-          </Pressable>
-          <Pressable style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitText}>Use this photo →</Text>
-          </Pressable>
-        </View>
-      </View>
-    );
-  }
-
-  // Camera view
-  return (
-    <View style={styles.container}>
-      {/* Camera — no children, uses absolute overlay instead */}
-      <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing={facing} />
-
-      {/* Overlay: top bar */}
-      <View style={[styles.topBar, { paddingTop: top + spacing.sm }]}>
-        <Pressable onPress={() => router.back()} style={styles.closeButton}>
-          <Text style={styles.closeText}>✕</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => setFacing(f => f === 'back' ? 'front' : 'back')}
-          style={styles.flipButton}
-        >
-          <Text style={styles.flipText}>⇄</Text>
-        </Pressable>
-      </View>
-
-      {/* Overlay: viewfinder corners */}
-      <View style={styles.viewfinder} pointerEvents="none">
-        <View style={[styles.corner, styles.cornerTL]} />
-        <View style={[styles.corner, styles.cornerTR]} />
-        <View style={[styles.corner, styles.cornerBL]} />
-        <View style={[styles.corner, styles.cornerBR]} />
-      </View>
-
-      {/* Overlay: bottom capture button */}
-      <View style={[styles.bottomBar, { paddingBottom: (bottom || spacing.lg) + spacing.md }]}>
-        <Text style={styles.hint}>Position the location in frame</Text>
-        <Pressable
-          style={[styles.captureButton, capturing && styles.captureButtonDisabled]}
-          onPress={handleCapture}
-          disabled={capturing}
-        >
-          {capturing ? (
-            <ActivityIndicator color={colors.textPrimary} />
-          ) : (
-            <View style={styles.captureInner} />
-          )}
-        </Pressable>
-      </View>
-    </View>
-  );
-}
+import { spacing, typography, AppColors } from '@/src/theme'
+import { useTheme } from '@/src/hooks/useTheme'
 
 const CORNER_SIZE = 24;
 const CORNER_THICKNESS = 3;
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
@@ -161,10 +43,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  closeText: {
-    color: 'white',
-    fontSize: 18,
-  },
   flipButton: {
     width: 40,
     height: 40,
@@ -172,10 +50,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  flipText: {
-    color: 'white',
-    fontSize: 20,
   },
   viewfinder: {
     flex: 1,
@@ -297,4 +171,125 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.textSecondary,
   },
-});
+})
+
+export default function CaptureScreen() {
+  const { top, bottom } = useSafeAreaInsets();
+  const { colors } = useTheme()
+  const styles = makeStyles(colors)
+  const { chapterId } = useLocalSearchParams<{ chapterId: string }>();
+  const [permission, requestPermission] = useCameraPermissions();
+  const [locationPermission, requestLocationPermission] = Location.useForegroundPermissions();
+  const [facing, setFacing] = useState<CameraType>('back');
+  const [capturing, setCapturing] = useState(false);
+  const [photo, setPhoto] = useState<string | null>(null);
+  const cameraRef = useRef<CameraView>(null);
+
+  useEffect(() => {
+    requestLocationPermission();
+  }, []);
+
+  const handleCapture = async () => {
+    if (!cameraRef.current || capturing) return;
+    setCapturing(true);
+    try {
+      const result = await cameraRef.current.takePictureAsync({ quality: 0.7 });
+      if (result) setPhoto(result.uri);
+    } catch (e) {
+      console.error('Capture error:', e);
+    } finally {
+      setCapturing(false);
+    }
+  };
+
+  const handleRetake = () => setPhoto(null);
+
+  const handleSubmit = async () => {
+    if (!photo) return;
+    router.push({
+      pathname: '/capture/submit',
+      params: { chapterId, photoUri: photo },
+    });
+  };
+
+  // Permission request
+  if (!permission) {
+    return <View style={styles.container} />;
+  }
+
+  if (!permission.granted) {
+    return (
+      <View style={[styles.container, styles.center, { paddingTop: top }]}>
+        <Text style={styles.permissionText}>Camera access is needed to capture moments</Text>
+        <Pressable style={styles.permissionButton} onPress={requestPermission}>
+          <Text style={styles.permissionButtonText}>Grant Camera Access</Text>
+        </Pressable>
+        <Pressable onPress={() => router.back()} style={styles.cancelLink}>
+          <Text style={styles.cancelLinkText}>Go back</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  // Photo preview
+  if (photo) {
+    return (
+      <View style={styles.container}>
+        <Image source={{ uri: photo }} style={styles.previewImage} resizeMode="cover" />
+        <View style={styles.previewActions}>
+          <Pressable style={styles.retakeButton} onPress={handleRetake}>
+            <Text style={styles.retakeText}>Retake</Text>
+          </Pressable>
+          <Pressable style={styles.submitButton} onPress={handleSubmit}>
+            <Text style={styles.submitText}>Use this photo →</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
+  // Camera view
+  return (
+    <View style={styles.container}>
+      {/* Camera — no children, uses absolute overlay instead */}
+      <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing={facing} />
+
+      {/* Overlay: top bar */}
+      <View style={[styles.topBar, { paddingTop: top + spacing.sm }]}>
+        <Pressable onPress={() => router.back()} style={styles.closeButton}>
+          <X size={18} color="white" />
+        </Pressable>
+        <Pressable
+          onPress={() => setFacing(f => f === 'back' ? 'front' : 'back')}
+          style={styles.flipButton}
+        >
+          <FlipHorizontal2 size={18} color="white" />
+        </Pressable>
+      </View>
+
+      {/* Overlay: viewfinder corners */}
+      <View style={styles.viewfinder} pointerEvents="none">
+        <View style={[styles.corner, styles.cornerTL]} />
+        <View style={[styles.corner, styles.cornerTR]} />
+        <View style={[styles.corner, styles.cornerBL]} />
+        <View style={[styles.corner, styles.cornerBR]} />
+      </View>
+
+      {/* Overlay: bottom capture button */}
+      <View style={[styles.bottomBar, { paddingBottom: (bottom || spacing.lg) + spacing.md }]}>
+        <Text style={styles.hint}>Position the location in frame</Text>
+        <Pressable
+          style={[styles.captureButton, capturing && styles.captureButtonDisabled]}
+          onPress={handleCapture}
+          disabled={capturing}
+        >
+          {capturing ? (
+            <ActivityIndicator color={colors.textPrimary} />
+          ) : (
+            <View style={styles.captureInner} />
+          )}
+        </Pressable>
+      </View>
+    </View>
+  );
+}

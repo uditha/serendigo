@@ -16,6 +16,11 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { usePushNotifications } from '@/src/hooks/usePushNotifications';
+import { useTheme } from '@/src/hooks/useTheme';
+import { OfflineBanner } from '@/src/components/OfflineBanner';
+import { onlineManager } from '@tanstack/react-query';
+import NetInfo from '@react-native-community/netinfo';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -25,7 +30,38 @@ export const unstable_settings = {
 
 SplashScreen.preventAutoHideAsync();
 
-const queryClient = new QueryClient();
+// Tell TanStack Query about network state — queries pause when offline
+// and automatically refetch when connection returns
+onlineManager.setEventListener((setOnline) => {
+  return NetInfo.addEventListener((state) => {
+    setOnline(!!state.isConnected && state.isInternetReachable !== false)
+  })
+})
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Keep cached data while offline — don't show stale errors
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      // Retry once after a short delay, then give up
+      retry: 1,
+      retryDelay: 2000,
+      // Don't refetch on window focus in React Native
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function PushNotificationProvider() {
+  usePushNotifications()
+  return null
+}
+
+function ThemedStatusBar() {
+  const { isDark } = useTheme()
+  return <StatusBar style={isDark ? 'light' : 'dark'} />
+}
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -53,8 +89,10 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <StatusBar style="dark" />
+      <ThemedStatusBar />
       <GestureHandlerRootView style={{ flex: 1 }}>
+        <PushNotificationProvider />
+        <OfflineBanner />
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -68,6 +106,7 @@ export default function RootLayout() {
           <Stack.Screen name="arc/[id]/captures" options={{ headerShown: false }} />
           <Stack.Screen name="capture/[chapterId]" options={{ headerShown: false, animation: 'fade' }} />
           <Stack.Screen name="capture/submit" options={{ headerShown: false, animation: 'fade' }} />
+          <Stack.Screen name="discover" options={{ headerShown: false }} />
         </Stack>
       </GestureHandlerRootView>
     </QueryClientProvider>

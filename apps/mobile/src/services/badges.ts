@@ -18,7 +18,12 @@ export interface UserBadge {
   name: string
   description: string
   icon: string
-  earnedAt: string
+  conditionType: string
+  conditionValue: string
+  earned: boolean
+  earnedAt: string | null
+  progress: number
+  target: number
 }
 
 export async function fetchBadges(): Promise<UserBadge[]> {

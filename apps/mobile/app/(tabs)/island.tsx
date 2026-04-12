@@ -10,7 +10,8 @@ import Reanimated, {
   withSpring,
   clamp,
 } from 'react-native-reanimated';
-import { colors, spacing, typography } from '@/src/theme';
+import { spacing, typography, AppColors } from '@/src/theme'
+import { useTheme } from '@/src/hooks/useTheme'
 import { DISTRICT_PATHS } from '@/src/data/sriLankaDistricts';
 import DistrictBottomSheet from '@/src/components/DistrictBottomSheet';
 import { useArcs } from '@/src/hooks/useArcs';
@@ -21,12 +22,13 @@ const VIEW_BOX_HEIGHT = 792.54926;
 const MIN_SCALE_FACTOR = 1;
 const MAX_SCALE_FACTOR = 8;
 
+// World colors are brand colors — same in light & dark
 const WORLD_COLORS: Record<string, string> = {
-  TASTE:   colors.taste,
-  WILD:    colors.wild,
-  MOVE:    colors.move,
-  ROOTS:   colors.roots,
-  RESTORE: colors.restore,
+  TASTE:   '#B85C1A',
+  WILD:    '#2D6E4E',
+  MOVE:    '#1A5F8A',
+  ROOTS:   '#614A9E',
+  RESTORE: '#5E8C6E',
 };
 
 const WORLD_EMOJI: Record<string, string> = {
@@ -37,17 +39,75 @@ const WORLD_EMOJI: Record<string, string> = {
   RESTORE: '🧘',
 };
 
-const LEGEND = [
-  { key: 'TASTE',   label: 'Taste',   color: colors.taste },
-  { key: 'WILD',    label: 'Wild',    color: colors.wild },
-  { key: 'MOVE',    label: 'Move',    color: colors.move },
-  { key: 'ROOTS',   label: 'Roots',   color: colors.roots },
-  { key: 'RESTORE', label: 'Restore', color: colors.restore },
+const LEGEND_ITEMS = [
+  { key: 'TASTE',   label: 'Taste',   color: '#B85C1A' },
+  { key: 'WILD',    label: 'Wild',    color: '#2D6E4E' },
+  { key: 'MOVE',    label: 'Move',    color: '#1A5F8A' },
+  { key: 'ROOTS',   label: 'Roots',   color: '#614A9E' },
+  { key: 'RESTORE', label: 'Restore', color: '#5E8C6E' },
 ]
+
+const makeStyles = (colors: AppColors) => StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+    overflow: 'hidden',
+  },
+  floatingHeader: {
+    position: 'absolute',
+    right: spacing.lg,
+    zIndex: 10,
+    gap: 2,
+    alignItems: 'flex-end',
+  },
+  floatingTitle: {
+    ...typography.h1,
+    color: colors.textPrimary,
+  },
+  floatingSubtitle: {
+    ...typography.label,
+    color: colors.textTertiary,
+    letterSpacing: 2,
+  },
+  legend: {
+    position: 'absolute',
+    left: spacing.lg,
+    zIndex: 10,
+    gap: 6,
+    backgroundColor: colors.surfaceWhite + 'E0',
+    borderRadius: 12,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  legendDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+  },
+  legendLabel: {
+    ...typography.label,
+    color: colors.textSecondary,
+    fontSize: 11,
+  },
+})
 
 export default function IslandScreen() {
   const { width, height } = useWindowDimensions();
   const { top, bottom } = useSafeAreaInsets();
+  const { colors } = useTheme()
+  const styles = makeStyles(colors)
   const { data: arcs } = useArcs();
 
   const padding = spacing.xl * 2;
@@ -137,16 +197,15 @@ export default function IslandScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Floating header */}
-      {/* Floating title — top right */}
+      {/* Floating title */}
       <View style={[styles.floatingHeader, { top: top + spacing.sm }]}>
         <Text style={styles.floatingTitle}>The Island</Text>
         <Text style={styles.floatingSubtitle}>Sri Lanka</Text>
       </View>
 
-      {/* Pin legend — bottom left, hidden when bottom sheet is open */}
+      {/* Pin legend */}
       {!selectedDistrict && <View style={[styles.legend, { bottom: bottom + spacing.lg }]}>
-        {LEGEND.map((item) => (
+        {LEGEND_ITEMS.map((item) => (
           <View key={item.key} style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: item.color }]} />
             <Text style={styles.legendLabel}>{item.label}</Text>
@@ -174,7 +233,7 @@ export default function IslandScreen() {
               />
             ))}
 
-            {/* Arc pins — teardrop shape per arc, jitter overlapping pins */}
+            {/* Arc pins */}
             {arcs?.map((arc, index) => {
               const firstChapter = arc.chapters?.[0];
               if (!firstChapter) return null;
@@ -182,7 +241,6 @@ export default function IslandScreen() {
               const emoji = WORLD_EMOJI[arc.worldType] ?? '📍';
               const base = geoToSvg(firstChapter.lat, firstChapter.lng);
 
-              // Offset pins that are within 28px of an earlier pin
               const JITTER_RADIUS = 28;
               const priorPositions = arcs.slice(0, index).map((a) => {
                 const ch = a.chapters?.[0];
@@ -194,16 +252,14 @@ export default function IslandScreen() {
                 (p) => Math.hypot(p.x - x, p.y - y) < JITTER_RADIUS
               );
               if (overlapping.length > 0) {
-                const angle = (index * 137.5 * Math.PI) / 180; // golden angle spread
+                const angle = (index * 137.5 * Math.PI) / 180;
                 x += Math.cos(angle) * JITTER_RADIUS * 0.8;
                 y += Math.sin(angle) * JITTER_RADIUS * 0.8;
               }
 
-              // Teardrop pin geometry — tip points down at (x, y)
               const r = 11;
               const tailH = 10;
               const cy = y - r - tailH;
-              // Tangent points where the tail meets the circle (~±30° from bottom)
               const lx = x - r * 0.5;
               const rx = x + r * 0.5;
               const ty = cy + r * 0.866;
@@ -211,20 +267,10 @@ export default function IslandScreen() {
 
               return (
                 <G key={arc.id} onPress={() => router.push(`/arc/${arc.id}` as never)}>
-                  {/* Soft glow behind pin */}
                   <Circle cx={x} cy={cy} r={r + 7} fill={pinColor + '22'} />
-                  {/* Teardrop body */}
                   <Path d={pinD} fill={pinColor} />
-                  {/* White border on circle part */}
                   <Circle cx={x} cy={cy} r={r} fill={pinColor} stroke="white" strokeWidth={1.5} />
-                  {/* World type emoji */}
-                  <SvgText
-                    x={x}
-                    y={cy + 4}
-                    textAnchor="middle"
-                    fontSize={11}
-                    fill="white"
-                  >
+                  <SvgText x={x} y={cy + 4} textAnchor="middle" fontSize={11} fill="white">
                     {emoji}
                   </SvgText>
                 </G>
@@ -242,61 +288,3 @@ export default function IslandScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-    overflow: 'hidden',
-  },
-
-  floatingHeader: {
-    position: 'absolute',
-    right: spacing.lg,
-    zIndex: 10,
-    gap: 2,
-    alignItems: 'flex-end',
-  },
-  floatingTitle: {
-    ...typography.h1,
-    color: colors.textPrimary,
-  },
-  floatingSubtitle: {
-    ...typography.label,
-    color: colors.textTertiary,
-    letterSpacing: 2,
-  },
-
-  legend: {
-    position: 'absolute',
-    left: spacing.lg,
-    zIndex: 10,
-    gap: 6,
-    backgroundColor: colors.surfaceWhite + 'E0',
-    borderRadius: 12,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  legendDot: {
-    width: 9,
-    height: 9,
-    borderRadius: 5,
-  },
-  legendLabel: {
-    ...typography.label,
-    color: colors.textSecondary,
-    fontSize: 11,
-  },
-});

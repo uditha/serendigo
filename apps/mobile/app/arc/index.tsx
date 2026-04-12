@@ -1,169 +1,25 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useState } from 'react'
 import { router } from 'expo-router'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { colors, spacing, typography } from '@/src/theme'
+import { ChevronRight } from 'lucide-react-native'
+import { spacing, typography, AppColors } from '@/src/theme'
+import { useTheme } from '@/src/hooks/useTheme'
 import { useArcs, type ArcPin } from '@/src/hooks/useArcs'
 
-// ─── Config ────────────────────────────────────────────────────────────────
-type WorldFilter = 'ALL' | 'TASTE' | 'WILD' | 'MOVE' | 'ROOTS' | 'RESTORE'
-
-const FILTERS: { key: WorldFilter; label: string; emoji: string; color: string }[] = [
-  { key: 'ALL',     label: 'All',     emoji: '🗺️', color: colors.textSecondary },
-  { key: 'TASTE',   label: 'Taste',   emoji: '🍛', color: colors.taste },
-  { key: 'WILD',    label: 'Wild',    emoji: '🐘', color: colors.wild },
-  { key: 'MOVE',    label: 'Move',    emoji: '🏄', color: colors.move },
-  { key: 'ROOTS',   label: 'Roots',   emoji: '🏛️', color: colors.roots },
-  { key: 'RESTORE', label: 'Restore', emoji: '🌿', color: colors.restore },
-]
-
+// World colors — brand colors, same in light & dark
 const WORLD_COLORS: Record<string, string> = {
-  TASTE: colors.taste, WILD: colors.wild, MOVE: colors.move,
-  ROOTS: colors.roots, RESTORE: colors.restore,
+  TASTE: '#B85C1A', WILD: '#2D6E4E', MOVE: '#1A5F8A',
+  ROOTS: '#614A9E', RESTORE: '#5E8C6E',
 }
-
 const WORLD_EMOJI: Record<string, string> = {
   TASTE: '🍛', WILD: '🐘', MOVE: '🏄', ROOTS: '🏛️', RESTORE: '🌿',
 }
 
-function Skeleton({ width, height = 16, radius = 6 }: { width: number | string; height?: number; radius?: number }) {
-  return <View style={{ width, height, borderRadius: radius, backgroundColor: colors.textTertiary + '30' }} />
-}
+type WorldFilter = 'ALL' | 'TASTE' | 'WILD' | 'MOVE' | 'ROOTS' | 'RESTORE'
 
-// ─── Screen ────────────────────────────────────────────────────────────────
-export default function ArcBrowseScreen() {
-  const { top } = useSafeAreaInsets()
-  const { data: arcs, isLoading } = useArcs()
-  const [activeFilter, setActiveFilter] = useState<WorldFilter>('ALL')
-
-  const filtered = activeFilter === 'ALL'
-    ? (arcs ?? [])
-    : (arcs ?? []).filter((a) => a.worldType === activeFilter)
-
-  return (
-    <View style={styles.container}>
-      {/* Fixed header + filter chips */}
-      <View style={[styles.header, { paddingTop: top + spacing.md }]}>
-        <View style={styles.headerRow}>
-          <Pressable onPress={() => router.back()} style={styles.backLink}>
-            <Text style={styles.backLinkText}>←</Text>
-          </Pressable>
-          <View style={styles.headerTitles}>
-            <Text style={styles.title}>All Journeys</Text>
-            {!isLoading && (
-              <Text style={styles.subtitle}>
-                {filtered.length} {filtered.length === 1 ? 'arc' : 'arcs'}
-                {activeFilter !== 'ALL' ? ` in ${activeFilter.charAt(0) + activeFilter.slice(1).toLowerCase()}` : ''}
-              </Text>
-            )}
-          </View>
-        </View>
-
-        {/* Filter chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filtersRow}
-        >
-          {FILTERS.map((f) => {
-            const active = activeFilter === f.key
-            const chipColor = f.key === 'ALL' ? colors.textPrimary : f.color
-            return (
-              <Pressable
-                key={f.key}
-                style={[
-                  styles.chip,
-                  active && { backgroundColor: chipColor, borderColor: chipColor },
-                ]}
-                onPress={() => setActiveFilter(f.key)}
-              >
-                <Text style={styles.chipEmoji}>{f.emoji}</Text>
-                <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
-                  {f.label}
-                </Text>
-              </Pressable>
-            )
-          })}
-        </ScrollView>
-      </View>
-
-      {/* Arc list */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.list}
-      >
-        {isLoading ? (
-          <>
-            <ArcCardSkeleton />
-            <ArcCardSkeleton />
-            <ArcCardSkeleton />
-          </>
-        ) : filtered.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>🗺️</Text>
-            <Text style={styles.emptyTitle}>No journeys here yet</Text>
-            <Text style={styles.emptyBody}>
-              More arcs are being added — check back soon or explore a different world type.
-            </Text>
-          </View>
-        ) : (
-          filtered.map((arc) => <ArcCard key={arc.id} arc={arc} />)
-        )}
-      </ScrollView>
-    </View>
-  )
-}
-
-// ─── Arc card ──────────────────────────────────────────────────────────────
-function ArcCard({ arc }: { arc: ArcPin }) {
-  const worldColor = WORLD_COLORS[arc.worldType] ?? colors.primary
-
-  return (
-    <Pressable style={styles.card} onPress={() => router.push(`/arc/${arc.id}` as never)}>
-      {/* Colored banner */}
-      <View style={[styles.cardBanner, { backgroundColor: worldColor + '22' }]}>
-        <View style={[styles.worldBadge, { backgroundColor: worldColor }]}>
-          <Text style={styles.worldBadgeText}>{arc.worldType}</Text>
-        </View>
-        <Text style={styles.cardEmoji}>{WORLD_EMOJI[arc.worldType] ?? '✨'}</Text>
-      </View>
-
-      {/* Body */}
-      <View style={styles.cardBody}>
-        <Text style={styles.cardTitle} numberOfLines={2}>{arc.title}</Text>
-        <View style={styles.cardMeta}>
-          <Text style={styles.cardMetaText}>
-            {arc.chapters.length} {arc.chapters.length === 1 ? 'chapter' : 'chapters'}
-          </Text>
-          <Text style={styles.metaDot}>·</Text>
-          <Text style={styles.cardMetaText}>
-            {arc.province.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-          </Text>
-        </View>
-        <View style={[styles.exploreButton, { backgroundColor: worldColor }]}>
-          <Text style={styles.exploreButtonText}>View journey →</Text>
-        </View>
-      </View>
-    </Pressable>
-  )
-}
-
-// ─── Skeleton card ─────────────────────────────────────────────────────────
-function ArcCardSkeleton() {
-  return (
-    <View style={[styles.card, { overflow: 'hidden' }]}>
-      <View style={[styles.cardBanner, { backgroundColor: colors.textTertiary + '15' }]} />
-      <View style={{ padding: spacing.md, gap: spacing.sm }}>
-        <Skeleton width={80} height={12} />
-        <Skeleton width="70%" height={22} />
-        <Skeleton width="50%" height={14} />
-      </View>
-    </View>
-  )
-}
-
-// ─── Styles ────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surface,
@@ -174,7 +30,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     paddingBottom: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5DDD0',
+    borderBottomColor: colors.border,
     gap: spacing.md,
   },
   headerRow: {
@@ -215,7 +71,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: '#E5DDD0',
+    borderColor: colors.border,
     backgroundColor: colors.surfaceWhite,
   },
   chipEmoji: { fontSize: 14 },
@@ -238,39 +94,79 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surfaceWhite,
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E5DDD0',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  cardImage: {
+    height: 185,
+    overflow: 'hidden',
+    borderRadius: 20,
+  },
+  cardImageFallback: {
+    height: 185,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
     overflow: 'hidden',
   },
-  cardBanner: {
-    height: 100,
-    flexDirection: 'row',
+  cardImageGrad: {
+    flex: 1,
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
     padding: spacing.md,
+    paddingBottom: spacing.md,
+    borderRadius: 20,
   },
-  worldBadge: {
-    borderRadius: 8,
+  cardImageTitle: {
+    fontFamily: 'DMSerifDisplay_400Regular',
+    fontSize: 22,
+    color: 'white',
+    lineHeight: 28,
+  },
+  cardFallbackEmoji: { fontSize: 56 },
+  worldPill: {
+    borderRadius: 20,
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+    paddingVertical: 4,
+    alignSelf: 'flex-start',
   },
-  worldBadgeText: {
+  worldPillText: {
     ...typography.label,
     color: 'white',
+    letterSpacing: 0.4,
   },
-  cardEmoji: { fontSize: 44 },
   cardBody: {
-    padding: spacing.md,
-    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: 6,
   },
   cardTitle: {
-    ...typography.h2,
+    ...typography.body,
+    fontFamily: 'SpaceGrotesk_600SemiBold',
     color: colors.textPrimary,
+  },
+  cardMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   cardMeta: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs,
+    flex: 1,
+  },
+  chapterBadge: {
+    borderRadius: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+  },
+  chapterBadgeText: {
+    ...typography.label,
+    fontSize: 10,
   },
   cardMetaText: {
     ...typography.caption,
@@ -279,16 +175,6 @@ const styles = StyleSheet.create({
   metaDot: {
     ...typography.caption,
     color: colors.textTertiary,
-  },
-  exploreButton: {
-    borderRadius: 12,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-    marginTop: spacing.xs,
-  },
-  exploreButtonText: {
-    ...typography.h3,
-    color: 'white',
   },
 
   // Empty state
@@ -310,3 +196,166 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
 })
+
+// ─── Screen ────────────────────────────────────────────────────────────────
+export default function ArcBrowseScreen() {
+  const { top } = useSafeAreaInsets()
+  const { colors } = useTheme()
+  const styles = makeStyles(colors)
+  const { data: arcs, isLoading } = useArcs()
+  const [activeFilter, setActiveFilter] = useState<WorldFilter>('ALL')
+
+  const FILTERS: { key: WorldFilter; label: string; emoji: string; color: string }[] = [
+    { key: 'ALL',     label: 'All',     emoji: '🗺️', color: colors.textPrimary },
+    { key: 'TASTE',   label: 'Taste',   emoji: '🍛', color: '#B85C1A' },
+    { key: 'WILD',    label: 'Wild',    emoji: '🐘', color: '#2D6E4E' },
+    { key: 'MOVE',    label: 'Move',    emoji: '🏄', color: '#1A5F8A' },
+    { key: 'ROOTS',   label: 'Roots',   emoji: '🏛️', color: '#614A9E' },
+    { key: 'RESTORE', label: 'Restore', emoji: '🌿', color: '#5E8C6E' },
+  ]
+
+  const filtered = activeFilter === 'ALL'
+    ? (arcs ?? [])
+    : (arcs ?? []).filter((a) => a.worldType === activeFilter)
+
+  return (
+    <View style={styles.container}>
+      {/* Fixed header + filter chips */}
+      <View style={[styles.header, { paddingTop: top + spacing.md }]}>
+        <View style={styles.headerRow}>
+          <Pressable onPress={() => router.back()} style={styles.backLink}>
+            <Text style={styles.backLinkText}>←</Text>
+          </Pressable>
+          <View style={styles.headerTitles}>
+            <Text style={styles.title}>All Journeys</Text>
+            {!isLoading && (
+              <Text style={styles.subtitle}>
+                {filtered.length} {filtered.length === 1 ? 'arc' : 'arcs'}
+                {activeFilter !== 'ALL' ? ` in ${activeFilter.charAt(0) + activeFilter.slice(1).toLowerCase()}` : ''}
+              </Text>
+            )}
+          </View>
+        </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filtersRow}
+        >
+          {FILTERS.map((f) => {
+            const active = activeFilter === f.key
+            return (
+              <Pressable
+                key={f.key}
+                style={[
+                  styles.chip,
+                  active && { backgroundColor: f.color, borderColor: f.color },
+                ]}
+                onPress={() => setActiveFilter(f.key)}
+              >
+                <Text style={styles.chipEmoji}>{f.emoji}</Text>
+                <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
+                  {f.label}
+                </Text>
+              </Pressable>
+            )
+          })}
+        </ScrollView>
+      </View>
+
+      {/* Arc list */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.list}
+      >
+        {isLoading ? (
+          <>
+            <ArcCardSkeleton styles={styles} colors={colors} />
+            <ArcCardSkeleton styles={styles} colors={colors} />
+            <ArcCardSkeleton styles={styles} colors={colors} />
+          </>
+        ) : filtered.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyEmoji}>🗺️</Text>
+            <Text style={styles.emptyTitle}>No journeys here yet</Text>
+            <Text style={styles.emptyBody}>
+              More arcs are being added — check back soon or explore a different world type.
+            </Text>
+          </View>
+        ) : (
+          filtered.map((arc) => <ArcCard key={arc.id} arc={arc} styles={styles} colors={colors} />)
+        )}
+      </ScrollView>
+    </View>
+  )
+}
+
+// ─── Arc card ──────────────────────────────────────────────────────────────
+function ArcCard({ arc, styles, colors }: { arc: ArcPin; styles: ReturnType<typeof makeStyles>; colors: AppColors }) {
+  const worldColor = WORLD_COLORS[arc.worldType] ?? colors.primary
+  const province = arc.province.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+
+  return (
+    <Pressable style={styles.card} onPress={() => router.push(`/arc/${arc.id}` as never)}>
+      {arc.coverImage ? (
+        <ImageBackground
+          source={{ uri: arc.coverImage }}
+          style={styles.cardImage}
+          resizeMode="cover"
+          imageStyle={{ borderRadius: 20 }}
+        >
+          <LinearGradient
+            colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.72)']}
+            style={styles.cardImageGrad}
+          >
+            <View style={[styles.worldPill, { backgroundColor: worldColor }]}>
+              <Text style={styles.worldPillText}>{WORLD_EMOJI[arc.worldType]}  {arc.worldType}</Text>
+            </View>
+            <Text style={styles.cardImageTitle} numberOfLines={2}>{arc.title}</Text>
+          </LinearGradient>
+        </ImageBackground>
+      ) : (
+        <View style={[styles.cardImageFallback, { backgroundColor: worldColor + '20' }]}>
+          <Text style={styles.cardFallbackEmoji}>{WORLD_EMOJI[arc.worldType] ?? '✨'}</Text>
+          <View style={[styles.worldPill, { backgroundColor: worldColor, position: 'absolute', bottom: spacing.md, left: spacing.md }]}>
+            <Text style={styles.worldPillText}>{WORLD_EMOJI[arc.worldType]}  {arc.worldType}</Text>
+          </View>
+          <Text style={[styles.cardImageTitle, { position: 'absolute', bottom: spacing.md + 36, left: spacing.md, right: spacing.md }]} numberOfLines={2}>
+            {arc.title}
+          </Text>
+        </View>
+      )}
+
+      <View style={styles.cardBody}>
+        {arc.coverImage && (
+          <Text style={styles.cardTitle} numberOfLines={1}>{arc.title}</Text>
+        )}
+        <View style={styles.cardMetaRow}>
+          <View style={styles.cardMeta}>
+            <View style={[styles.chapterBadge, { backgroundColor: worldColor + '15' }]}>
+              <Text style={[styles.chapterBadgeText, { color: worldColor }]}>
+                {arc.chapters.length} {arc.chapters.length === 1 ? 'chapter' : 'chapters'}
+              </Text>
+            </View>
+            <Text style={styles.metaDot}>·</Text>
+            <Text style={styles.cardMetaText}>{province}</Text>
+          </View>
+          <ChevronRight size={18} color={colors.textTertiary} />
+        </View>
+      </View>
+    </Pressable>
+  )
+}
+
+// ─── Skeleton card ─────────────────────────────────────────────────────────
+function ArcCardSkeleton({ styles, colors }: { styles: ReturnType<typeof makeStyles>; colors: AppColors }) {
+  return (
+    <View style={styles.card}>
+      <View style={[styles.cardImage, { backgroundColor: colors.textTertiary + '15' }]} />
+      <View style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm, gap: spacing.sm }}>
+        <View style={{ width: 80, height: 10, borderRadius: 8, backgroundColor: colors.textTertiary + '30' }} />
+        <View style={{ width: '60%', height: 14, borderRadius: 6, backgroundColor: colors.textTertiary + '30' }} />
+      </View>
+    </View>
+  )
+}

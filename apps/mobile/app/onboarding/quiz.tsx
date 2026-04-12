@@ -17,7 +17,8 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { colors, spacing, typography } from '@/src/theme';
+import { spacing, typography, AppColors } from '@/src/theme'
+import { useTheme } from '@/src/hooks/useTheme'
 import { fetchFromApi } from '@/src/services/api';
 import { useAuthStore } from '@/src/stores/authStore';
 
@@ -67,12 +68,13 @@ const QUESTIONS: Question[] = [
   },
 ];
 
+// Brand colors — same in light & dark
 const CHARACTER_MAP: Record<WorldType, { name: string; tagline: string; color: string }> = {
-  TASTE:   { name: 'The Gourmand',    tagline: "Sri Lanka's table is your compass",       color: colors.taste },
-  WILD:    { name: 'The Adventurer',  tagline: "The wild calls and you always answer",      color: colors.wild },
-  MOVE:    { name: 'The Wanderer',    tagline: "You move through places, never just visiting", color: colors.move },
-  ROOTS:   { name: 'The Storyteller', tagline: "Every stone has a story and you find them",  color: colors.roots },
-  RESTORE: { name: 'The Seeker',      tagline: "You travel to find stillness",              color: colors.restore },
+  TASTE:   { name: 'The Gourmand',    tagline: "Sri Lanka's table is your compass",          color: '#B85C1A' },
+  WILD:    { name: 'The Adventurer',  tagline: "The wild calls and you always answer",        color: '#2D6E4E' },
+  MOVE:    { name: 'The Wanderer',    tagline: "You move through places, never just visiting", color: '#1A5F8A' },
+  ROOTS:   { name: 'The Storyteller', tagline: "Every stone has a story and you find them",   color: '#614A9E' },
+  RESTORE: { name: 'The Seeker',      tagline: "You travel to find stillness",                color: '#5E8C6E' },
 };
 
 const CALC_PHRASES = [
@@ -84,191 +86,7 @@ const CALC_PHRASES = [
 
 const CALC_EMOJIS = ['🍛', '🐆', '🏄', '🏛️', '🌿', '🗺️', '✨', '🌊'];
 
-function CalculatingScreen({ onDone }: { onDone: () => void }) {
-  const [phraseIdx, setPhraseIdx] = useState(0);
-  const [emojiIdx, setEmojiIdx] = useState(0);
-  const barWidth = useSharedValue(0);
-  const emojiScale = useSharedValue(1);
-
-  const barStyle = useAnimatedStyle(() => ({ width: `${barWidth.value * 100}%` }));
-  const emojiStyle = useAnimatedStyle(() => ({ transform: [{ scale: emojiScale.value }] }));
-
-  useEffect(() => {
-    // Animate bar to 100% over 4.8s
-    barWidth.value = withTiming(1, { duration: 4800, easing: Easing.out(Easing.quad) });
-
-    // Cycle phrases every 1200ms
-    const phraseTimer = setInterval(() => {
-      setPhraseIdx((i) => (i + 1) % CALC_PHRASES.length);
-    }, 1200);
-
-    // Cycle emojis every 600ms
-    const emojiTimer = setInterval(() => {
-      setEmojiIdx((i) => (i + 1) % CALC_EMOJIS.length);
-      emojiScale.value = withSequence(
-        withTiming(1.3, { duration: 150 }),
-        withTiming(1, { duration: 250 })
-      );
-    }, 600);
-
-    // Reveal result after 5s
-    const doneTimer = setTimeout(onDone, 5000);
-
-    return () => {
-      clearInterval(phraseTimer);
-      clearInterval(emojiTimer);
-      clearTimeout(doneTimer);
-    };
-  }, []);
-
-  return (
-    <View style={[styles.container, styles.resultContainer]}>
-      <Animated.Text style={[styles.calcEmoji, emojiStyle]}>
-        {CALC_EMOJIS[emojiIdx]}
-      </Animated.Text>
-      <Text style={styles.calcPhrase}>{CALC_PHRASES[phraseIdx]}</Text>
-      <View style={styles.progressTrack}>
-        <Animated.View style={[styles.progressFill, barStyle]} />
-      </View>
-    </View>
-  );
-}
-
-export default function QuizScreen() {
-  const { top } = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-  const [step, setStep] = useState(0); // 0,1,2 = questions; 3 = calculating; 4 = result
-  const [scores, setScores] = useState<Record<WorldType, number>>({
-    TASTE: 0, WILD: 0, MOVE: 0, ROOTS: 0, RESTORE: 0,
-  });
-  const [selected, setSelected] = useState<WorldType | null>(null);
-  const [result, setResult] = useState<WorldType | null>(null);
-  const { user, setAuth, token } = useAuthStore();
-
-  const progress = useSharedValue(0);
-  const progressStyle = useAnimatedStyle(() => ({
-    width: `${progress.value * 100}%`,
-  }));
-
-  const handleSelect = (world: WorldType) => {
-    setSelected(world);
-  };
-
-  const handleNext = () => {
-    if (!selected) return;
-
-    const newScores = { ...scores, [selected]: scores[selected] + 1 };
-    setScores(newScores);
-    setSelected(null);
-
-    if (step < QUESTIONS.length - 1) {
-      progress.value = withTiming((step + 1) / QUESTIONS.length);
-      setStep(step + 1);
-    } else {
-      // Calculate winner
-      const winner = (Object.keys(newScores) as WorldType[]).reduce((a, b) =>
-        newScores[a] >= newScores[b] ? a : b
-      );
-      progress.value = withTiming(1);
-      setResult(winner);
-      setStep(3); // show calculating screen first
-    }
-  };
-
-  const handleContinue = async () => {
-    if (result && token && user) {
-      try {
-        await fetchFromApi('/api/user/character', {
-          method: 'PATCH',
-          body: JSON.stringify({ character: result }),
-        });
-        // Update local store so the character is immediately available
-        setAuth(token, { ...user, travellerCharacter: result })
-      } catch (e) {
-        // Non-blocking — character can be set again later
-        console.warn('Failed to save character:', e)
-      }
-    }
-    router.replace('/(tabs)');
-  };
-
-  // Calculating screen
-  if (step === 3) {
-    return <CalculatingScreen onDone={() => setStep(4)} />;
-  }
-
-  // Result screen
-  if (step === 4 && result) {
-    const character = CHARACTER_MAP[result];
-    return (
-      <View style={[styles.container, styles.resultContainer, { paddingTop: top + spacing.xl }]}>
-        <View style={[styles.characterBadge, { backgroundColor: character.color + '22', borderColor: character.color }]}>
-          <Text style={styles.characterEmoji}>
-            {result === 'TASTE' ? '🍛' : result === 'WILD' ? '🐆' : result === 'MOVE' ? '🏄' : result === 'ROOTS' ? '🏛️' : '🌿'}
-          </Text>
-        </View>
-        <Text style={styles.resultTitle}>{character.name}</Text>
-        <Text style={styles.resultTagline}>{character.tagline}</Text>
-        <Text style={styles.resultBody}>
-          Your SerendiGO journey is shaped around your character. The island will reveal itself to you in your own way.
-        </Text>
-        <Pressable
-          style={[styles.button, { backgroundColor: character.color }]}
-          onPress={handleContinue}
-        >
-          <Text style={styles.buttonText}>Begin the journey →</Text>
-        </Pressable>
-      </View>
-    );
-  }
-
-  const question = QUESTIONS[step];
-
-  return (
-    <View style={[styles.container, { paddingTop: top + spacing.lg }]}>
-      {/* Progress bar */}
-      <View style={styles.progressTrack}>
-        <Animated.View style={[styles.progressFill, progressStyle]} />
-      </View>
-
-      <Text style={styles.stepText}>{step + 1} of {QUESTIONS.length}</Text>
-
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.prompt}>{question.prompt}</Text>
-
-        <View style={styles.answers}>
-          {question.answers.map((answer) => {
-            const isSelected = selected === answer.world;
-            return (
-              <Pressable
-                key={answer.world}
-                style={[styles.answer, isSelected && styles.answerSelected]}
-                onPress={() => handleSelect(answer.world)}
-              >
-                <Text style={styles.answerEmoji}>{answer.emoji}</Text>
-                <Text style={[styles.answerText, isSelected && styles.answerTextSelected]}>
-                  {answer.text}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <Pressable
-          style={[styles.button, !selected && styles.buttonDisabled]}
-          onPress={handleNext}
-          disabled={!selected}
-        >
-          <Text style={styles.buttonText}>
-            {step < QUESTIONS.length - 1 ? 'Next →' : 'See my character →'}
-          </Text>
-        </Pressable>
-      </ScrollView>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surface,
@@ -387,4 +205,183 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: spacing.lg,
   },
-});
+})
+
+function CalculatingScreen({ onDone }: { onDone: () => void }) {
+  const { colors } = useTheme()
+  const styles = makeStyles(colors)
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const [emojiIdx, setEmojiIdx] = useState(0);
+  const barWidth = useSharedValue(0);
+  const emojiScale = useSharedValue(1);
+
+  const barStyle = useAnimatedStyle(() => ({ width: `${barWidth.value * 100}%` }));
+  const emojiStyle = useAnimatedStyle(() => ({ transform: [{ scale: emojiScale.value }] }));
+
+  useEffect(() => {
+    barWidth.value = withTiming(1, { duration: 4800, easing: Easing.out(Easing.quad) });
+
+    const phraseTimer = setInterval(() => {
+      setPhraseIdx((i) => (i + 1) % CALC_PHRASES.length);
+    }, 1200);
+
+    const emojiTimer = setInterval(() => {
+      setEmojiIdx((i) => (i + 1) % CALC_EMOJIS.length);
+      emojiScale.value = withSequence(
+        withTiming(1.3, { duration: 150 }),
+        withTiming(1, { duration: 250 })
+      );
+    }, 600);
+
+    const doneTimer = setTimeout(onDone, 5000);
+
+    return () => {
+      clearInterval(phraseTimer);
+      clearInterval(emojiTimer);
+      clearTimeout(doneTimer);
+    };
+  }, []);
+
+  return (
+    <View style={[styles.container, styles.resultContainer]}>
+      <Animated.Text style={[styles.calcEmoji, emojiStyle]}>
+        {CALC_EMOJIS[emojiIdx]}
+      </Animated.Text>
+      <Text style={styles.calcPhrase}>{CALC_PHRASES[phraseIdx]}</Text>
+      <View style={styles.progressTrack}>
+        <Animated.View style={[styles.progressFill, barStyle]} />
+      </View>
+    </View>
+  );
+}
+
+export default function QuizScreen() {
+  const { top } = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const { colors } = useTheme()
+  const styles = makeStyles(colors)
+  const [step, setStep] = useState(0);
+  const [scores, setScores] = useState<Record<WorldType, number>>({
+    TASTE: 0, WILD: 0, MOVE: 0, ROOTS: 0, RESTORE: 0,
+  });
+  const [selected, setSelected] = useState<WorldType | null>(null);
+  const [result, setResult] = useState<WorldType | null>(null);
+  const { user, setAuth, token } = useAuthStore();
+
+  const progress = useSharedValue(0);
+  const progressStyle = useAnimatedStyle(() => ({
+    width: `${progress.value * 100}%`,
+  }));
+
+  const handleSelect = (world: WorldType) => {
+    setSelected(world);
+  };
+
+  const handleNext = () => {
+    if (!selected) return;
+
+    const newScores = { ...scores, [selected]: scores[selected] + 1 };
+    setScores(newScores);
+    setSelected(null);
+
+    if (step < QUESTIONS.length - 1) {
+      progress.value = withTiming((step + 1) / QUESTIONS.length);
+      setStep(step + 1);
+    } else {
+      const winner = (Object.keys(newScores) as WorldType[]).reduce((a, b) =>
+        newScores[a] >= newScores[b] ? a : b
+      );
+      progress.value = withTiming(1);
+      setResult(winner);
+      setStep(3);
+    }
+  };
+
+  const handleContinue = async () => {
+    if (result && token && user) {
+      try {
+        await fetchFromApi('/api/user/character', {
+          method: 'PATCH',
+          body: JSON.stringify({ character: result }),
+        });
+        setAuth(token, { ...user, travellerCharacter: result })
+      } catch (e) {
+        console.warn('Failed to save character:', e)
+      }
+    }
+    router.replace('/(tabs)');
+  };
+
+  if (step === 3) {
+    return <CalculatingScreen onDone={() => setStep(4)} />;
+  }
+
+  if (step === 4 && result) {
+    const character = CHARACTER_MAP[result];
+    return (
+      <View style={[styles.container, styles.resultContainer, { paddingTop: top + spacing.xl }]}>
+        <View style={[styles.characterBadge, { backgroundColor: character.color + '22', borderColor: character.color }]}>
+          <Text style={styles.characterEmoji}>
+            {result === 'TASTE' ? '🍛' : result === 'WILD' ? '🐆' : result === 'MOVE' ? '🏄' : result === 'ROOTS' ? '🏛️' : '🌿'}
+          </Text>
+        </View>
+        <Text style={styles.resultTitle}>{character.name}</Text>
+        <Text style={styles.resultTagline}>{character.tagline}</Text>
+        <Text style={styles.resultBody}>
+          Your SerendiGO journey is shaped around your character. The island will reveal itself to you in your own way.
+        </Text>
+        <Pressable
+          style={[styles.button, { backgroundColor: character.color }]}
+          onPress={handleContinue}
+        >
+          <Text style={styles.buttonText}>Begin the journey →</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  const question = QUESTIONS[step];
+
+  return (
+    <View style={[styles.container, { paddingTop: top + spacing.lg }]}>
+      {/* Progress bar */}
+      <View style={styles.progressTrack}>
+        <Animated.View style={[styles.progressFill, progressStyle]} />
+      </View>
+
+      <Text style={styles.stepText}>{step + 1} of {QUESTIONS.length}</Text>
+
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <Text style={styles.prompt}>{question.prompt}</Text>
+
+        <View style={styles.answers}>
+          {question.answers.map((answer) => {
+            const isSelected = selected === answer.world;
+            return (
+              <Pressable
+                key={answer.world}
+                style={[styles.answer, isSelected && styles.answerSelected]}
+                onPress={() => handleSelect(answer.world)}
+              >
+                <Text style={styles.answerEmoji}>{answer.emoji}</Text>
+                <Text style={[styles.answerText, isSelected && styles.answerTextSelected]}>
+                  {answer.text}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <Pressable
+          style={[styles.button, !selected && styles.buttonDisabled]}
+          onPress={handleNext}
+          disabled={!selected}
+        >
+          <Text style={styles.buttonText}>
+            {step < QUESTIONS.length - 1 ? 'Next →' : 'See my character →'}
+          </Text>
+        </Pressable>
+      </ScrollView>
+    </View>
+  );
+}

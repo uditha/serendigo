@@ -36,6 +36,7 @@ export async function submitCapture(params: {
   lat: number
   lng: number
   note?: string
+  isPublic?: boolean
 }): Promise<CaptureResult> {
   const token = await getToken()
 
@@ -44,6 +45,7 @@ export async function submitCapture(params: {
   form.append('lat', String(params.lat))
   form.append('lng', String(params.lng))
   if (params.note) form.append('note', params.note)
+  form.append('isPublic', params.isPublic !== false ? 'true' : 'false')
 
   // Append photo as a file blob
   const filename = params.photoUri.split('/').pop() ?? 'photo.jpg'
