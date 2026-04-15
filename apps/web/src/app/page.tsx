@@ -1,18 +1,19 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import BrandMark from '@/components/BrandMark'
 import SriLankaMap from '@/components/SriLankaMap'
 
 /* ── Sri Lanka simplified province data ─────────────────────────────── */
 const PROVINCES = [
   { id: 'western',       label: 'Western',     cx: 72,  cy: 168, r: 18, worldColor: '#B85C1A' },
   { id: 'central',       label: 'Central',     cx: 105, cy: 148, r: 16, worldColor: '#2D6E4E' },
-  { id: 'southern',      label: 'Southern',    cx: 88,  cy: 200, r: 16, worldColor: '#E8832A' },
+  { id: 'southern',      label: 'Southern',    cx: 88,  cy: 200, r: 16, worldColor: '#1d7dc8' },
   { id: 'northern',      label: 'Northern',    cx: 100, cy: 50,  r: 20, worldColor: '#614A9E' },
   { id: 'eastern',       label: 'Eastern',     cx: 145, cy: 130, r: 16, worldColor: '#1A5F8A' },
   { id: 'north_western', label: 'NW',          cx: 68,  cy: 110, r: 14, worldColor: '#5E8C6E' },
   { id: 'north_central', label: 'NC',          cx: 105, cy: 105, r: 16, worldColor: '#8E44AD' },
-  { id: 'uva',           label: 'Uva',         cx: 125, cy: 170, r: 14, worldColor: '#E8832A' },
+  { id: 'uva',           label: 'Uva',         cx: 125, cy: 170, r: 14, worldColor: '#1d7dc8' },
   { id: 'sabaragamuwa',  label: 'Sabaragamuwa', cx: 92, cy: 172, r: 13, worldColor: '#2D6E4E' },
 ]
 
@@ -31,11 +32,34 @@ const ORBIT_NODES = [
   { angle: 270, emoji: '🏠', label: 'Spend' },
 ]
 
+const HERO_PROVINCE_IDS = ['western','central','southern','northern','eastern','north_western','north_central','uva','sabaragamuwa']
+
+const PROVINCE_COLORS_MAP: Record<string, string> = {
+  western:'#B85C1A', central:'#2D6E4E', southern:'#1A5F8A', northern:'#614A9E',
+  eastern:'#1A6B7A', north_western:'#5E8C6E', north_central:'#8E44AD',
+  uva:'#1d7dc8', sabaragamuwa:'#C0392B',
+}
+const PROVINCE_LABELS: Record<string, string> = {
+  western:'Western', central:'Central', southern:'Southern', northern:'Northern',
+  eastern:'Eastern', north_western:'North Western', north_central:'North Central',
+  uva:'Uva', sabaragamuwa:'Sabaragamuwa',
+}
+
+const PARTNER_VIGNETTES = [
+  { name: "Ravi's Kottu Corner", type: 'FOOD', province: 'Western', delay: 0, familyRun: true },
+  { name: "Dilani's Ella Nest", type: 'STAY', province: 'Uva', delay: 0.12, familyRun: true },
+  { name: 'Asanka Spice Garden', type: 'EXPERIENCE', province: 'Central', delay: 0.24, familyRun: false },
+  { name: 'Nimal Beach Cabanas', type: 'STAY', province: 'Southern', delay: 0.36, familyRun: true },
+] as const
+
+const STACK_STEP_TOP = 48
+const STACK_STEP_RIGHT = 14
+const STACK_ROTATE_MS = 1_000
+
 export default function Home() {
-  const [activeProvinces, setActiveProvinces] = useState<string[]>([])
+  const [heroProvinceIdx, setHeroProvinceIdx] = useState(0)
   const [preloaderDone, setPreloaderDone] = useState(false)
-  const arcSectionRef = useRef<HTMLDivElement>(null)
-  const arcTrackRef = useRef<HTMLDivElement>(null)
+  const [partnerStackFront, setPartnerStackFront] = useState(0)
   const counterRef = useRef<HTMLSpanElement>(null)
   const counterDone = useRef(false)
 
@@ -45,72 +69,26 @@ export default function Home() {
     return () => clearTimeout(t)
   }, [])
 
-  /* Stars */
+  /* Hero province cycling */
   useEffect(() => {
-    const container = document.getElementById('star-field')
-    if (!container) return
-    for (let i = 0; i < 70; i++) {
-      const star = document.createElement('div')
-      star.className = 'star'
-      star.style.cssText = `
-        width: ${Math.random() * 2.5 + 0.5}px;
-        height: ${Math.random() * 2.5 + 0.5}px;
-        top: ${Math.random() * 100}%;
-        left: ${Math.random() * 100}%;
-        --dur: ${Math.random() * 3 + 2}s;
-        --delay: ${Math.random() * 4}s;
-        opacity: ${Math.random() * 0.5 + 0.1};
-      `
-      container.appendChild(star)
-    }
+    const id = setInterval(() => setHeroProvinceIdx(i => (i + 1) % HERO_PROVINCE_IDS.length), 6000)
+    return () => clearInterval(id)
   }, [])
 
-  /* Scroll — sky interpolation + horizontal arc scroll + province map */
+  /* Partner deck: every second the front card cycles — top/right animate */
   useEffect(() => {
-    const lerp = (a: number, b: number, t: number) => a + (b - a) * Math.min(1, Math.max(0, t))
+    if (typeof window === 'undefined') return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const n = PARTNER_VIGNETTES.length
+    const id = window.setInterval(() => {
+      setPartnerStackFront((f) => (f + 1) % n)
+    }, STACK_ROTATE_MS)
+    return () => window.clearInterval(id)
+  }, [])
 
-    const handler = () => {
-      const y = window.scrollY
-      const max = document.body.scrollHeight - window.innerHeight
-
-      // Sky gradient interpolation (pre-dawn → golden → teal → night)
-      const p = y / max
-      let r: number, g: number, b: number
-      if (p < 0.3) {
-        const t = p / 0.3
-        r = lerp(13, 26, t); g = lerp(11, 107, t); b = lerp(24, 122, t)
-      } else if (p < 0.6) {
-        const t = (p - 0.3) / 0.3
-        r = lerp(26, 26, t); g = lerp(107, 26, t); b = lerp(122, 46, t)
-      } else {
-        const t = (p - 0.6) / 0.4
-        r = lerp(26, 10, t); g = lerp(26, 8, t); b = lerp(46, 20, t)
-      }
-      document.documentElement.style.setProperty('--sky', `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`)
-
-      // Horizontal arc scroll
-      const arcSection = arcSectionRef.current
-      const arcTrack = arcTrackRef.current
-      if (arcSection && arcTrack) {
-        const rect = arcSection.getBoundingClientRect()
-        if (rect.top <= 0 && rect.bottom >= window.innerHeight) {
-          const progress = Math.abs(rect.top) / (arcSection.offsetHeight - window.innerHeight)
-          const maxX = arcTrack.scrollWidth - arcTrack.clientWidth
-          arcTrack.style.transform = `translateX(${-maxX * Math.min(1, progress)}px)`
-        }
-      }
-
-      // Province map: highlight based on scroll position through arc section
-      const arcProgress = arcSection
-        ? Math.abs(arcSection.getBoundingClientRect().top) / (arcSection.offsetHeight || 1)
-        : 0
-      const arcIdx = Math.floor(arcProgress * ARCS.length)
-      const arc = ARCS[Math.min(arcIdx, ARCS.length - 1)]
-      setActiveProvinces(arc ? [arc.province] : [])
-    }
-
-    window.addEventListener('scroll', handler, { passive: true })
-    return () => window.removeEventListener('scroll', handler)
+  /* Hero / theme: keep sky token white */
+  useEffect(() => {
+    document.documentElement.style.setProperty('--sky', '#ffffff')
   }, [])
 
   /* Intersection observer for reveals + counter */
@@ -148,10 +126,10 @@ export default function Home() {
       {/* ── Preloader ──────────────────────────────────────────── */}
       <div id="preloader" className={preloaderDone ? 'hidden' : ''}>
         <div className="flex flex-col items-center gap-6">
-          <svg width="120" height="150" viewBox="0 0 200 250" fill="none">
+          <svg width="120" height="150" viewBox="0 0 200 250" fill="none" style={{ color: 'var(--sg-primary)' }}>
             <path
               d="M100,12 C115,8 132,14 143,28 C158,46 164,70 163,96 C162,122 154,146 142,167 C130,188 114,205 96,216 C78,227 58,228 42,216 C26,204 18,184 16,162 C14,140 20,118 30,98 C40,78 54,62 64,46 C74,30 80,18 100,12 Z"
-              stroke="#E8832A"
+              stroke="currentColor"
               strokeWidth="2.5"
               fill="none"
             />
@@ -160,7 +138,7 @@ export default function Home() {
             style={{
               fontFamily: 'DM Serif Display, serif',
               fontSize: 28,
-              color: '#F7F0E3',
+              color: 'var(--sg-ink)',
               letterSpacing: 2,
             }}
           >
@@ -171,42 +149,46 @@ export default function Home() {
 
       {/* ── Nav ────────────────────────────────────────────────── */}
       <nav
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-5"
-        style={{ background: 'rgba(13,11,24,0.7)', backdropFilter: 'blur(12px)' }}
+        className="sg-nav-strip"
+        style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: 'var(--sg-nav-glass)', backdropFilter: 'blur(20px)', borderBottom: '1px solid var(--sg-border-subtle)' }}
       >
-        <div style={{ fontFamily: 'DM Serif Display, serif', fontSize: 22, color: '#F7F0E3' }}>
-          SerendiGO <span style={{ color: '#E8832A' }}>🌴</span>
-        </div>
-        <div className="hidden md:flex items-center gap-8">
-          {['For Explorers', 'How It Works', 'Blog'].map((l) => (
-            <a
-              key={l}
-              href={`#${l.toLowerCase().replace(/\s/g, '-')}`}
+        <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 16, paddingBottom: 16 }}>
+          <div className="flex items-center gap-2" style={{ fontFamily: 'DM Serif Display, serif', fontSize: 22, color: 'var(--sg-ink)' }}>
+            <span>SerendiGO</span>
+            <BrandMark size={22} />
+          </div>
+          <div className="hidden md:flex items-center gap-8">
+            {['For Explorers', 'How It Works', 'Blog'].map((l) => (
+              <a
+                key={l}
+                href={`#${l.toLowerCase().replace(/\s/g, '-')}`}
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 14,
+                  color: 'var(--sg-muted)',
+                }}
+                className="hover:text-sg-ink transition-colors"
+              >
+                {l}
+              </a>
+            ))}
+            <Link
+              href="/partners"
               style={{
                 fontFamily: 'Space Grotesk, sans-serif',
                 fontSize: 14,
-                color: '#F7F0E3',
-                opacity: 0.75,
+                fontWeight: 600,
+                background: 'transparent',
+                color: 'var(--sg-secondary)',
+                padding: '8px 18px',
+                borderRadius: 100,
+                border: '1.5px solid var(--sg-secondary)',
               }}
-              className="hover:opacity-100 transition-opacity"
+              className="hover:bg-[rgba(26,107,122,0.06)] transition-colors"
             >
-              {l}
-            </a>
-          ))}
-          <Link
-            href="/partners"
-            style={{
-              fontFamily: 'Space Grotesk, sans-serif',
-              fontSize: 14,
-              background: '#1A6B7A',
-              color: '#F7F0E3',
-              padding: '8px 20px',
-              borderRadius: 100,
-            }}
-            className="hover:opacity-90 transition-opacity"
-          >
-            For Partners
-          </Link>
+              For Partners
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -214,157 +196,202 @@ export default function Home() {
 
         {/* ── HERO ───────────────────────────────────────────────── */}
         <section
-          className="relative min-h-screen flex items-center overflow-hidden"
           id="for-explorers"
-          style={{ background: 'linear-gradient(to bottom, #0D0B18 0%, #0D2B38 100%)' }}
+          className="relative flex min-h-screen items-center overflow-hidden bg-white"
         >
-          {/* Stars */}
-          <div id="star-field" className="absolute inset-0 pointer-events-none" />
-
-          {/* Island — hero right column */}
-          <div
-            className="hidden lg:flex items-center justify-center pointer-events-none"
-            style={{
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: '48%',
-              animation: 'islandFloat 7s ease-in-out infinite',
-            }}
-          >
-            <SriLankaMap
-              animated
-              width={420}
-              height={740}
-              style={{ filter: 'drop-shadow(0 0 60px rgba(26,107,122,0.25))' }}
-            />
-          </div>
-
-          {/* Content — left half only on desktop */}
-          <div className="relative z-10 px-8 md:px-20 pt-32 pb-20 lg:w-1/2">
-            <p
-              className="mb-6"
-              style={{
-                fontFamily: 'Space Grotesk, sans-serif',
-                fontSize: 12,
-                letterSpacing: 5,
-                color: '#E8832A',
-                textTransform: 'uppercase',
-              }}
-            >
-              The Living Guide to Sri Lanka
-            </p>
-            <h1
-              style={{
-                fontFamily: 'DM Serif Display, serif',
-                fontSize: 'clamp(52px, 8vw, 96px)',
-                color: '#F7F0E3',
-                lineHeight: 1.05,
-                marginBottom: 28,
-              }}
-            >
-              Before you know it,
-              <br />
-              <span style={{ color: '#E8832A' }}>you&apos;ll miss it.</span>
-            </h1>
-            <p
-              style={{
-                fontFamily: 'Space Grotesk, sans-serif',
-                fontSize: 'clamp(16px, 2vw, 20px)',
-                color: '#F7F0E3',
-                opacity: 0.72,
-                maxWidth: 520,
-                lineHeight: 1.7,
-                marginBottom: 48,
-              }}
-            >
-              SerendiGO is the living guide. Follow story arcs across 9 provinces, collect stamps
-              on your passport, earn coins — and spend them with the families who make this island
-              extraordinary.
-            </p>
-            <div className="flex flex-wrap gap-4 items-center">
-              <a
-                href="#how-it-works"
-                className="pulse-cta"
+          <div className="container relative z-[1] grid md:grid-cols-2 gap-12 items-center" style={{ paddingTop: 120, paddingBottom: 80 }}>
+            {/* LEFT: text content */}
+            <div>
+              <p
+                className="mb-6"
                 style={{
                   fontFamily: 'Space Grotesk, sans-serif',
-                  fontWeight: 600,
-                  fontSize: 15,
-                  background: '#E8832A',
-                  color: '#fff',
-                  padding: '14px 32px',
-                  borderRadius: 100,
-                  textDecoration: 'none',
+                  fontSize: 12,
+                  letterSpacing: 5,
+                  color: 'var(--sg-primary)',
+                  textTransform: 'uppercase',
                 }}
               >
-                Begin the journey
-              </a>
-              <Link
-                href="/partners"
+                The Living Guide to Sri Lanka
+              </p>
+              <h1
+                style={{
+                  fontFamily: 'DM Serif Display, serif',
+                  fontSize: 'clamp(32px, 3.2vw, 52px)',
+                  color: 'var(--sg-ink)',
+                  lineHeight: 1.1,
+                  marginBottom: 28,
+                }}
+              >
+                Before you know it,
+                <br />
+                <span className="sg-text-accent">you&apos;ll miss it.</span>
+              </h1>
+              <p
                 style={{
                   fontFamily: 'Space Grotesk, sans-serif',
-                  fontSize: 15,
-                  color: '#F7F0E3',
-                  opacity: 0.7,
-                  padding: '14px 24px',
-                  border: '1px solid rgba(247,240,227,0.25)',
-                  borderRadius: 100,
-                  textDecoration: 'none',
+                  fontSize: 'clamp(16px, 2vw, 20px)',
+                  color: 'var(--sg-muted)',
+                  maxWidth: 520,
+                  lineHeight: 1.7,
+                  marginBottom: 48,
                 }}
-                className="hover:opacity-100 transition-opacity"
               >
-                I have a local business →
-              </Link>
-            </div>
-
-            {/* World type pills */}
-            <div className="flex flex-wrap gap-2 mt-12">
-              {[
-                { label: 'Taste',   emoji: '🍛', color: '#B85C1A' },
-                { label: 'Wild',    emoji: '🌿', color: '#2D6E4E' },
-                { label: 'Move',    emoji: '⚡', color: '#1A5F8A' },
-                { label: 'Roots',   emoji: '🏛️', color: '#614A9E' },
-                { label: 'Restore', emoji: '🧘', color: '#5E8C6E' },
-              ].map((w) => (
-                <span
-                  key={w.label}
+                SerendiGO is the living guide. Follow story arcs across 9 provinces, collect stamps
+                on your passport, earn coins — and spend them with the families who make this island
+                extraordinary.
+              </p>
+              <div className="flex flex-wrap gap-4 items-center">
+                <a
+                  href="#how-it-works"
                   style={{
                     fontFamily: 'Space Grotesk, sans-serif',
-                    fontSize: 12,
                     fontWeight: 600,
-                    letterSpacing: 1,
-                    textTransform: 'uppercase',
-                    background: `${w.color}22`,
-                    color: w.color,
-                    border: `1px solid ${w.color}44`,
-                    padding: '6px 14px',
+                    fontSize: 15,
+                    background: 'var(--sg-primary)',
+                    color: '#ffffff',
+                    padding: '14px 32px',
                     borderRadius: 100,
+                    textDecoration: 'none',
+                    boxShadow: 'var(--sg-glow-amber)',
                   }}
+                  className="hover:brightness-[1.03] transition-[filter]"
                 >
-                  {w.emoji} {w.label}
-                </span>
-              ))}
+                  Begin the journey
+                </a>
+                <Link
+                  href="/partners"
+                  style={{
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    fontSize: 15,
+                    color: 'var(--sg-ink)',
+                    padding: '14px 24px',
+                    border: '1px solid var(--sg-border-strong)',
+                    borderRadius: 100,
+                    textDecoration: 'none',
+                    background: '#ffffff',
+                  }}
+                  className="hover:bg-sg-section transition-colors"
+                >
+                  I have a local business →
+                </Link>
+              </div>
+
+              {/* World type pills */}
+              <div className="flex flex-wrap gap-2 mt-12">
+                {[
+                  { label: 'Taste',   emoji: '🍛', color: '#B85C1A' },
+                  { label: 'Wild',    emoji: '🌿', color: '#2D6E4E' },
+                  { label: 'Move',    emoji: '⚡', color: '#1A5F8A' },
+                  { label: 'Roots',   emoji: '🏛️', color: '#614A9E' },
+                  { label: 'Restore', emoji: '🧘', color: '#5E8C6E' },
+                ].map((w) => (
+                  <span
+                    key={w.label}
+                    style={{
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      letterSpacing: 1,
+                      textTransform: 'uppercase',
+                      background: '#ffffff',
+                      color: w.color,
+                      border: `1px solid ${w.color}66`,
+                      boxShadow: '0 1px 2px rgba(26,26,46,0.06)',
+                      padding: '6px 14px',
+                      borderRadius: 100,
+                    }}
+                  >
+                    {w.emoji} {w.label}
+                  </span>
+                ))}
+              </div>
             </div>
+
+            {/* RIGHT: island map + province arc card */}
+            {(() => {
+              const activeProvince = HERO_PROVINCE_IDS[heroProvinceIdx]
+              const provinceColor = PROVINCE_COLORS_MAP[activeProvince] ?? '#1d7dc8'
+              const provinceArc = ARCS.find(a => a.province === activeProvince)
+              return (
+                <div className="hidden lg:flex" style={{ justifyContent: 'flex-end', alignItems: 'center', position: 'relative', width: 360, height: 600, marginLeft: 40 }}>
+                  <SriLankaMap
+                    goldenBorder
+                    width={360}
+                    height={600}
+                    style={{ animation: 'islandFloat 9s ease-in-out infinite' }}
+                  />
+
+                  {/* Province info card */}
+                  <div
+                    key={heroProvinceIdx}
+                    style={{
+                      position: 'absolute',
+                      top: 24,
+                      right: -150,
+                      width: 240,
+                      borderRadius: 20,
+                      overflow: 'hidden',
+                      animation: 'fadeInUp 2s ease',
+                      boxShadow: 'var(--sg-shadow-card)',
+                    }}
+                  >
+                    {provinceArc ? (
+                      <>
+                        {/* Coloured header band */}
+                        <div style={{
+                          background: `linear-gradient(135deg, ${provinceColor}EE, ${provinceColor}99)`,
+                          padding: '16px 18px 14px',
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                            <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 9, fontWeight: 700, letterSpacing: 3, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase' }}>{provinceArc.world}</span>
+                            <span style={{ fontSize: 24 }}>{provinceArc.emoji}</span>
+                          </div>
+                          <div style={{ fontFamily: 'DM Serif Display, serif', fontSize: 17, color: '#fff', lineHeight: 1.2 }}>{provinceArc.title}</div>
+                        </div>
+
+                        {/* White body */}
+                        <div style={{ background: '#FDFAF5', padding: '14px 18px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: provinceColor }} />
+                            <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 10, fontWeight: 600, color: '#5A5A7A', letterSpacing: 1, textTransform: 'uppercase' }}>{PROVINCE_LABELS[activeProvince]} Province</span>
+                          </div>
+                          <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 12, color: '#5A5A7A', lineHeight: 1.6, marginBottom: 14 }}>{provinceArc.desc}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 11, color: '#1A1A2E', fontWeight: 700 }}>{provinceArc.chapters} chapters</span>
+                            <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 11, color: provinceColor, fontWeight: 700 }}>Explore →</span>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ background: '#FDFAF5', padding: '20px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 12, background: `${provinceColor}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🗺️</div>
+                        <div>
+                          <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 13, color: '#1A1A2E', fontWeight: 700 }}>{PROVINCE_LABELS[activeProvince]}</div>
+                          <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 11, color: '#5A5A7A', marginTop: 3 }}>Arcs coming soon</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
           </div>
 
           {/* Scroll indicator */}
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3">
+          <div className="absolute bottom-10 left-1/2 z-[2] flex -translate-x-1/2 flex-col items-center gap-3">
+            <div className="h-1 w-1 rounded-full bg-sg-muted" />
             <div
-              className="scroll-dot w-1 h-1 rounded-full"
-              style={{ background: '#F7F0E3', opacity: 0.4 }}
-            />
-            <div
-              className="scroll-dot w-1 h-6 rounded-full"
-              style={{ background: '#F7F0E3', opacity: 0.2, animationDelay: '0.3s' }}
+              className="scroll-dot h-6 w-1 rounded-full bg-sg-muted/50"
+              style={{ animationDelay: '0.3s' }}
             />
             <p
               style={{
                 fontFamily: 'Space Grotesk, sans-serif',
-                fontSize: 10,
-                letterSpacing: 4,
-                color: '#F7F0E3',
-                opacity: 0.35,
+                fontSize: 11,
+                fontWeight: 600,
+                letterSpacing: 3,
+                color: 'var(--sg-muted)',
                 textTransform: 'uppercase',
               }}
             >
@@ -374,15 +401,15 @@ export default function Home() {
         </section>
 
         {/* ── TWO PATHS ──────────────────────────────────────────── */}
-        <section className="py-24 px-8 md:px-20" style={{ background: '#0D1520' }}>
-          <div className="max-w-6xl mx-auto">
+        <section style={{ background: 'var(--sg-bg-section)', paddingTop: 96, paddingBottom: 96 }}>
+          <div className="container">
             <p
               className="reveal mb-4"
               style={{
                 fontFamily: 'Space Grotesk, sans-serif',
                 fontSize: 12,
                 letterSpacing: 5,
-                color: '#E8832A',
+                color: 'var(--sg-primary)',
                 textTransform: 'uppercase',
               }}
             >
@@ -392,8 +419,8 @@ export default function Home() {
               className="reveal reveal-delay-1 mb-16"
               style={{
                 fontFamily: 'DM Serif Display, serif',
-                fontSize: 'clamp(36px, 5vw, 60px)',
-                color: '#F7F0E3',
+                fontSize: 'clamp(28px, 3.5vw, 48px)',
+                color: 'var(--sg-ink)',
                 lineHeight: 1.1,
               }}
             >
@@ -406,10 +433,10 @@ export default function Home() {
               {/* Explorer card */}
               <a href="#how-it-works" style={{ textDecoration: 'none' }}>
                 <div
-                  className="path-card rounded-3xl p-10 relative overflow-hidden cursor-pointer h-full"
+                  className="path-card rounded-3xl p-10 relative overflow-hidden cursor-pointer h-full bg-white"
                   style={{
-                    background: 'linear-gradient(135deg, #0D2B38 0%, #1A3D4A 100%)',
-                    border: '1px solid rgba(26,107,122,0.3)',
+                    border: '1px solid rgba(26,107,122,0.22)',
+                    boxShadow: 'var(--sg-shadow-card)',
                   }}
                 >
                   <div className="float-pin text-5xl mb-6">🧭</div>
@@ -417,7 +444,7 @@ export default function Home() {
                     style={{
                       fontFamily: 'DM Serif Display, serif',
                       fontSize: 32,
-                      color: '#F7F0E3',
+                      color: 'var(--sg-ink)',
                       marginBottom: 12,
                     }}
                   >
@@ -427,8 +454,7 @@ export default function Home() {
                     style={{
                       fontFamily: 'Space Grotesk, sans-serif',
                       fontSize: 16,
-                      color: '#F7F0E3',
-                      opacity: 0.65,
+                      color: 'var(--sg-muted)',
                       lineHeight: 1.7,
                       marginBottom: 28,
                     }}
@@ -461,7 +487,7 @@ export default function Home() {
                     style={{
                       fontFamily: 'Space Grotesk, sans-serif',
                       fontSize: 14,
-                      color: '#E8832A',
+                      color: 'var(--sg-primary)',
                       fontWeight: 600,
                     }}
                   >
@@ -473,10 +499,10 @@ export default function Home() {
               {/* Partner card */}
               <Link href="/partners" style={{ textDecoration: 'none' }}>
                 <div
-                  className="path-card rounded-3xl p-10 relative overflow-hidden cursor-pointer h-full"
+                  className="path-card rounded-3xl p-10 relative overflow-hidden cursor-pointer h-full bg-white"
                   style={{
-                    background: 'linear-gradient(135deg, #1A3322 0%, #1F3D2A 100%)',
-                    border: '1px solid rgba(45,110,78,0.3)',
+                    border: '1px solid rgba(45,110,78,0.25)',
+                    boxShadow: 'var(--sg-shadow-card)',
                   }}
                 >
                   <div className="float-pin text-5xl mb-6" style={{ animationDelay: '1.5s' }}>
@@ -486,7 +512,7 @@ export default function Home() {
                     style={{
                       fontFamily: 'DM Serif Display, serif',
                       fontSize: 32,
-                      color: '#F7F0E3',
+                      color: 'var(--sg-ink)',
                       marginBottom: 12,
                     }}
                   >
@@ -496,8 +522,7 @@ export default function Home() {
                     style={{
                       fontFamily: 'Space Grotesk, sans-serif',
                       fontSize: 16,
-                      color: '#F7F0E3',
-                      opacity: 0.65,
+                      color: 'var(--sg-muted)',
                       lineHeight: 1.7,
                       marginBottom: 28,
                     }}
@@ -531,7 +556,7 @@ export default function Home() {
                     style={{
                       fontFamily: 'Space Grotesk, sans-serif',
                       fontSize: 14,
-                      color: '#E8832A',
+                      color: 'var(--sg-primary)',
                       fontWeight: 600,
                     }}
                   >
@@ -543,150 +568,121 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── HORIZONTAL ARC SCROLL ──────────────────────────────── */}
-        <div ref={arcSectionRef} id="how-it-works" style={{ height: '400vh', position: 'relative', background: '#080C14' }}>
-          <div
-            style={{
-              position: 'sticky',
-              top: 0,
-              height: '100vh',
-              overflow: 'hidden',
-              display: 'flex',
-              background: '#080C14',
-              flexDirection: 'column',
-              justifyContent: 'center',
-            }}
-          >
-
-            <div className="px-8 md:px-20 mb-8">
-              <p
-                style={{
-                  fontFamily: 'Space Grotesk, sans-serif',
-                  fontSize: 12,
-                  letterSpacing: 5,
-                  color: '#E8832A',
-                  textTransform: 'uppercase',
-                  marginBottom: 8,
-                }}
-              >
-                The five worlds
-              </p>
-              <h2
-                style={{
-                  fontFamily: 'DM Serif Display, serif',
-                  fontSize: 'clamp(28px, 4vw, 48px)',
-                  color: '#F7F0E3',
-                }}
-              >
-                Follow the story. Don&apos;t follow the crowd.
-              </h2>
-            </div>
-
-            {/* Horizontal track */}
-            <div style={{ overflow: 'hidden', paddingLeft: '8vw' }}>
-              <div
-                ref={arcTrackRef}
-                id="arc-track"
-                style={{ display: 'flex', gap: 24, width: 'max-content', paddingRight: '8vw' }}
-              >
-                {ARCS.map((arc) => (
-                  <div
-                    key={arc.world}
-                    style={{
-                      width: 340,
-                      flexShrink: 0,
-                      background: 'rgba(247,240,227,0.04)',
-                      border: `1px solid ${arc.color}33`,
-                      borderTop: `3px solid ${arc.color}`,
-                      borderRadius: 20,
-                      padding: 32,
-                      backdropFilter: 'blur(8px)',
-                    }}
-                  >
-                    <div style={{ fontSize: 44, marginBottom: 16 }}>{arc.emoji}</div>
-                    <span
-                      style={{
-                        fontFamily: 'Space Grotesk, sans-serif',
-                        fontSize: 11,
-                        letterSpacing: 2,
-                        color: arc.color,
-                        textTransform: 'uppercase',
-                        fontWeight: 700,
-                      }}
-                    >
-                      {arc.world}
-                    </span>
-                    <h3
-                      style={{
-                        fontFamily: 'DM Serif Display, serif',
-                        fontSize: 24,
-                        color: '#F7F0E3',
-                        marginTop: 8,
-                        marginBottom: 8,
-                        lineHeight: 1.2,
-                      }}
-                    >
-                      {arc.title}
-                    </h3>
-                    <p
-                      style={{
-                        fontFamily: 'Space Grotesk, sans-serif',
-                        fontSize: 14,
-                        color: '#F7F0E3',
-                        opacity: 0.6,
-                        lineHeight: 1.6,
-                        marginBottom: 20,
-                      }}
-                    >
-                      {arc.desc}
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <span
-                        style={{
-                          fontFamily: 'Space Grotesk, sans-serif',
-                          fontSize: 11,
-                          color: '#F7F0E3',
-                          opacity: 0.4,
-                          background: 'rgba(247,240,227,0.06)',
-                          padding: '4px 10px',
-                          borderRadius: 100,
-                        }}
-                      >
-                        {arc.province}
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: 'Space Grotesk, sans-serif',
-                          fontSize: 11,
-                          color: arc.color,
-                          fontWeight: 600,
-                        }}
-                      >
-                        {arc.chapters} chapters
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+        {/* ── FIVE WORLDS / ARCS ─────────────────────────────────── */}
+        <section
+          id="how-it-works"
+          style={{ background: 'var(--sg-bg-rich)', paddingTop: 96, paddingBottom: 96 }}
+        >
+          <div className="container">
             <p
               style={{
                 fontFamily: 'Space Grotesk, sans-serif',
                 fontSize: 12,
-                color: 'rgba(247,240,227,0.3)',
-                paddingLeft: '8vw',
-                marginTop: 16,
-                letterSpacing: 2,
+                letterSpacing: 5,
+                color: 'var(--sg-primary)',
+                textTransform: 'uppercase',
+                marginBottom: 8,
               }}
             >
-              ← SCROLL TO EXPLORE →
+              The five worlds
             </p>
+            <h2
+              style={{
+                fontFamily: 'DM Serif Display, serif',
+                fontSize: 'clamp(28px, 3.5vw, 48px)',
+                color: 'var(--sg-ink)',
+                marginBottom: 48,
+                maxWidth: 720,
+              }}
+            >
+              Follow the story. Don&apos;t follow the crowd.
+            </h2>
+
+            <div className="flex flex-wrap justify-center gap-6">
+              {ARCS.map((arc) => (
+                <div
+                  key={arc.world}
+                  className="w-[min(100%,340px)] shrink-0"
+                  style={{
+                    background: '#ffffff',
+                    border: `1px solid ${arc.color}40`,
+                    borderTop: `3px solid ${arc.color}`,
+                    borderRadius: 20,
+                    padding: 32,
+                    boxShadow: 'var(--sg-shadow-card)',
+                  }}
+                >
+                  <div style={{ fontSize: 44, marginBottom: 16 }}>{arc.emoji}</div>
+                  <span
+                    style={{
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      fontSize: 11,
+                      letterSpacing: 2,
+                      color: arc.color,
+                      textTransform: 'uppercase',
+                      fontWeight: 700,
+                    }}
+                  >
+                    {arc.world}
+                  </span>
+                  <h3
+                    style={{
+                      fontFamily: 'DM Serif Display, serif',
+                      fontSize: 24,
+                      color: 'var(--sg-ink)',
+                      marginTop: 8,
+                      marginBottom: 8,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {arc.title}
+                  </h3>
+                  <p
+                    style={{
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      fontSize: 14,
+                      color: 'var(--sg-ink)',
+                      opacity: 0.6,
+                      lineHeight: 1.6,
+                      marginBottom: 20,
+                    }}
+                  >
+                    {arc.desc}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span
+                      style={{
+                        fontFamily: 'Space Grotesk, sans-serif',
+                        fontSize: 11,
+                        color: 'var(--sg-ink)',
+                        opacity: 0.4,
+                        background: 'rgba(26,26,46,0.06)',
+                        padding: '4px 10px',
+                        borderRadius: 100,
+                      }}
+                    >
+                      {arc.province}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: 'Space Grotesk, sans-serif',
+                        fontSize: 11,
+                        color: arc.color,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {arc.chapters} chapters
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        </section>
 
         {/* ── GAMIFICATION LOOP ──────────────────────────────────── */}
-        <section className="py-28 px-8 md:px-20" style={{ background: '#0D1A2A' }}>
-          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+        <section style={{ background: 'var(--sg-bg-deep)', paddingTop: 96, paddingBottom: 96 }}>
+          <div className="container grid md:grid-cols-2 gap-16 items-center">
             <div>
               <p
                 className="reveal mb-4"
@@ -694,7 +690,7 @@ export default function Home() {
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontSize: 12,
                   letterSpacing: 5,
-                  color: '#E8832A',
+                  color: 'var(--sg-primary)',
                   textTransform: 'uppercase',
                 }}
               >
@@ -704,8 +700,8 @@ export default function Home() {
                 className="reveal reveal-delay-1 mb-6"
                 style={{
                   fontFamily: 'DM Serif Display, serif',
-                  fontSize: 'clamp(32px, 4vw, 52px)',
-                  color: '#F7F0E3',
+                  fontSize: 'clamp(28px, 3.5vw, 48px)',
+                  color: 'var(--sg-ink)',
                   lineHeight: 1.1,
                 }}
               >
@@ -718,7 +714,7 @@ export default function Home() {
                 style={{
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontSize: 17,
-                  color: '#F7F0E3',
+                  color: 'var(--sg-ink)',
                   opacity: 0.68,
                   lineHeight: 1.75,
                 }}
@@ -735,7 +731,7 @@ export default function Home() {
                     fontFamily: 'Space Grotesk, sans-serif',
                     fontSize: 11,
                     letterSpacing: 3,
-                    color: 'rgba(247,240,227,0.4)',
+                    color: 'var(--sg-muted)',
                     textTransform: 'uppercase',
                     marginBottom: 12,
                   }}
@@ -758,11 +754,11 @@ export default function Home() {
                         width: 64,
                         height: 64,
                         borderRadius: '50%',
-                        background: i < 5 ? `${p.worldColor}33` : 'rgba(247,240,227,0.04)',
+                        background: i < 5 ? `${p.worldColor}22` : 'rgba(26,26,46,0.04)',
                         border:
                           i < 5
                             ? `2px solid ${p.worldColor}`
-                            : '2px dashed rgba(247,240,227,0.15)',
+                            : '2px dashed rgba(26,26,46,0.12)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -773,7 +769,7 @@ export default function Home() {
                         style={{
                           fontSize: 10,
                           fontFamily: 'Space Grotesk, sans-serif',
-                          color: i < 5 ? p.worldColor : 'rgba(247,240,227,0.2)',
+                          color: i < 5 ? p.worldColor : 'rgba(26,26,46,0.22)',
                           fontWeight: 700,
                           textAlign: 'center',
                           lineHeight: 1.2,
@@ -810,7 +806,7 @@ export default function Home() {
                     style={{
                       fontFamily: 'DM Serif Display, serif',
                       fontSize: 14,
-                      color: '#E8832A',
+                      color: 'var(--sg-primary)',
                       marginTop: 4,
                     }}
                   >
@@ -825,7 +821,7 @@ export default function Home() {
                     position: 'absolute',
                     inset: 20,
                     borderRadius: '50%',
-                    border: '1px dashed rgba(232,131,42,0.2)',
+                    border: '1px dashed rgba(29,125,200,0.22)',
                   }}
                 />
                 {/* Orbiting nodes */}
@@ -844,8 +840,8 @@ export default function Home() {
                         width: 64,
                         height: 64,
                         borderRadius: '50%',
-                        background: 'rgba(232,131,42,0.1)',
-                        border: '1px solid rgba(232,131,42,0.3)',
+                        background: 'rgba(29,125,200,0.1)',
+                        border: '1px solid rgba(29,125,200,0.28)',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
@@ -858,7 +854,7 @@ export default function Home() {
                         style={{
                           fontFamily: 'Space Grotesk, sans-serif',
                           fontSize: 9,
-                          color: '#E8832A',
+                          color: 'var(--sg-primary)',
                           fontWeight: 700,
                           letterSpacing: 1,
                           textTransform: 'uppercase',
@@ -875,144 +871,148 @@ export default function Home() {
         </section>
 
         {/* ── THE HUMAN STORY ────────────────────────────────────── */}
-        <section className="py-28 px-8 md:px-20" style={{ background: '#0D0B18' }}>
-          <div className="max-w-6xl mx-auto">
-            <div className="grid md:grid-cols-5 gap-16 items-start">
-              <div className="md:col-span-3">
-                <p
-                  className="reveal mb-5"
-                  style={{
-                    fontFamily: 'Space Grotesk, sans-serif',
-                    fontSize: 12,
-                    letterSpacing: 5,
-                    color: '#E8832A',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  The heart of SerendiGO
+        <section style={{ background: 'var(--sg-bg-base)', paddingTop: 96, paddingBottom: 96 }}>
+          <div className="container grid md:grid-cols-5 gap-12 md:gap-16 items-center">
+            <div className="md:col-span-3">
+              <p
+                className="reveal mb-5"
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 12,
+                  letterSpacing: 5,
+                  color: 'var(--sg-primary)',
+                  textTransform: 'uppercase',
+                }}
+              >
+                The heart of SerendiGO
+              </p>
+              <h2
+                className="reveal reveal-delay-1 mb-10"
+                style={{
+                  fontFamily: 'DM Serif Display, serif',
+                  fontSize: 'clamp(28px, 3.5vw, 48px)',
+                  color: 'var(--sg-ink)',
+                  lineHeight: 1.05,
+                }}
+              >
+                Behind every meal,
+                <br />
+                <span className="sg-text-accent">there&apos;s a family.</span>
+              </h2>
+              <div
+                className="reveal reveal-delay-2"
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 17,
+                  color: 'var(--sg-ink)',
+                  opacity: 0.7,
+                  lineHeight: 1.85,
+                  maxWidth: 560,
+                }}
+              >
+                <p style={{ marginBottom: 20 }}>
+                  Sri Lanka&apos;s greatest hospitality has never come from hotel chains. It comes
+                  from the kottu stall where Ravi&apos;s been flipping roti since 1994. From
+                  Dilani&apos;s guesthouse in Ella where she grows her own vegetables and knows
+                  every hiking trail. From Asanka&apos;s spice garden in Matale where the cinnamon
+                  is cut fresh when you arrive.
                 </p>
-                <h2
-                  className="reveal reveal-delay-1 mb-10"
-                  style={{
-                    fontFamily: 'DM Serif Display, serif',
-                    fontSize: 'clamp(36px, 5vw, 64px)',
-                    color: '#F7F0E3',
-                    lineHeight: 1.05,
-                  }}
-                >
-                  Behind every meal,
-                  <br />
-                  <span style={{ color: '#E8832A' }}>there&apos;s a family.</span>
-                </h2>
-                <div
-                  className="reveal reveal-delay-2"
-                  style={{
-                    fontFamily: 'Space Grotesk, sans-serif',
-                    fontSize: 17,
-                    color: '#F7F0E3',
-                    opacity: 0.7,
-                    lineHeight: 1.85,
-                    maxWidth: 560,
-                  }}
-                >
-                  <p style={{ marginBottom: 20 }}>
-                    Sri Lanka&apos;s greatest hospitality has never come from hotel chains. It comes
-                    from the kottu stall where Ravi&apos;s been flipping roti since 1994. From
-                    Dilani&apos;s guesthouse in Ella where she grows her own vegetables and knows
-                    every hiking trail. From Asanka&apos;s spice garden in Matale where the cinnamon
-                    is cut fresh when you arrive.
-                  </p>
-                  <p>
-                    These are the people we built this for. SerendiGO surfaces them first. Always.
-                  </p>
-                </div>
-
-                {/* Stats */}
-                <div className="reveal reveal-delay-3 flex flex-wrap gap-12 mt-14">
-                  {[
-                    { value: null, label: 'Local partners', ref: true },
-                    { value: '9', label: 'Provinces' },
-                    { value: '🏠', label: 'Family-run, always first' },
-                  ].map((s, i) => (
-                    <div key={i}>
-                      <div
-                        style={{
-                          fontFamily: 'DM Serif Display, serif',
-                          fontSize: 52,
-                          color: '#E8832A',
-                          lineHeight: 1,
-                        }}
-                      >
-                        {s.ref ? <span ref={counterRef}>0+</span> : s.value}
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: 'Space Grotesk, sans-serif',
-                          fontSize: 13,
-                          color: '#F7F0E3',
-                          opacity: 0.5,
-                          marginTop: 6,
-                        }}
-                      >
-                        {s.label}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <p>
+                  These are the people we built this for. SerendiGO surfaces them first. Always.
+                </p>
               </div>
 
-              {/* Partner vignettes */}
-              <div className="md:col-span-2 relative" style={{ minHeight: 360 }}>
+              {/* Stats */}
+              <div className="reveal reveal-delay-3 flex flex-wrap gap-12 mt-14">
                 {[
-                  { name: "Ravi's Kottu Corner",  type: 'FOOD',       province: 'Western', delay: 0 },
-                  { name: "Dilani's Ella Nest",   type: 'STAY',       province: 'Uva',     delay: 0.15 },
-                  { name: 'Asanka Spice Garden',  type: 'EXPERIENCE', province: 'Central', delay: 0.3 },
-                ].map((v, i) => (
+                  { value: null, label: 'Local partners', ref: true },
+                  { value: '9', label: 'Provinces' },
+                  { value: '🏠', label: 'Family-run, always first' },
+                ].map((s, i) => (
+                  <div key={i}>
+                    <div
+                      style={{
+                        fontFamily: 'DM Serif Display, serif',
+                        fontSize: 52,
+                        color: 'var(--sg-primary)',
+                        lineHeight: 1,
+                      }}
+                    >
+                      {s.ref ? <span ref={counterRef}>0+</span> : s.value}
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: 'Space Grotesk, sans-serif',
+                        fontSize: 13,
+                        color: 'var(--sg-ink)',
+                        opacity: 0.5,
+                        marginTop: 6,
+                      }}
+                    >
+                      {s.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Partner vignettes — right column; grid items-center vertically centers this vs copy */}
+            <div className="md:col-span-2 mt-12 flex justify-center md:mt-0 md:justify-end">
+              <div className="relative w-full max-w-[320px]" style={{ minHeight: 420 }}>
+                {PARTNER_VIGNETTES.map((v, i) => {
+                  const depth =
+                    (i - partnerStackFront + PARTNER_VIGNETTES.length) % PARTNER_VIGNETTES.length
+                  return (
                   <div
                     key={v.name}
                     className="reveal"
                     style={{
-                      position: i === 0 ? 'relative' : 'absolute',
-                      top: i === 0 ? 0 : `${i * 52}px`,
-                      right: i === 0 ? 0 : `${i * 16}px`,
+                      position: 'absolute',
+                      top: depth * STACK_STEP_TOP,
+                      right: depth * STACK_STEP_RIGHT,
                       width: '100%',
-                      background: '#0D2B38',
-                      border: '1px solid rgba(26,107,122,0.3)',
+                      background: '#ffffff',
+                      border: '1px solid var(--sg-border-subtle)',
                       borderRadius: 16,
                       padding: '20px 24px',
                       animationDelay: `${v.delay}s`,
-                      zIndex: 3 - i,
-                      boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                      zIndex: 10 - depth,
+                      boxShadow: 'var(--sg-shadow-card)',
+                      transition:
+                        'top 0.65s cubic-bezier(0.33, 1, 0.68, 1), right 0.65s cubic-bezier(0.33, 1, 0.68, 1)',
                     }}
                   >
-                    <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-start justify-between gap-2 mb-3">
                       <div
                         style={{
                           fontFamily: 'DM Serif Display, serif',
                           fontSize: 18,
-                          color: '#F7F0E3',
+                          color: 'var(--sg-ink)',
+                          lineHeight: 1.25,
                         }}
                       >
                         {v.name}
                       </div>
-                      <span
-                        style={{
-                          fontFamily: 'Space Grotesk, sans-serif',
-                          fontSize: 10,
-                          letterSpacing: 1,
-                          background: '#E8832A22',
-                          color: '#E8832A',
-                          border: '1px solid #E8832A44',
-                          padding: '3px 10px',
-                          borderRadius: 100,
-                          whiteSpace: 'nowrap',
-                          marginLeft: 8,
-                        }}
-                      >
-                        🏠 Family run
-                      </span>
+                      {v.familyRun ? (
+                        <span
+                          style={{
+                            fontFamily: 'Space Grotesk, sans-serif',
+                            fontSize: 10,
+                            letterSpacing: 1,
+                            background: 'rgba(29, 125, 200, 0.12)',
+                            color: 'var(--sg-primary)',
+                            border: '1px solid rgba(29, 125, 200, 0.28)',
+                            padding: '3px 10px',
+                            borderRadius: 100,
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                          }}
+                        >
+                          🏠 Family run
+                        </span>
+                      ) : null}
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <span
                         style={{
                           fontFamily: 'Space Grotesk, sans-serif',
@@ -1029,30 +1029,31 @@ export default function Home() {
                         style={{
                           fontFamily: 'Space Grotesk, sans-serif',
                           fontSize: 11,
-                          color: 'rgba(247,240,227,0.4)',
+                          color: 'var(--sg-muted)',
                         }}
                       >
                         {v.province}
                       </span>
-                      <span style={{ color: '#E8832A', fontSize: 11 }}>★★★★★</span>
+                      <span style={{ color: 'var(--sg-primary)', fontSize: 11 }}>★★★★★</span>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           </div>
         </section>
 
         {/* ── FOR PARTNERS ───────────────────────────────────────── */}
-        <section className="py-28 px-8 md:px-20" style={{ background: '#0D2B38' }} id="partners">
-          <div className="max-w-6xl mx-auto">
+        <section id="partners" style={{ background: 'var(--sg-bg-partner)', paddingTop: 96, paddingBottom: 96 }}>
+          <div className="container">
             <p
               className="reveal mb-4"
               style={{
                 fontFamily: 'Space Grotesk, sans-serif',
                 fontSize: 12,
                 letterSpacing: 5,
-                color: '#E8832A',
+                color: 'var(--sg-primary)',
                 textTransform: 'uppercase',
               }}
             >
@@ -1062,8 +1063,8 @@ export default function Home() {
               className="reveal reveal-delay-1 mb-5"
               style={{
                 fontFamily: 'DM Serif Display, serif',
-                fontSize: 'clamp(32px, 4vw, 56px)',
-                color: '#F7F0E3',
+                fontSize: 'clamp(28px, 3.5vw, 48px)',
+                color: 'var(--sg-ink)',
                 lineHeight: 1.1,
                 maxWidth: 640,
               }}
@@ -1077,7 +1078,7 @@ export default function Home() {
               style={{
                 fontFamily: 'Space Grotesk, sans-serif',
                 fontSize: 17,
-                color: '#F7F0E3',
+                color: 'var(--sg-ink)',
                 opacity: 0.65,
                 lineHeight: 1.7,
                 maxWidth: 520,
@@ -1108,8 +1109,8 @@ export default function Home() {
                   key={b.title}
                   className="reveal"
                   style={{
-                    background: 'rgba(13,11,24,0.6)',
-                    border: '1px solid rgba(247,240,227,0.08)',
+                    background: 'var(--sg-bg-elevated)',
+                    border: '1px solid var(--sg-border-subtle)',
                     borderRadius: 20,
                     padding: 28,
                   }}
@@ -1119,7 +1120,7 @@ export default function Home() {
                     style={{
                       fontFamily: 'DM Serif Display, serif',
                       fontSize: 22,
-                      color: '#F7F0E3',
+                      color: 'var(--sg-ink)',
                       marginBottom: 10,
                     }}
                   >
@@ -1129,7 +1130,7 @@ export default function Home() {
                     style={{
                       fontFamily: 'Space Grotesk, sans-serif',
                       fontSize: 14,
-                      color: '#F7F0E3',
+                      color: 'var(--sg-ink)',
                       opacity: 0.6,
                       lineHeight: 1.7,
                     }}
@@ -1146,14 +1147,15 @@ export default function Home() {
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontWeight: 700,
                   fontSize: 16,
-                  background: '#E8832A',
-                  color: '#fff',
+                  background: 'var(--sg-primary)',
+                  color: '#ffffff',
                   padding: '16px 40px',
                   borderRadius: 100,
                   textDecoration: 'none',
                   display: 'inline-block',
+                  boxShadow: 'var(--sg-glow-amber)',
                 }}
-                className="hover:opacity-90 transition-opacity pulse-cta"
+                className="hover:brightness-[1.03] transition-[filter]"
               >
                 Become a Partner →
               </Link>
@@ -1163,33 +1165,33 @@ export default function Home() {
 
         {/* ── DOWNLOAD ───────────────────────────────────────────── */}
         <section
-          className="py-28 px-8 md:px-20 text-center"
-          style={{ background: 'linear-gradient(to bottom, #0D0B18 0%, #0D2B38 100%)' }}
+          className="text-center"
+          style={{ background: 'linear-gradient(to bottom, var(--sg-bg-base) 0%, var(--sg-bg-partner) 100%)', paddingTop: 96, paddingBottom: 96 }}
         >
-          <div className="max-w-3xl mx-auto">
+          <div className="container" style={{ maxWidth: 768, margin: '0 auto', padding: '0 48px' }}>
             {/* Island with all provinces lit */}
             <div className="flex justify-center mb-10">
-              <SriLankaMap allLit width={160} height={282} style={{ filter: 'drop-shadow(0 0 30px rgba(232,131,42,0.4))' }} />
+              <SriLankaMap allLit width={160} height={282} style={{ filter: 'drop-shadow(0 0 28px rgba(29,125,200,0.35))' }} />
             </div>
             <h2
               className="reveal mb-5"
               style={{
                 fontFamily: 'DM Serif Display, serif',
-                fontSize: 'clamp(40px, 6vw, 72px)',
-                color: '#F7F0E3',
+                fontSize: 'clamp(28px, 3.5vw, 48px)',
+                color: 'var(--sg-ink)',
                 lineHeight: 1.05,
               }}
             >
               The island is ready.
               <br />
-              <span style={{ color: '#E8832A' }}>Are you?</span>
+              <span className="sg-text-accent">Are you?</span>
             </h2>
             <p
               className="reveal reveal-delay-1 mb-10"
               style={{
                 fontFamily: 'Space Grotesk, sans-serif',
                 fontSize: 17,
-                color: '#F7F0E3',
+                color: 'var(--sg-ink)',
                 opacity: 0.6,
                 lineHeight: 1.7,
               }}
@@ -1208,9 +1210,9 @@ export default function Home() {
                     fontFamily: 'Space Grotesk, sans-serif',
                     fontWeight: 600,
                     fontSize: 15,
-                    background: 'rgba(247,240,227,0.08)',
-                    color: '#F7F0E3',
-                    border: '1px solid rgba(247,240,227,0.2)',
+                    background: '#ffffff',
+                    color: 'var(--sg-ink)',
+                    border: '1px solid var(--sg-border-strong)',
                     padding: '14px 28px',
                     borderRadius: 100,
                     textDecoration: 'none',
@@ -1218,7 +1220,7 @@ export default function Home() {
                     alignItems: 'center',
                     gap: 8,
                   }}
-                  className="hover:bg-white/10 transition-colors"
+                  className="hover:bg-sg-section transition-colors"
                 >
                   {s.icon} {s.label}
                 </a>
@@ -1229,7 +1231,7 @@ export default function Home() {
               style={{
                 fontFamily: 'Space Grotesk, sans-serif',
                 fontSize: 12,
-                color: 'rgba(247,240,227,0.3)',
+                color: 'var(--sg-muted)',
                 letterSpacing: 2,
               }}
             >
@@ -1240,16 +1242,15 @@ export default function Home() {
 
         {/* ── FOOTER ─────────────────────────────────────────────── */}
         <footer
-          className="py-16 px-8 md:px-20"
-          style={{ background: '#08070F', borderTop: '1px solid rgba(247,240,227,0.06)' }}
+          style={{ background: 'var(--sg-bg-footer)', borderTop: '1px solid var(--sg-border-subtle)', paddingTop: 64, paddingBottom: 64 }}
         >
-          <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-12">
+          <div className="container grid md:grid-cols-3 gap-12">
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <svg width="32" height="40" viewBox="0 0 200 250" fill="none">
                   <path
                     d="M100,12 C115,8 132,14 143,28 C158,46 164,70 163,96 C162,122 154,146 142,167 C130,188 114,205 96,216 C78,227 58,228 42,216 C26,204 18,184 16,162 C14,140 20,118 30,98 C40,78 54,62 64,46 C74,30 80,18 100,12 Z"
-                    stroke="rgba(247,240,227,0.3)"
+                    stroke="rgba(26,26,46,0.2)"
                     strokeWidth="3"
                     fill="none"
                   />
@@ -1258,7 +1259,7 @@ export default function Home() {
                   style={{
                     fontFamily: 'DM Serif Display, serif',
                     fontSize: 20,
-                    color: '#F7F0E3',
+                    color: 'var(--sg-ink)',
                   }}
                 >
                   SerendiGO
@@ -1268,7 +1269,7 @@ export default function Home() {
                 style={{
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontSize: 13,
-                  color: 'rgba(247,240,227,0.4)',
+                  color: 'var(--sg-muted)',
                   lineHeight: 1.7,
                 }}
               >
@@ -1283,7 +1284,7 @@ export default function Home() {
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontSize: 11,
                   letterSpacing: 3,
-                  color: 'rgba(247,240,227,0.3)',
+                  color: 'var(--sg-muted)',
                   textTransform: 'uppercase',
                   marginBottom: 16,
                 }}
@@ -1298,12 +1299,12 @@ export default function Home() {
                   style={{
                     fontFamily: 'Space Grotesk, sans-serif',
                     fontSize: 14,
-                    color: 'rgba(247,240,227,0.55)',
+                    color: 'var(--sg-muted)',
                     textDecoration: 'none',
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#F7F0E3')}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--sg-ink)')}
                   onMouseLeave={(e) =>
-                    (e.currentTarget.style.color = 'rgba(247,240,227,0.55)')
+                    (e.currentTarget.style.color = 'var(--sg-muted)')
                   }
                 >
                   {l}
@@ -1316,7 +1317,7 @@ export default function Home() {
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontSize: 11,
                   letterSpacing: 3,
-                  color: 'rgba(247,240,227,0.3)',
+                  color: 'var(--sg-muted)',
                   textTransform: 'uppercase',
                   marginBottom: 16,
                 }}
@@ -1328,7 +1329,7 @@ export default function Home() {
                 style={{
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontSize: 14,
-                  color: '#E8832A',
+                  color: 'var(--sg-primary)',
                   textDecoration: 'none',
                 }}
               >
@@ -1338,7 +1339,7 @@ export default function Home() {
                 style={{
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontSize: 12,
-                  color: 'rgba(247,240,227,0.25)',
+                  color: 'var(--sg-muted)',
                   marginTop: 24,
                 }}
               >

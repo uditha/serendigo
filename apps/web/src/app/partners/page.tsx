@@ -1,7 +1,9 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import BrandMark from '@/components/BrandMark'
+import QrCodeMock from '@/components/QrCodeMock'
 
 const INPUT_STYLE: React.CSSProperties = {
   width: '100%',
@@ -39,7 +41,7 @@ function Field({
         }}
       >
         {label}
-        {required && <span style={{ color: '#E8832A', marginLeft: 4 }}>*</span>}
+        {required && <span style={{ color: '#1d7dc8', marginLeft: 4 }}>*</span>}
       </label>
       {children}
     </div>
@@ -52,7 +54,7 @@ export default function PartnersPage() {
   const formRef = useRef<HTMLFormElement>(null)
 
   const focusBorder = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    e.currentTarget.style.borderColor = '#E8832A'
+    e.currentTarget.style.borderColor = '#1d7dc8'
   }
   const blurBorder = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     e.currentTarget.style.borderColor = '#E5DDD0'
@@ -63,162 +65,215 @@ export default function PartnersPage() {
     setSubmitted(true)
   }
 
+  /* Match home page: .reveal starts hidden until .visible (globals.css) */
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) e.target.classList.add('visible')
+        })
+      },
+      { threshold: 0.12 }
+    )
+    document.querySelectorAll('.reveal').forEach((el) => io.observe(el))
+    return () => io.disconnect()
+  }, [])
+
   return (
     <>
       {/* ── Nav ─────────────────────────────────────────────────── */}
       <nav
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-5"
-        style={{ background: 'rgba(13,11,24,0.85)', backdropFilter: 'blur(12px)' }}
+        className="sg-nav-strip"
+        style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: 'var(--sg-nav-glass)', backdropFilter: 'blur(20px)', borderBottom: '1px solid var(--sg-border-subtle)' }}
       >
-        <Link
-          href="/"
-          style={{ fontFamily: 'DM Serif Display, serif', fontSize: 22, color: '#F7F0E3', textDecoration: 'none' }}
-        >
-          SerendiGO <span style={{ color: '#E8832A' }}>🌴</span>
-        </Link>
-        <div className="flex items-center gap-6">
+        <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 16, paddingBottom: 16 }}>
           <Link
             href="/"
-            style={{
-              fontFamily: 'Space Grotesk, sans-serif',
-              fontSize: 14,
-              color: '#F7F0E3',
-              opacity: 0.65,
-              textDecoration: 'none',
-            }}
-            className="hidden md:inline hover:opacity-100 transition-opacity"
+            className="flex items-center gap-2"
+            style={{ fontFamily: 'DM Serif Display, serif', fontSize: 22, color: 'var(--sg-ink)', textDecoration: 'none' }}
           >
-            ← Back to home
+            <span>SerendiGO</span>
+            <BrandMark size={22} />
           </Link>
-          <a
-            href="#apply"
-            style={{
-              fontFamily: 'Space Grotesk, sans-serif',
-              fontSize: 14,
-              background: '#E8832A',
-              color: '#fff',
-              padding: '8px 20px',
-              borderRadius: 100,
-              textDecoration: 'none',
-            }}
-            className="hover:opacity-90 transition-opacity"
-          >
-            Apply now
-          </a>
+          <div className="flex items-center gap-6">
+            <Link
+              href="/"
+              style={{
+                fontFamily: 'Space Grotesk, sans-serif',
+                fontSize: 14,
+                color: 'var(--sg-muted)',
+                textDecoration: 'none',
+              }}
+              className="hidden md:inline hover:text-sg-ink transition-colors"
+            >
+              ← Back to home
+            </Link>
+            <a
+              href="#apply"
+              style={{
+                fontFamily: 'Space Grotesk, sans-serif',
+                fontSize: 14,
+                fontWeight: 600,
+                background: 'var(--sg-primary)',
+                color: '#fff',
+                padding: '8px 18px',
+                borderRadius: 100,
+                textDecoration: 'none',
+              }}
+              className="hover:brightness-[1.03] transition-[filter]"
+            >
+              Apply now
+            </a>
+          </div>
         </div>
       </nav>
 
       <main>
         {/* ── HERO ────────────────────────────────────────────────── */}
-        <section
-          className="relative min-h-screen flex items-center overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, #0D0B18 0%, #0D2B38 60%, #0D1F12 100%)' }}
-        >
-          {/* Radial accent */}
-          <div
-            className="absolute pointer-events-none"
-            style={{
-              inset: 0,
-              background:
-                'radial-gradient(ellipse 60% 50% at 80% 50%, rgba(26,107,122,0.18) 0%, transparent 70%)',
-            }}
-          />
+        <section className="relative flex min-h-screen items-center overflow-hidden bg-white">
+          <div className="container relative z-[1] grid md:grid-cols-2 gap-12 items-center" style={{ paddingTop: 120, paddingBottom: 80 }}>
+            {/* LEFT: text content */}
+            <div>
+              {/* Stat pills */}
+              <div className="flex flex-wrap gap-3 mb-10">
+                {[
+                  { label: '66+ active partners', icon: '🏠' },
+                  { label: 'Launching 2026', icon: '🚀' },
+                ].map((pill) => (
+                  <span
+                    key={pill.label}
+                    style={{
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      letterSpacing: 1,
+                      color: '#1d7dc8',
+                      background: 'rgba(29,125,200,0.1)',
+                      border: '1px solid rgba(29,125,200,0.25)',
+                      padding: '6px 16px',
+                      borderRadius: 100,
+                    }}
+                  >
+                    {pill.icon} {pill.label}
+                  </span>
+                ))}
+              </div>
 
-          <div className="relative z-10 px-8 md:px-20 max-w-5xl pt-36 pb-24">
-            {/* Stat pills */}
-            <div className="flex flex-wrap gap-3 mb-10">
-              {[
-                { label: '66+ active partners', icon: '🏠' },
-                { label: 'Launching 2026', icon: '🚀' },
-              ].map((pill) => (
-                <span
-                  key={pill.label}
+              <h1
+                style={{
+                  fontFamily: 'DM Serif Display, serif',
+                  fontSize: 'clamp(40px, 5vw, 72px)',
+                  color: 'var(--sg-ink)',
+                  lineHeight: 1.05,
+                  marginBottom: 28,
+                }}
+              >
+                Grow with people
+                <br />
+                <span className="sg-text-accent">who travel with purpose.</span>
+              </h1>
+
+              <p
+                style={{
+                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontSize: 'clamp(16px, 1.8vw, 20px)',
+                  color: 'var(--sg-muted)',
+                  maxWidth: 580,
+                  lineHeight: 1.75,
+                  marginBottom: 44,
+                }}
+              >
+                SerendiGO connects your business with travellers who specifically seek out local,
+                family-run experiences — and rewards them with coins to spend with you.
+              </p>
+
+              <div className="flex flex-wrap gap-4">
+                <a
+                  href="#apply"
                   style={{
                     fontFamily: 'Space Grotesk, sans-serif',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    letterSpacing: 1,
-                    color: '#E8832A',
-                    background: 'rgba(232,131,42,0.12)',
-                    border: '1px solid rgba(232,131,42,0.3)',
-                    padding: '6px 16px',
+                    fontWeight: 700,
+                    fontSize: 16,
+                    background: 'var(--sg-primary)',
+                    color: '#ffffff',
+                    padding: '16px 36px',
                     borderRadius: 100,
+                    textDecoration: 'none',
+                    boxShadow: 'var(--sg-glow-amber)',
                   }}
+                  className="hover:brightness-[1.03] transition-[filter]"
                 >
-                  {pill.icon} {pill.label}
-                </span>
-              ))}
+                  Apply to join SerendiGO →
+                </a>
+                <a
+                  href="#how-it-works"
+                  style={{
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    fontSize: 15,
+                    color: 'var(--sg-ink)',
+                    padding: '16px 28px',
+                    border: '1px solid var(--sg-border-strong)',
+                    borderRadius: 100,
+                    textDecoration: 'none',
+                    background: 'rgba(255,255,255,0.7)',
+                  }}
+                  className="hover:bg-white transition-colors"
+                >
+                  See how it works
+                </a>
+              </div>
             </div>
 
-            <h1
-              style={{
-                fontFamily: 'DM Serif Display, serif',
-                fontSize: 'clamp(48px, 7vw, 88px)',
-                color: '#F7F0E3',
-                lineHeight: 1.05,
-                marginBottom: 28,
-              }}
-            >
-              Grow with people
-              <br />
-              <span style={{ color: '#E8832A' }}>who travel with purpose.</span>
-            </h1>
-
-            <p
-              style={{
-                fontFamily: 'Space Grotesk, sans-serif',
-                fontSize: 'clamp(16px, 1.8vw, 20px)',
-                color: '#F7F0E3',
-                opacity: 0.7,
-                maxWidth: 580,
-                lineHeight: 1.75,
-                marginBottom: 44,
-              }}
-            >
-              SerendiGO connects your business with travellers who specifically seek out local,
-              family-run experiences — and rewards them with coins to spend with you.
-            </p>
-
-            <div className="flex flex-wrap gap-4">
-              <a
-                href="#apply"
-                className="pulse-cta"
-                style={{
-                  fontFamily: 'Space Grotesk, sans-serif',
-                  fontWeight: 700,
-                  fontSize: 16,
-                  background: '#E8832A',
-                  color: '#fff',
-                  padding: '16px 36px',
-                  borderRadius: 100,
-                  textDecoration: 'none',
-                }}
-              >
-                Apply to join SerendiGO →
-              </a>
-              <a
-                href="#how-it-works"
-                style={{
-                  fontFamily: 'Space Grotesk, sans-serif',
-                  fontSize: 15,
-                  color: '#F7F0E3',
-                  opacity: 0.6,
-                  padding: '16px 28px',
-                  border: '1px solid rgba(247,240,227,0.2)',
-                  borderRadius: 100,
-                  textDecoration: 'none',
-                }}
-                className="hover:opacity-100 transition-opacity"
-              >
-                See how it works
-              </a>
+            {/* RIGHT: stats / visual */}
+            <div className="hidden lg:flex flex-col items-center justify-center gap-6">
+              {[
+                { value: '66+', label: 'Active partners' },
+                { value: '9', label: 'Provinces covered' },
+                { value: '🏠', label: 'Family-run always first' },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid var(--sg-border-subtle)',
+                    borderRadius: 20,
+                    padding: '28px 40px',
+                    textAlign: 'center',
+                    width: '100%',
+                    maxWidth: 280,
+                    boxShadow: 'var(--sg-shadow-card)',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: 'DM Serif Display, serif',
+                      fontSize: 48,
+                      color: '#1d7dc8',
+                      lineHeight: 1,
+                      marginBottom: 8,
+                    }}
+                  >
+                    {stat.value}
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      fontSize: 13,
+                      color: 'var(--sg-muted)',
+                      letterSpacing: 1,
+                    }}
+                  >
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
         {/* ── BENEFIT 1: VISIBILITY ───────────────────────────────── */}
-        <section className="py-28 px-8 md:px-20" style={{ background: '#0D1526' }}>
-          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+        <section style={{ background: 'var(--sg-bg-section)', paddingTop: 96, paddingBottom: 96 }}>
+          <div className="container grid md:grid-cols-2 gap-16 items-center">
             <div>
               <p
                 className="reveal mb-4"
@@ -226,7 +281,7 @@ export default function PartnersPage() {
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontSize: 11,
                   letterSpacing: 5,
-                  color: '#E8832A',
+                  color: '#1d7dc8',
                   textTransform: 'uppercase',
                 }}
               >
@@ -236,8 +291,8 @@ export default function PartnersPage() {
                 className="reveal reveal-delay-1 mb-6"
                 style={{
                   fontFamily: 'DM Serif Display, serif',
-                  fontSize: 'clamp(32px, 4vw, 52px)',
-                  color: '#F7F0E3',
+                  fontSize: 'clamp(28px, 3.5vw, 48px)',
+                  color: 'var(--sg-ink)',
                   lineHeight: 1.1,
                 }}
               >
@@ -250,8 +305,7 @@ export default function PartnersPage() {
                 style={{
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontSize: 17,
-                  color: '#F7F0E3',
-                  opacity: 0.65,
+                  color: 'var(--sg-muted)',
                   lineHeight: 1.8,
                 }}
               >
@@ -299,7 +353,7 @@ export default function PartnersPage() {
                   <svg width="56" height="72" viewBox="0 0 56 72" fill="none">
                     <path
                       d="M28 2 C14 2 4 12 4 26 C4 44 28 70 28 70 C28 70 52 44 52 26 C52 12 42 2 28 2 Z"
-                      fill="#E8832A"
+                      fill="#1d7dc8"
                       style={{ filter: 'drop-shadow(0 0 12px rgba(232,131,42,0.8))' }}
                     />
                     <circle cx="28" cy="26" r="8" fill="white" opacity="0.9" />
@@ -315,7 +369,7 @@ export default function PartnersPage() {
                     fontFamily: 'Space Grotesk, sans-serif',
                     fontSize: 11,
                     letterSpacing: 2,
-                    color: 'rgba(247,240,227,0.35)',
+                    color: 'var(--sg-muted)',
                     textTransform: 'uppercase',
                   }}
                 >
@@ -327,64 +381,30 @@ export default function PartnersPage() {
         </section>
 
         {/* ── BENEFIT 2: COIN REDEMPTIONS ─────────────────────────── */}
-        <section className="py-28 px-8 md:px-20" style={{ background: '#08070F' }}>
-          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+        <section style={{ background: 'var(--sg-bg-rich)', paddingTop: 96, paddingBottom: 96 }}>
+          <div className="container grid md:grid-cols-2 gap-16 items-center">
             {/* QR mock graphic */}
             <div className="reveal flex items-center justify-center order-2 md:order-1">
               <div
                 style={{
-                  background: 'rgba(247,240,227,0.04)',
-                  border: '1px solid rgba(247,240,227,0.1)',
+                  background: '#ffffff',
+                  border: '1px solid var(--sg-border-subtle)',
                   borderRadius: 20,
                   padding: 32,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
                   textAlign: 'center',
+                  boxShadow: 'var(--sg-shadow-card)',
                 }}
               >
-                {/* CSS QR code grid */}
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(9, 1fr)',
-                    gap: 3,
-                    width: 160,
-                    marginBottom: 16,
-                  }}
-                >
-                  {Array.from({ length: 81 }).map((_, i) => {
-                    // Create a QR-like pattern (corners + random middle)
-                    const row = Math.floor(i / 9)
-                    const col = i % 9
-                    const isCornerBlock =
-                      (row < 3 && col < 3) ||
-                      (row < 3 && col > 5) ||
-                      (row > 5 && col < 3)
-                    const isCornerInner =
-                      (row === 1 && col === 1) ||
-                      (row === 1 && col === 7) ||
-                      (row === 7 && col === 1)
-                    const filled = isCornerBlock && !isCornerInner
-                      ? true
-                      : !isCornerBlock && Math.random() > 0.5
-                    return (
-                      <div
-                        key={i}
-                        style={{
-                          width: '100%',
-                          aspectRatio: '1',
-                          background: filled ? '#F7F0E3' : 'transparent',
-                          borderRadius: 1,
-                          opacity: filled ? 0.85 : 0,
-                        }}
-                      />
-                    )
-                  })}
-                </div>
+                <QrCodeMock />
                 <p
                   style={{
                     fontFamily: 'Space Grotesk, sans-serif',
                     fontSize: 11,
                     letterSpacing: 2,
-                    color: 'rgba(247,240,227,0.35)',
+                    color: 'var(--sg-muted)',
                     textTransform: 'uppercase',
                   }}
                 >
@@ -396,8 +416,8 @@ export default function PartnersPage() {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 6,
-                    background: 'rgba(232,131,42,0.12)',
-                    border: '1px solid rgba(232,131,42,0.3)',
+                    background: 'rgba(29,125,200,0.1)',
+                    border: '1px solid rgba(29,125,200,0.25)',
                     padding: '6px 14px',
                     borderRadius: 100,
                   }}
@@ -407,7 +427,7 @@ export default function PartnersPage() {
                     style={{
                       fontFamily: 'Space Grotesk, sans-serif',
                       fontSize: 12,
-                      color: '#E8832A',
+                      color: '#1d7dc8',
                       fontWeight: 700,
                     }}
                   >
@@ -424,7 +444,7 @@ export default function PartnersPage() {
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontSize: 11,
                   letterSpacing: 5,
-                  color: '#E8832A',
+                  color: '#1d7dc8',
                   textTransform: 'uppercase',
                 }}
               >
@@ -434,8 +454,8 @@ export default function PartnersPage() {
                 className="reveal reveal-delay-1 mb-6"
                 style={{
                   fontFamily: 'DM Serif Display, serif',
-                  fontSize: 'clamp(32px, 4vw, 52px)',
-                  color: '#F7F0E3',
+                  fontSize: 'clamp(28px, 3.5vw, 48px)',
+                  color: 'var(--sg-ink)',
                   lineHeight: 1.1,
                 }}
               >
@@ -448,8 +468,7 @@ export default function PartnersPage() {
                 style={{
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontSize: 17,
-                  color: '#F7F0E3',
-                  opacity: 0.65,
+                  color: 'var(--sg-muted)',
                   lineHeight: 1.8,
                 }}
               >
@@ -462,8 +481,8 @@ export default function PartnersPage() {
         </section>
 
         {/* ── BENEFIT 3: FAMILY-RUN ───────────────────────────────── */}
-        <section className="py-28 px-8 md:px-20" style={{ background: '#0D2B38' }}>
-          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+        <section style={{ background: 'var(--sg-bg-partner)', paddingTop: 96, paddingBottom: 96 }}>
+          <div className="container grid md:grid-cols-2 gap-16 items-center">
             <div>
               <p
                 className="reveal mb-4"
@@ -471,7 +490,7 @@ export default function PartnersPage() {
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontSize: 11,
                   letterSpacing: 5,
-                  color: '#E8832A',
+                  color: '#1d7dc8',
                   textTransform: 'uppercase',
                 }}
               >
@@ -481,8 +500,8 @@ export default function PartnersPage() {
                 className="reveal reveal-delay-1 mb-6"
                 style={{
                   fontFamily: 'DM Serif Display, serif',
-                  fontSize: 'clamp(32px, 4vw, 52px)',
-                  color: '#F7F0E3',
+                  fontSize: 'clamp(28px, 3.5vw, 48px)',
+                  color: 'var(--sg-ink)',
                   lineHeight: 1.1,
                 }}
               >
@@ -495,8 +514,7 @@ export default function PartnersPage() {
                 style={{
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontSize: 17,
-                  color: '#F7F0E3',
-                  opacity: 0.65,
+                  color: 'var(--sg-muted)',
                   lineHeight: 1.8,
                 }}
               >
@@ -517,8 +535,8 @@ export default function PartnersPage() {
                     flexDirection: 'column',
                     alignItems: 'center',
                     gap: 16,
-                    background: 'linear-gradient(135deg, #1A3322, #1F3D2A)',
-                    border: '2px solid rgba(45,110,78,0.4)',
+                    background: 'linear-gradient(145deg, #eef6f0 0%, #f5faf7 100%)',
+                    border: '2px solid rgba(45,110,78,0.22)',
                     borderRadius: 28,
                     padding: '40px 48px',
                   }}
@@ -538,7 +556,7 @@ export default function PartnersPage() {
                         fontSize: 13,
                         fontWeight: 700,
                         letterSpacing: 1,
-                        color: '#E8832A',
+                        color: '#1d7dc8',
                         textTransform: 'uppercase',
                       }}
                     >
@@ -549,7 +567,7 @@ export default function PartnersPage() {
                     style={{
                       fontFamily: 'Space Grotesk, sans-serif',
                       fontSize: 13,
-                      color: 'rgba(247,240,227,0.5)',
+                      color: 'var(--sg-muted)',
                       marginTop: 4,
                     }}
                   >
@@ -564,17 +582,16 @@ export default function PartnersPage() {
         {/* ── HOW IT WORKS ────────────────────────────────────────── */}
         <section
           id="how-it-works"
-          className="py-28 px-8 md:px-20"
-          style={{ background: '#0D0B18' }}
+          style={{ background: 'var(--sg-bg-base)', paddingTop: 96, paddingBottom: 96 }}
         >
-          <div className="max-w-6xl mx-auto">
+          <div className="container">
             <p
               className="reveal mb-4 text-center"
               style={{
                 fontFamily: 'Space Grotesk, sans-serif',
                 fontSize: 11,
                 letterSpacing: 5,
-                color: '#E8832A',
+                color: '#1d7dc8',
                 textTransform: 'uppercase',
               }}
             >
@@ -584,8 +601,8 @@ export default function PartnersPage() {
               className="reveal reveal-delay-1 mb-20 text-center"
               style={{
                 fontFamily: 'DM Serif Display, serif',
-                fontSize: 'clamp(30px, 4vw, 48px)',
-                color: '#F7F0E3',
+                fontSize: 'clamp(28px, 3.5vw, 48px)',
+                color: 'var(--sg-ink)',
               }}
             >
               Three steps to going live.
@@ -651,7 +668,7 @@ export default function PartnersPage() {
                       fontFamily: 'Space Grotesk, sans-serif',
                       fontSize: 11,
                       letterSpacing: 3,
-                      color: '#E8832A',
+                      color: '#1d7dc8',
                       textTransform: 'uppercase',
                       marginBottom: 12,
                       fontWeight: 700,
@@ -663,7 +680,7 @@ export default function PartnersPage() {
                     style={{
                       fontFamily: 'DM Serif Display, serif',
                       fontSize: 24,
-                      color: '#F7F0E3',
+                      color: 'var(--sg-ink)',
                       marginBottom: 12,
                     }}
                   >
@@ -673,8 +690,7 @@ export default function PartnersPage() {
                     style={{
                       fontFamily: 'Space Grotesk, sans-serif',
                       fontSize: 14,
-                      color: '#F7F0E3',
-                      opacity: 0.55,
+                      color: 'var(--sg-muted)',
                       lineHeight: 1.7,
                     }}
                   >
@@ -689,10 +705,9 @@ export default function PartnersPage() {
         {/* ── APPLICATION FORM ─────────────────────────────────────── */}
         <section
           id="apply"
-          className="py-28 px-8 md:px-20"
-          style={{ background: '#F7F0E3' }}
+          style={{ background: 'var(--sg-cream)', paddingTop: 96, paddingBottom: 96 }}
         >
-          <div className="max-w-2xl mx-auto">
+          <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 48px' }}>
             {submitted ? (
               <div className="text-center py-16">
                 <div style={{ fontSize: 64, marginBottom: 20 }}>🌴</div>
@@ -724,7 +739,7 @@ export default function PartnersPage() {
                     fontFamily: 'Space Grotesk, sans-serif',
                     fontWeight: 600,
                     fontSize: 15,
-                    background: '#E8832A',
+                    background: '#1d7dc8',
                     color: '#fff',
                     padding: '14px 32px',
                     borderRadius: 100,
@@ -742,7 +757,7 @@ export default function PartnersPage() {
                       fontFamily: 'Space Grotesk, sans-serif',
                       fontSize: 11,
                       letterSpacing: 5,
-                      color: '#E8832A',
+                      color: '#1d7dc8',
                       textTransform: 'uppercase',
                       marginBottom: 12,
                     }}
@@ -903,12 +918,12 @@ export default function PartnersPage() {
                             padding: '12px 24px',
                             borderRadius: 100,
                             border: familyRun === opt.value
-                              ? '2px solid #E8832A'
+                              ? '2px solid #1d7dc8'
                               : '1.5px solid #E5DDD0',
                             background: familyRun === opt.value
                               ? 'rgba(232,131,42,0.08)'
                               : '#fff',
-                            color: familyRun === opt.value ? '#E8832A' : '#5A5A7A',
+                            color: familyRun === opt.value ? '#1d7dc8' : '#5A5A7A',
                             cursor: 'pointer',
                             transition: 'all 0.2s ease',
                           }}
@@ -928,7 +943,7 @@ export default function PartnersPage() {
                         fontFamily: 'Space Grotesk, sans-serif',
                         fontWeight: 700,
                         fontSize: 16,
-                        background: '#E8832A',
+                        background: '#1d7dc8',
                         color: '#fff',
                         padding: '16px',
                         borderRadius: 100,
@@ -962,16 +977,15 @@ export default function PartnersPage() {
 
         {/* ── FOOTER ──────────────────────────────────────────────── */}
         <footer
-          className="py-16 px-8 md:px-20"
-          style={{ background: '#08070F', borderTop: '1px solid rgba(247,240,227,0.06)' }}
+          style={{ background: 'var(--sg-bg-footer)', borderTop: '1px solid var(--sg-border-subtle)', paddingTop: 64, paddingBottom: 64 }}
         >
-          <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-12">
+          <div className="container grid md:grid-cols-3 gap-12">
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <svg width="32" height="40" viewBox="0 0 200 250" fill="none">
                   <path
                     d="M100,12 C115,8 132,14 143,28 C158,46 164,70 163,96 C162,122 154,146 142,167 C130,188 114,205 96,216 C78,227 58,228 42,216 C26,204 18,184 16,162 C14,140 20,118 30,98 C40,78 54,62 64,46 C74,30 80,18 100,12 Z"
-                    stroke="rgba(247,240,227,0.3)"
+                    stroke="rgba(26,26,46,0.2)"
                     strokeWidth="3"
                     fill="none"
                   />
@@ -980,7 +994,7 @@ export default function PartnersPage() {
                   style={{
                     fontFamily: 'DM Serif Display, serif',
                     fontSize: 20,
-                    color: '#F7F0E3',
+                    color: 'var(--sg-ink)',
                   }}
                 >
                   SerendiGO
@@ -990,7 +1004,7 @@ export default function PartnersPage() {
                 style={{
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontSize: 13,
-                  color: 'rgba(247,240,227,0.4)',
+                  color: 'var(--sg-muted)',
                   lineHeight: 1.7,
                 }}
               >
@@ -1005,7 +1019,7 @@ export default function PartnersPage() {
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontSize: 11,
                   letterSpacing: 3,
-                  color: 'rgba(247,240,227,0.3)',
+                  color: 'var(--sg-muted)',
                   textTransform: 'uppercase',
                   marginBottom: 16,
                 }}
@@ -1016,11 +1030,10 @@ export default function PartnersPage() {
                 <Link
                   key={l}
                   href={l === 'For Partners' ? '/partners' : '/'}
-                  className="block mb-3"
+                  className="block mb-3 text-sg-muted hover:text-sg-ink transition-colors"
                   style={{
                     fontFamily: 'Space Grotesk, sans-serif',
                     fontSize: 14,
-                    color: 'rgba(247,240,227,0.55)',
                     textDecoration: 'none',
                   }}
                 >
@@ -1034,7 +1047,7 @@ export default function PartnersPage() {
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontSize: 11,
                   letterSpacing: 3,
-                  color: 'rgba(247,240,227,0.3)',
+                  color: 'var(--sg-muted)',
                   textTransform: 'uppercase',
                   marginBottom: 16,
                 }}
@@ -1046,7 +1059,7 @@ export default function PartnersPage() {
                 style={{
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontSize: 14,
-                  color: '#E8832A',
+                  color: '#1d7dc8',
                   textDecoration: 'none',
                 }}
               >
@@ -1056,7 +1069,7 @@ export default function PartnersPage() {
                 style={{
                   fontFamily: 'Space Grotesk, sans-serif',
                   fontSize: 12,
-                  color: 'rgba(247,240,227,0.25)',
+                  color: 'var(--sg-muted)',
                   marginTop: 24,
                 }}
               >

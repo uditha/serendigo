@@ -2,77 +2,221 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── SerendiGO — light theme (white + warm paper + brand accents) ──── */
 :root {
   --font-serif: 'DM Serif Display', serif;
   --font-sans: 'Space Grotesk', sans-serif;
-  --sky: #0D0B18;
+
+  /* Ocean / sky blue accent (replaces temple amber on web) */
+  --sg-primary: #1d7dc8;
+  --sg-primary-deep: #135a94;
+  --sg-secondary: #1a6b7a;
+  --sg-cream: #f7f0e3;
+  --sg-cream-bright: #fdfaf5;
+  --sg-ink: #1a1a2e;
+  --sg-muted: #4d4d68;
+
+  /* Surfaces */
+  --sg-bg-base: #ffffff;
+  --sg-bg-elevated: #ffffff;
+  --sg-bg-section: #f6f3ed;
+  --sg-bg-rich: #efeae1;
+  --sg-bg-deep: #faf8f5;
+  --sg-bg-partner: #f3f0e8;
+  --sg-bg-footer: #f7f5f0;
+
+  --sg-border-subtle: rgba(26, 26, 46, 0.08);
+  --sg-border-strong: rgba(26, 26, 46, 0.14);
+  --sg-nav-glass: rgba(255, 255, 255, 0.94);
+
+  --sg-shadow-card: 0 20px 56px rgba(26, 26, 46, 0.08);
+  --sg-shadow-card-hover: 0 28px 72px rgba(26, 26, 46, 0.12);
+  --sg-glow-accent: 0 2px 14px rgba(29, 125, 200, 0.28);
+  /* legacy name — same as accent */
+  --sg-glow-amber: var(--sg-glow-accent);
+
+  /* Scroll-driven page tint (page.tsx can pin to white) */
+  --sky: var(--sg-bg-base);
+
+  /* Hero: flat white — optional partners page can add .hero-mesh-soft */
+  --sg-hero-gradient: #ffffff;
+  --sg-mesh-hero: none;
 }
 
-html { scroll-behavior: smooth; }
-body { background-color: var(--sky); transition: background-color 0.1s linear; }
+/* Optional soft wash (partners hero only) */
+.hero-mesh-soft::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse 80% 60% at 90% 0%,
+    rgba(29, 125, 200, 0.05) 0%,
+    transparent 55%
+  );
+}
+
+/* Accent headline (blue) */
+.sg-text-accent {
+  background: linear-gradient(115deg, #135a94 0%, #1d7dc8 50%, #3d9ee6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Nav — sits flush on white */
+.sg-nav-strip {
+  box-shadow: 0 1px 0 var(--sg-border-subtle);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--sky);
+  color: var(--sg-ink);
+  transition: background-color 0.12s linear;
+}
 
 /* ── Keyframes ──────────────────────────────────────────────────────── */
 
 @keyframes drawPath {
-  from { stroke-dashoffset: 1200; }
-  to   { stroke-dashoffset: 0; }
+  from {
+    stroke-dashoffset: 1200;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes twinkle {
-  0%, 100% { opacity: 0.2; }
-  50%       { opacity: 0.9; }
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.9;
+  }
 }
 
 @keyframes floatPin {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-8px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 @keyframes pulseRing {
-  0%   { box-shadow: 0 0 0 0 rgba(232,131,42,0.5); }
-  70%  { box-shadow: 0 0 0 14px rgba(232,131,42,0); }
-  100% { box-shadow: 0 0 0 0 rgba(232,131,42,0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(29, 125, 200, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(29, 125, 200, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(29, 125, 200, 0);
+  }
 }
 
 @keyframes orbit {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes counterOrbit {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(-360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
 }
 
 @keyframes slideInRight {
-  from { opacity: 0; transform: translateX(40px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes stampReveal {
-  from { opacity: 0.15; transform: scale(0.85); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0.15;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes shimmer {
-  0%   { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
 }
 
 @keyframes scrollIndicator {
-  0%, 100% { transform: translateY(0); opacity: 1; }
-  50%       { transform: translateY(10px); opacity: 0.3; }
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(10px);
+    opacity: 0.3;
+  }
 }
 
 @keyframes islandFloat {
-  0%, 100% { transform: translateY(0px) scale(1); }
-  40%       { transform: translateY(-20px) scale(1.012); }
-  70%       { transform: translateY(-8px) scale(1.006); }
+  0% {
+    transform: translateY(0px) scale(1);
+  }
+  30% {
+    transform: translateY(-14px) scale(1.07);
+  }
+  60% {
+    transform: translateY(-6px) scale(1.04);
+  }
+  100% {
+    transform: translateY(0px) scale(1);
+  }
+}
+
+@keyframes goldenTrace {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -600;
+  }
 }
 
 /* ── Reveal on scroll ───────────────────────────────────────────────── */
@@ -81,69 +225,88 @@ body { background-color: var(--sky); transition: background-color 0.1s linear; }
   transform: translateY(32px);
   transition: opacity 0.9s ease, transform 0.9s ease;
 }
-.reveal.visible { opacity: 1; transform: translateY(0); }
-.reveal-delay-1 { transition-delay: 0.15s; }
-.reveal-delay-2 { transition-delay: 0.30s; }
-.reveal-delay-3 { transition-delay: 0.45s; }
-.reveal-delay-4 { transition-delay: 0.60s; }
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 {
+  transition-delay: 0.15s;
+}
+.reveal-delay-2 {
+  transition-delay: 0.3s;
+}
+.reveal-delay-3 {
+  transition-delay: 0.45s;
+}
+.reveal-delay-4 {
+  transition-delay: 0.6s;
+}
 
 /* ── Preloader ──────────────────────────────────────────────────────── */
 #preloader {
-  position: fixed; inset: 0; z-index: 100;
-  background: #0D0B18;
-  display: flex; align-items: center; justify-content: center;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--sg-bg-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: opacity 0.6s ease;
 }
-#preloader.hidden { opacity: 0; pointer-events: none; }
+#preloader.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
 #preloader svg path {
   stroke-dasharray: 1200;
   stroke-dashoffset: 1200;
   animation: drawPath 1.4s ease forwards 0.2s;
 }
 
-/* ── Stars ──────────────────────────────────────────────────────────── */
+/* Stars — hidden on light theme (container may be empty) */
 .star {
   position: absolute;
   border-radius: 50%;
-  background: white;
+  background: rgba(29, 125, 200, 0.35);
   animation: twinkle var(--dur, 3s) ease-in-out infinite;
   animation-delay: var(--delay, 0s);
 }
 
-/* ── Pin float ──────────────────────────────────────────────────────── */
-.float-pin { animation: floatPin 3s ease-in-out infinite; }
+.float-pin {
+  animation: floatPin 3s ease-in-out infinite;
+}
 
-/* ── CTA pulse ──────────────────────────────────────────────────────── */
-.pulse-cta { animation: pulseRing 2.5s ease-out infinite; }
+.pulse-cta {
+  animation: pulseRing 2.5s ease-out infinite;
+}
 
-/* ── Orbit ──────────────────────────────────────────────────────────── */
-.orbit-container { animation: orbit 18s linear infinite; }
-.orbit-label     { animation: counterOrbit 18s linear infinite; }
+.orbit-container {
+  animation: orbit 18s linear infinite;
+}
+.orbit-label {
+  animation: counterOrbit 18s linear infinite;
+}
 
-/* ── Province map ───────────────────────────────────────────────────── */
 .province-region {
   transition: fill 0.4s ease, filter 0.4s ease;
 }
 .province-region.active {
-  filter: drop-shadow(0 0 6px rgba(232,131,42,0.8));
+  filter: drop-shadow(0 0 6px rgba(29, 125, 200, 0.75));
 }
 
-/* ── Horizontal arc track ───────────────────────────────────────────── */
 #arc-track {
   transition: transform 0.05s linear;
   will-change: transform;
 }
 
-/* ── Split card hover ───────────────────────────────────────────────── */
 .path-card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .path-card:hover {
   transform: scale(1.02) translateY(-4px);
-  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+  box-shadow: var(--sg-shadow-card-hover);
 }
 
-/* ── Province stamp ─────────────────────────────────────────────────── */
 .stamp {
   transition: all 0.4s ease;
 }
@@ -154,5 +317,17 @@ body { background-color: var(--sky); transition: background-color 0.1s linear; }
   animation: floatPin 0.4s ease-in-out 2;
 }
 
-/* ── Scroll indicator ───────────────────────────────────────────────── */
-.scroll-dot { animation: scrollIndicator 2s ease-in-out infinite; }
+.scroll-dot {
+  animation: scrollIndicator 2s ease-in-out infinite;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+@media (max-width: 768px) {
+  .container {
+    padding: 0 24px;
+  }
+}
