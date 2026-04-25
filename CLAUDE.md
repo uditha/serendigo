@@ -18,7 +18,7 @@ serendigo/
 
 ## Current Phase
 Phase 1 — Foundation
-Current Milestone: 44 — Next
+Current Milestone: 47 — Next
 
 ## Tech Stack
 
@@ -114,9 +114,9 @@ const colors = {
 - Body/UI: Space Grotesk
 
 ## Current Session Memory
-- Last completed: M43 QR coin redemption system (coin_offers + coin_redemptions tables, /api/redeem route, mobile scan + redeem screens, admin QR generator + coin offers CRUD, family-run feature with isLocal sort priority); M44 Admin polish (full-width layout, 3-col PartnerForm, client-side filtering on partners/arcs/users, dashboard with pending partners + recent redemptions, Nav pending badge)
+- Last completed: M46 Creator Portal (see above); Google login (iOS PKCE + expo-auth-session, /api/google-signin endpoint, auth middleware DB fallback for Google sessions, Google profile photo on Today tab avatar + profile screen); M47 Real-time data (invalidate ['arcs'] after capture + enrollment + quiz; pull-to-refresh on Arc Detail + Discover screens)
 - Current blocker: None
-- Next step: Milestone 45 — Flash Deals mobile (post-capture "While you're here" slide-up, Today tab flash deal banner, push notification for deals)
+- Next step: Milestone 48 — Creator portal polish (email notification on application approval/rejection, creator photo upload, cover image upload on submission form)
 
 ## Milestones Completed
 - ✅ 1 — Expo app running
@@ -163,6 +163,9 @@ const colors = {
 - ✅ 42 — Partners in mobile: services/partners.ts, PartnerCard (photo/emoji fallback, category badge, featured badge, rating, distance, WhatsApp/Call button), partner detail screen (/partner/:id — photo carousel, contact buttons, hours, tags, reviews with verified badge, star review modal), chapter detail "Places nearby" section (featured first then proximity), arc detail "Plan your visit" horizontal scroll (FOOD/STAY/EXPERIENCE), registered in _layout.tsx
 - ✅ 43 — QR coin redemption system: coin_offers + coin_redemptions tables (migration 0010), isLocal + coinBalance on partners (migration 0009); API /api/redeem (GET /:partnerId for offers, POST / to redeem); mobile redeem/scan.tsx (CameraView QR scanner parsing serendigo://redeem/{id}), redeem/[partnerId].tsx (offer selection, affordability gating, receipt screen with 6-char code); admin: QRCodeCard component (qrcode.react, download PNG + print), coin offers CRUD (createCoinOffer/deleteCoinOffer/toggleCoinOffer actions); family-run feature: isLocal sort priority in all partner queries (family-run first silently), 🏠 badge on PartnerCard + full-width warm card on partner detail; Today tab "Redeem your coins" banner → scan screen
 - ✅ 44 — Admin panel polish: full-width layout (max-w-7xl on pages, removed sidebar max-w), PartnerForm 3-col grid (2/3 content + 1/3 sidebar, opening hours Mon-Sun fields, useTransition with success/error banners, MultiImageUpload), PartnersClient + ArcsClient + UsersClient (client-side filtering — search + category/status/province filters + result count), dashboard 6 stat cards + pending partners table + recent redemptions, Nav pending badge (red dot when unapproved partners > 0)
+- ✅ 45 — Flash Deals mobile: WhileYoureHereSheet (animated slide-up Modal shown 800ms after capture success, showing nearby flash deals with countdown + partner emoji), Today tab amber gradient flash deal banner (→ flash-deals screen), push notifications on flash deal create (admin sendExpoPush), flash-deals.tsx full listing screen, useFlashDeals hook with Sri Lanka center fallback coords
+- ✅ 46 — Creator Portal: creators + arc_submissions tables (DB migration 0012), apps/web creator landing page + application form (HMAC-signed cookie session, bcrypt, cuid2 slug), creator login + dashboard (server component), arc submission form with inline chapter JSONB editor + AI polish route (/api/polish → Claude claude-3-5-sonnet-latest), admin /creators (approve/reject/suspend applications, red nav badge), admin /submissions (approve-to-publish creates live arc + chapters rows, reject with feedback), mobile creator attribution card on arc detail screen, API arcs service attaches creator data to getArcById response
+- ✅ 47 — Google Login + Real-time data: iOS PKCE OAuth via expo-auth-session (useAuthRequest + exchangeCodeAsync, code_verifier in extraParams), /api/google-signin endpoint (Google userinfo verify → find/create user → session token), auth middleware DB fallback for non-Better-Auth sessions, Google profile photo on Today tab avatar + profile hero with character badge overlay, ['arcs'] invalidation after capture/enrollment/quiz, pull-to-refresh on Arc Detail + Discover screens
 
 ## Key Decisions & Notes
 - District name: "Mahanuvara" renamed to "Kandy" everywhere
@@ -206,6 +209,17 @@ const colors = {
 - `isLocal` on partners = "family-run / independently owned small operation" (NOT about nationality); sorted first in all partner queries via `CASE WHEN isLocal THEN 0 ELSE 1 END`; shown as 🏠 "Family run" badge on cards
 - TanStack Query: per-query `staleTime: 0, refetchOnMount: 'always'` needed for coin offers (global 5min staleTime caused stale empty results); applies to redeem/[partnerId].tsx query
 - Admin client components (PartnersClient, ArcsClient, UsersClient): server fetches all → passes to client for in-memory filtering; pattern avoids server round-trips on filter change
+- Creator Portal lives in apps/web (not a new app); auth is HMAC SHA-256 cookie (CREATOR_SESSION_SECRET env var, 30-day maxAge); separate from admin (ADMIN_SECRET) and traveller auth (Better Auth)
+- Creators table lives in the shared Supabase DB; apps/web has its own Drizzle schema mirror (same pattern as apps/admin)
+- Arc submission chapters stored as JSONB until published; on admin approve → rows inserted into arcs + chapters tables with arc.creatorId set
+- AI polish endpoint POST /api/polish is an authenticated Next.js Route Handler; uses raw fetch to Anthropic API (no SDK dep); returns polished text only; requires ANTHROPIC_API_KEY in apps/web/.env.local
+- Curated editorial model (not open UGC): apply → admin approves → creator can submit → admin publishes; quality floor is protected by two gates
+- Google OAuth uses iOS Client ID (not Web) with reversed-domain redirect URI `com.googleusercontent.apps.CLIENT_ID:/oauth2redirect/google`; Web clients block custom URL schemes
+- expo-auth-session/providers/google subpath import fails in Metro monorepo (ESM `export *`); use main package entry with inlined discovery document instead
+- PKCE code_verifier must be in `extraParams: { code_verifier }` on `exchangeCodeAsync` — direct property is not serialized by `getQueryBody()`; capture codeVerifier via ref in `signInWithGoogle()` before re-renders
+- `/api/google-signin` route name required — `/api/auth/*` is caught by Better Auth wildcard before reaching Hono routes
+- `auth.api.getSession()` only validates Better Auth sessions; custom Google sessions need direct DB token lookup fallback in auth middleware
+- Google profile photo stored in `user.image` (Better Auth standard field); profile screen shows photo with character emoji as badge overlay
 
 ## Environment Setup
 Copy env files before first run:

@@ -53,5 +53,9 @@ export async function fetchStory(): Promise<StoryData> {
   })
   if (!response.ok) throw new Error('Failed to load story')
   const json = await response.json()
-  return json.data as StoryData
+  const payload = json?.data as StoryData | undefined
+  if (!payload || !Array.isArray(payload.journeys) || !payload.xp) {
+    throw new Error('Invalid story response')
+  }
+  return payload
 }

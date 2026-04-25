@@ -5,6 +5,7 @@ import {
   Image,
   Modal,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -274,7 +275,7 @@ export default function DiscoverScreen() {
   ]
 
   const queryKey = ['discover', filter]
-  const { data: captures = [], isLoading } = useQuery({
+  const { data: captures = [], isLoading, refetch, isFetching } = useQuery({
     queryKey,
     queryFn: () => getDiscoveryFeed(filter === 'ALL' ? undefined : filter),
     staleTime: 2 * 60 * 1000,
@@ -333,6 +334,9 @@ export default function DiscoverScreen() {
           contentContainerStyle={styles.grid}
           columnWrapperStyle={styles.gridRow}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor={colors.primary} />
+          }
           renderItem={({ item }) => (
             <CaptureCard
               item={item}

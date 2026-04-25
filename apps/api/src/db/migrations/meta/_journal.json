@@ -85,6 +85,13 @@
       "when": 1776012000000,
       "tag": "0011_enable_row_level_security",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1776375947755,
+      "tag": "0012_warm_psynapse",
+      "breakpoints": true
     }
   ]
 }

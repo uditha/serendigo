@@ -1,4 +1,4 @@
-import { ActivityIndicator, Alert, FlatList, Image, ImageBackground, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Image, ImageBackground, RefreshControl, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { Check, CircleDollarSign, Clock, ChevronRight, Star } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -35,6 +35,16 @@ interface Chapter {
   } | null
 }
 
+interface ArcCreator {
+  id: string
+  name: string
+  bio: string | null
+  photo: string | null
+  instagram: string | null
+  website: string | null
+  slug: string
+}
+
 interface ArcDetail {
   id: string
   title: string
@@ -46,6 +56,7 @@ interface ArcDetail {
   coverImage: string | null
   isPublished: boolean
   chapters: Chapter[]
+  creator: ArcCreator | null
 }
 
 const makeStyles = (colors: AppColors) => StyleSheet.create({
@@ -273,6 +284,54 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     ...typography.body,
     color: colors.primary,
   },
+  // Creator attribution
+  creatorCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.md,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    padding: spacing.md,
+    backgroundColor: colors.surfaceWhite,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.07)',
+  },
+  creatorAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  creatorAvatarFallback: {
+    backgroundColor: '#E8832A22',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  creatorAvatarInitial: {
+    ...typography.h3,
+    color: '#E8832A',
+  },
+  creatorBy: {
+    ...typography.label,
+    color: colors.textTertiary,
+    textTransform: 'uppercase',
+    fontSize: 10,
+  },
+  creatorName: {
+    ...typography.body,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  creatorBio: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  creatorHandle: {
+    ...typography.caption,
+    color: '#1d7dc8',
+    marginTop: 2,
+  },
 })
 
 const CATEGORY_COLOR: Record<string, string> = {
@@ -440,13 +499,21 @@ export default function ArcDetailScreen() {
   const { isLoggedIn } = useAuthStore();
   const queryClient = useQueryClient();
 
-  const { data: arc, isLoading, error } = useQuery({
+  const { data: arc, isLoading, error, refetch: refetchArc, isFetching } = useQuery({
     queryKey: ['arc', id],
     queryFn: () =>
       fetchFromApi<{ success: boolean; data: ArcDetail }>(`/api/arcs/${id}`).then(
         (res) => res.data
       ),
   });
+
+  const onRefresh = () => {
+    refetchArc();
+    if (isLoggedIn) {
+      queryClient.invalidateQueries({ queryKey: ['arc-progress', id] });
+      queryClient.invalidateQueries({ queryKey: ['arc-community', id] });
+    }
+  };
 
   const { data: progress, isLoading: progressLoading } = useQuery({
     queryKey: ['arc-progress', id],
@@ -460,6 +527,7 @@ export default function ArcDetailScreen() {
     onSuccess: (data) => {
       queryClient.setQueryData(['arc-progress', id], data);
       queryClient.invalidateQueries({ queryKey: ['story'] });
+      queryClient.invalidateQueries({ queryKey: ['arcs'] });
     },
     onError: (err: Error) => {
       Alert.alert('Could not start journey', err.message ?? 'Please try again.')
@@ -531,7 +599,13 @@ export default function ArcDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: spacing.xxl }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: spacing.xxl }}
+        refreshControl={
+          <RefreshControl refreshing={isFetching && !isLoading} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
+      >
         {/* Hero header */}
         <View style={styles.heroContainer}>
           {arc.coverImage ? (
@@ -603,6 +677,31 @@ export default function ArcDetailScreen() {
             </View>
           </View>
         </View>
+
+        {/* Creator attribution */}
+        {arc.creator && (
+          <View style={styles.creatorCard}>
+            {arc.creator.photo ? (
+              <Image source={{ uri: arc.creator.photo }} style={styles.creatorAvatar} />
+            ) : (
+              <View style={[styles.creatorAvatar, styles.creatorAvatarFallback]}>
+                <Text style={styles.creatorAvatarInitial}>
+                  {arc.creator.name.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+            <View style={{ flex: 1 }}>
+              <Text style={styles.creatorBy}>Arc by</Text>
+              <Text style={styles.creatorName}>{arc.creator.name}</Text>
+              {arc.creator.bio ? (
+                <Text style={styles.creatorBio} numberOfLines={2}>{arc.creator.bio}</Text>
+              ) : null}
+              {arc.creator.instagram ? (
+                <Text style={styles.creatorHandle}>@{arc.creator.instagram}</Text>
+              ) : null}
+            </View>
+          </View>
+        )}
 
         {/* Enrollment / Progress */}
         {isLoggedIn && !progressLoading && (

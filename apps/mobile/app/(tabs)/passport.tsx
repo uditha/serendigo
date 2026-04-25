@@ -1,10 +1,12 @@
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useState } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { LinearGradient } from 'expo-linear-gradient'
+import { router } from 'expo-router'
 import { spacing, typography, AppColors } from '@/src/theme'
 import { useTheme } from '@/src/hooks/useTheme'
+import { useAuthStore } from '@/src/stores/authStore'
 import { fetchPassport, type ProvinceStamp } from '@/src/services/passport'
 
 const PROVINCE_ICONS: Record<string, string> = {
@@ -280,6 +282,43 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     fontSize: 9,
   },
 
+  // ─── Guest CTA ──────────────────────────────────────────────────
+  guestCta: {
+    backgroundColor: colors.surfaceWhite,
+    borderRadius: 20,
+    padding: spacing.xl,
+    alignItems: 'center',
+    gap: spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  guestCtaEmoji: { fontSize: 48 },
+  guestCtaTitle: {
+    ...typography.h2,
+    color: colors.textPrimary,
+    textAlign: 'center',
+  },
+  guestCtaBody: {
+    ...typography.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  guestCtaButton: {
+    backgroundColor: colors.secondary,
+    borderRadius: 14,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    marginTop: spacing.xs,
+  },
+  guestCtaButtonText: {
+    ...typography.h3,
+    color: 'white',
+  },
+
   // ─── Footer / Error ─────────────────────────────────────────────
   footer: {
     ...typography.caption,
@@ -302,12 +341,14 @@ export default function PassportScreen() {
   const { colors } = useTheme()
   const styles = makeStyles(colors)
   const queryClient = useQueryClient()
+  const { isLoggedIn } = useAuthStore()
   const [refreshing, setRefreshing] = useState(false)
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['passport'],
     queryFn: fetchPassport,
     staleTime: 2 * 60 * 1000,
+    enabled: isLoggedIn,
   })
 
   const onRefresh = async () => {
@@ -342,46 +383,66 @@ export default function PassportScreen() {
         <View style={styles.passportDivider} />
         <Text style={styles.passportSubtitle}>DEMOCRATIC SOCIALIST REPUBLIC OF SRI LANKA</Text>
 
-        <View style={styles.stampCountRow}>
-          <View style={styles.stampCountItem}>
-            <Text style={styles.stampCountNumber}>{stamped}</Text>
-            <Text style={styles.stampCountLabel}>Stamped</Text>
-          </View>
-          <View style={styles.stampCountDivider} />
-          <View style={styles.stampCountItem}>
-            <Text style={styles.stampCountNumber}>{total - stamped}</Text>
-            <Text style={styles.stampCountLabel}>Remaining</Text>
-          </View>
-          <View style={styles.stampCountDivider} />
-          <View style={styles.stampCountItem}>
-            <Text style={styles.stampCountNumber}>{total}</Text>
-            <Text style={styles.stampCountLabel}>Provinces</Text>
-          </View>
-        </View>
+        {isLoggedIn && (
+          <>
+            <View style={styles.stampCountRow}>
+              <View style={styles.stampCountItem}>
+                <Text style={styles.stampCountNumber}>{stamped}</Text>
+                <Text style={styles.stampCountLabel}>Stamped</Text>
+              </View>
+              <View style={styles.stampCountDivider} />
+              <View style={styles.stampCountItem}>
+                <Text style={styles.stampCountNumber}>{total - stamped}</Text>
+                <Text style={styles.stampCountLabel}>Remaining</Text>
+              </View>
+              <View style={styles.stampCountDivider} />
+              <View style={styles.stampCountItem}>
+                <Text style={styles.stampCountNumber}>{total}</Text>
+                <Text style={styles.stampCountLabel}>Provinces</Text>
+              </View>
+            </View>
 
-        {/* Progress bar */}
-        <View style={styles.coverProgressTrack}>
-          <LinearGradient
-            colors={[colors.primary, colors.coinGold]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={[styles.coverProgressFill, { width: `${pct}%` }]}
-          />
-        </View>
-        <Text style={styles.coverProgressLabel}>
-          {stamped === 0
-            ? 'Begin your journey'
-            : stamped === total
-            ? 'Passport complete! 🎉'
-            : `${Math.round(pct)}% of Sri Lanka explored`}
-        </Text>
+            <View style={styles.coverProgressTrack}>
+              <LinearGradient
+                colors={[colors.primary, colors.coinGold]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[styles.coverProgressFill, { width: `${pct}%` }]}
+              />
+            </View>
+            <Text style={styles.coverProgressLabel}>
+              {stamped === 0
+                ? 'Begin your journey'
+                : stamped === total
+                ? 'Passport complete! 🎉'
+                : `${Math.round(pct)}% of Sri Lanka explored`}
+            </Text>
+          </>
+        )}
+
+        {!isLoggedIn && (
+          <Text style={[styles.coverProgressLabel, { marginTop: spacing.md }]}>
+            9 provinces to discover across Sri Lanka
+          </Text>
+        )}
       </LinearGradient>
 
       {/* Stamps */}
       <View style={styles.stampsSection}>
         <Text style={styles.stampsSectionTitle}>Province Stamps</Text>
 
-        {isLoading ? (
+        {!isLoggedIn ? (
+          <View style={styles.guestCta}>
+            <Text style={styles.guestCtaEmoji}>🗺️</Text>
+            <Text style={styles.guestCtaTitle}>Your stamps live here</Text>
+            <Text style={styles.guestCtaBody}>
+              Complete arcs across all 9 provinces to earn stamps and fill your passport.
+            </Text>
+            <Pressable style={styles.guestCtaButton} onPress={() => router.push('/(auth)/login')}>
+              <Text style={styles.guestCtaButtonText}>Sign in to get started</Text>
+            </Pressable>
+          </View>
+        ) : isLoading ? (
           <StampGridSkeleton styles={styles} />
         ) : error ? (
           <View style={styles.errorState}>
@@ -395,7 +456,9 @@ export default function PassportScreen() {
           </View>
         )}
 
-        <Text style={styles.footer}>Collect all 9 province stamps to complete your passport</Text>
+        {isLoggedIn && (
+          <Text style={styles.footer}>Collect all 9 province stamps to complete your passport</Text>
+        )}
       </View>
     </ScrollView>
   )

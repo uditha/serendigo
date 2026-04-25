@@ -15,7 +15,16 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.serendigo.app"
+      "bundleIdentifier": "com.serendigo.app",
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.447442424055-ovvo0b3qjh4f03q6q488eisi1m8n74gf"
+            ]
+          }
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {

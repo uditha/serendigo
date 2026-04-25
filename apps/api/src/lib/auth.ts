@@ -3,6 +3,18 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { db } from '../db'
 import * as schema from '../db/schema'
 
+/** Mobile sets `Origin` to EXPO_PUBLIC_API_URL (often LAN). Always trust the public API URL(s). */
+function buildTrustedOrigins(): string[] {
+  const fromEnv = (process.env.TRUSTED_ORIGINS ?? 'http://localhost:3000,http://localhost:3001')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean)
+  const sameAsApi = [process.env.BETTER_AUTH_URL, process.env.API_BASE_URL]
+    .filter((x): x is string => Boolean(x?.trim()))
+    .map((x) => x.trim())
+  return [...new Set([...fromEnv, ...sameAsApi])]
+}
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: 'pg',
@@ -14,10 +26,7 @@ export const auth = betterAuth({
     return s
   })(),
   baseURL: process.env.BETTER_AUTH_URL ?? 'http://localhost:3000',
-  trustedOrigins: (process.env.TRUSTED_ORIGINS ?? 'http://localhost:3000,http://localhost:3001')
-    .split(',')
-    .map((o) => o.trim())
-    .filter(Boolean),
+  trustedOrigins: buildTrustedOrigins(),
 
   emailAndPassword: {
     enabled: true,

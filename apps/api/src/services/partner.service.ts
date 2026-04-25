@@ -7,6 +7,7 @@ import {
   captures,
 } from '../db/schema'
 import { eq, and, sql, desc, asc, inArray, lte, gte } from 'drizzle-orm'
+import { haversineMeters } from '../utils/haversine-sql'
 import type { PartnerCategory } from '../db/schema/partners'
 import { user } from '../db/schema/auth'
 
@@ -99,7 +100,7 @@ async function attachRatings(
 }
 
 // --- NEARBY (chapter context) ---
-// Uses PostGIS ST_DWithin with category-specific radius
+// Haversine distance + category-specific radius (no PostGIS — works on plain Postgres)
 // If nothing found at default radius, doubles it once ("expand if empty")
 export async function getNearbyPartners(
   lat: number,
@@ -111,30 +112,18 @@ export async function getNearbyPartners(
     const conditions = [
       eq(partners.isActive, true),
       eq(partners.isApproved, true),
-      sql`ST_DWithin(
-        ST_SetSRID(ST_MakePoint(${partners.lng}, ${partners.lat}), 4326)::geography,
-        ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
-        ${radius}
-      )`,
+      sql`${haversineMeters(partners.lat, partners.lng, lat, lng)} <= ${radius}`,
     ]
     if (category) conditions.push(eq(partners.category, category))
 
     return db
       .select({
         partner: partners,
-        distanceM: sql<number>`round(ST_Distance(
-          ST_SetSRID(ST_MakePoint(${partners.lng}, ${partners.lat}), 4326)::geography,
-          ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography
-        ))::int`,
+        distanceM: sql<number>`round(${haversineMeters(partners.lat, partners.lng, lat, lng)})::int`,
       })
       .from(partners)
       .where(and(...conditions))
-      .orderBy(
-        sql`ST_Distance(
-          ST_SetSRID(ST_MakePoint(${partners.lng}, ${partners.lat}), 4326)::geography,
-          ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography
-        )`,
-      )
+      .orderBy(haversineMeters(partners.lat, partners.lng, lat, lng))
       .limit(maxResults)
   }
 
@@ -290,11 +279,7 @@ export async function getActiveFlashDeals(
         eq(partners.isActive, true),
         eq(partners.isApproved, true),
         sql`${userCoins} >= ${flashDeals.minCoins}`,
-        sql`ST_DWithin(
-          ST_SetSRID(ST_MakePoint(${partners.lng}, ${partners.lat}), 4326)::geography,
-          ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
-          ${flashDeals.radiusMeters}
-        )`,
+        sql`${haversineMeters(partners.lat, partners.lng, lat, lng)} <= ${flashDeals.radiusMeters}`,
       ),
     )
     .orderBy(asc(flashDeals.expiresAt))

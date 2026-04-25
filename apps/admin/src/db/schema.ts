@@ -9,6 +9,7 @@ export const user = pgTable('user', {
   email: text('email').notNull(),
   serendipityCoins: integer('serendipity_coins').default(0),
   travellerCharacter: text('traveller_character'),
+  pushToken: text('push_token'),
   createdAt: timestamp('created_at').defaultNow(),
 })
 
@@ -25,6 +26,7 @@ export const arcs = pgTable('arcs', {
   seasonEnd: integer('season_end'),
   isSeasonal: boolean('is_seasonal').default(false).notNull(),
   isPublished: boolean('is_published').default(false).notNull(),
+  creatorId: text('creator_id'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
@@ -133,9 +135,48 @@ export const coinRedemptions = pgTable('coin_redemptions', {
   redeemedAt: timestamp('redeemed_at').defaultNow().notNull(),
 })
 
+// ─── Creators (editorial partner applications) ────────────────────────────
+export const creators = pgTable('creators', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull(),
+  slug: text('slug').notNull(),
+  bio: text('bio'),
+  photo: text('photo'),
+  province: text('province'),
+  instagram: text('instagram'),
+  website: text('website'),
+  status: text('status').notNull().default('pending'), // pending | approved | rejected | suspended
+  applicationNote: text('application_note'),
+  rejectionReason: text('rejection_reason'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  approvedAt: timestamp('approved_at'),
+})
+
+export const arcSubmissions = pgTable('arc_submissions', {
+  id: text('id').primaryKey(),
+  creatorId: text('creator_id').notNull(),
+  title: text('title').notNull(),
+  tagline: text('tagline'),
+  worldType: text('world_type').notNull(),
+  province: text('province').notNull(),
+  narrativeHook: text('narrative_hook'),
+  coverImage: text('cover_image'),
+  chapters: jsonb('chapters').notNull().default([]),
+  status: text('status').notNull().default('draft'), // draft | submitted | approved | rejected | published
+  adminFeedback: text('admin_feedback'),
+  publishedArcId: text('published_arc_id'),
+  submittedAt: timestamp('submitted_at'),
+  reviewedAt: timestamp('reviewed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
 export type Arc = typeof arcs.$inferSelect
 export type Chapter = typeof chapters.$inferSelect
 export type Partner = typeof partners.$inferSelect
 export type FlashDeal = typeof flashDeals.$inferSelect
 export type CoinOffer = typeof coinOffers.$inferSelect
 export type CoinRedemption = typeof coinRedemptions.$inferSelect
+export type Creator = typeof creators.$inferSelect
+export type ArcSubmission = typeof arcSubmissions.$inferSelect

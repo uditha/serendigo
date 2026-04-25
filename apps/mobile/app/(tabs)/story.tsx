@@ -342,11 +342,11 @@ export default function StoryScreen() {
 
       {isLoading ? (
         <JourneysSkeleton styles={styles} colors={colors} />
-      ) : error ? (
+      ) : error || !data?.journeys ? (
         <View style={styles.emptyCard}>
           <Text style={styles.emptyBody}>Could not load your story</Text>
         </View>
-      ) : data?.journeys.length === 0 ? (
+      ) : data.journeys.length === 0 ? (
         <View style={styles.emptyCard}>
           <Text style={styles.emptyEmoji}>🗺️</Text>
           <Text style={styles.emptyTitle}>No journeys yet</Text>
@@ -354,21 +354,21 @@ export default function StoryScreen() {
         </View>
       ) : (
         <>
-          {data!.journeys.filter((j) => !j.isComplete).length > 0 && (
+          {data.journeys.filter((j) => !j.isComplete).length > 0 && (
             <View style={styles.journeyGroup}>
               <Text style={styles.groupLabel}>In Progress</Text>
               <View style={styles.arcList}>
-                {data!.journeys.filter((j) => !j.isComplete).map((journey) => (
+                {data.journeys.filter((j) => !j.isComplete).map((journey) => (
                   <JourneyCard key={journey.arcId} journey={journey} styles={styles} colors={colors} />
                 ))}
               </View>
             </View>
           )}
-          {data!.journeys.filter((j) => j.isComplete).length > 0 && (
+          {data.journeys.filter((j) => j.isComplete).length > 0 && (
             <View style={styles.journeyGroup}>
               <Text style={styles.groupLabel}>Completed</Text>
               <View style={styles.arcList}>
-                {data!.journeys.filter((j) => j.isComplete).map((journey) => (
+                {data.journeys.filter((j) => j.isComplete).map((journey) => (
                   <JourneyCard key={journey.arcId} journey={journey} styles={styles} colors={colors} />
                 ))}
               </View>

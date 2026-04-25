@@ -188,6 +188,22 @@ export default function Home() {
             >
               For Partners
             </Link>
+            <Link
+              href="/creators"
+              style={{
+                fontFamily: 'Space Grotesk, sans-serif',
+                fontSize: 14,
+                fontWeight: 600,
+                background: 'var(--sg-primary)',
+                color: '#fff',
+                padding: '8px 18px',
+                borderRadius: 100,
+                textDecoration: 'none',
+              }}
+              className="hover:brightness-[1.03] transition-[filter]"
+            >
+              For Creators
+            </Link>
           </div>
         </div>
       </nav>
@@ -1163,6 +1179,154 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ── CREATORS ───────────────────────────────────────────── */}
+        <section id="creators" style={{ background: '#fff', paddingTop: 96, paddingBottom: 96 }}>
+          <div className="container">
+            <div className="grid md:grid-cols-2 gap-16 items-center">
+              {/* LEFT */}
+              <div>
+                <p
+                  className="reveal mb-4"
+                  style={{
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    fontSize: 12,
+                    letterSpacing: 5,
+                    color: 'var(--sg-primary)',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  For writers &amp; photographers
+                </p>
+                <h2
+                  className="reveal reveal-delay-1 mb-5"
+                  style={{
+                    fontFamily: 'DM Serif Display, serif',
+                    fontSize: 'clamp(28px, 3.5vw, 48px)',
+                    color: 'var(--sg-ink)',
+                    lineHeight: 1.1,
+                  }}
+                >
+                  Write stories that send people
+                  <br />
+                  <span className="sg-text-accent">into your motherland.</span>
+                </h2>
+                <p
+                  className="reveal reveal-delay-2 mb-8"
+                  style={{
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    fontSize: 17,
+                    color: 'var(--sg-ink)',
+                    opacity: 0.65,
+                    lineHeight: 1.7,
+                    maxWidth: 520,
+                  }}
+                >
+                  SerendiGO publishes story arcs by photographers, food writers,
+                  naturalists, and locals who know one corner of this island deeply.
+                  Apply once — your arc carries your name and link in the app.
+                </p>
+                <div className="reveal reveal-delay-3 flex flex-wrap gap-4">
+                  <Link
+                    href="/creators"
+                    style={{
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      fontWeight: 700,
+                      fontSize: 16,
+                      background: 'var(--sg-primary)',
+                      color: '#ffffff',
+                      padding: '16px 40px',
+                      borderRadius: 100,
+                      textDecoration: 'none',
+                      display: 'inline-block',
+                      boxShadow: 'var(--sg-glow-accent)',
+                    }}
+                    className="hover:brightness-[1.03] transition-[filter]"
+                  >
+                    Apply to create →
+                  </Link>
+                  <Link
+                    href="/creators/login"
+                    style={{
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      fontSize: 15,
+                      color: 'var(--sg-ink)',
+                      padding: '16px 28px',
+                      border: '1px solid var(--sg-border-strong)',
+                      borderRadius: 100,
+                      textDecoration: 'none',
+                      display: 'inline-block',
+                    }}
+                    className="hover:bg-sg-section transition-colors"
+                  >
+                    Creator login
+                  </Link>
+                </div>
+              </div>
+
+              {/* RIGHT — three feature cards */}
+              <div className="flex flex-col gap-5">
+                {[
+                  {
+                    icon: '✍️',
+                    title: 'Curated, not crowdsourced',
+                    body: 'We review every arc before it goes live. That means your work sits next to quality — not noise.',
+                  },
+                  {
+                    icon: '✨',
+                    title: 'AI polish built in',
+                    body: 'Write your lore and narrative hooks. Our AI editor helps match tone and length — you stay in control.',
+                  },
+                  {
+                    icon: '📍',
+                    title: 'Your name on every chapter',
+                    body: 'Approved arcs carry your photo, bio, and link on every chapter in the mobile app. Real attribution.',
+                  },
+                ].map((card) => (
+                  <div
+                    key={card.title}
+                    className="reveal"
+                    style={{
+                      display: 'flex',
+                      gap: 16,
+                      alignItems: 'flex-start',
+                      background: 'var(--sg-bg-section)',
+                      border: '1px solid var(--sg-border-subtle)',
+                      borderRadius: 20,
+                      padding: '20px 24px',
+                    }}
+                  >
+                    <span style={{ fontSize: 28, lineHeight: 1, marginTop: 2 }}>{card.icon}</span>
+                    <div>
+                      <h3
+                        style={{
+                          fontFamily: 'Space Grotesk, sans-serif',
+                          fontSize: 16,
+                          fontWeight: 600,
+                          color: 'var(--sg-ink)',
+                          marginBottom: 6,
+                        }}
+                      >
+                        {card.title}
+                      </h3>
+                      <p
+                        style={{
+                          fontFamily: 'Space Grotesk, sans-serif',
+                          fontSize: 14,
+                          color: 'var(--sg-ink)',
+                          opacity: 0.6,
+                          lineHeight: 1.65,
+                        }}
+                      >
+                        {card.body}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── DOWNLOAD ───────────────────────────────────────────── */}
         <section
           className="text-center"
@@ -1291,10 +1455,16 @@ export default function Home() {
               >
                 Explore
               </p>
-              {['For Explorers', 'For Partners', 'Download', 'About'].map((l) => (
-                <a
-                  key={l}
-                  href="#"
+              {[
+                { label: 'For Explorers', href: '#for-explorers' },
+                { label: 'For Partners', href: '/partners' },
+                { label: 'For Creators', href: '/creators' },
+                { label: 'Download', href: '#download' },
+                { label: 'About', href: '#' },
+              ].map(({ label, href }) => (
+                <Link
+                  key={label}
+                  href={href}
                   className="block mb-3"
                   style={{
                     fontFamily: 'Space Grotesk, sans-serif',
@@ -1307,8 +1477,8 @@ export default function Home() {
                     (e.currentTarget.style.color = 'var(--sg-muted)')
                   }
                 >
-                  {l}
-                </a>
+                  {label}
+                </Link>
               ))}
             </div>
             <div>

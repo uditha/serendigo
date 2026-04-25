@@ -1,5 +1,5 @@
 import { db } from '../db'
-import { arcs, chapters, userArcs, captures } from '../db/schema'
+import { arcs, chapters, userArcs, captures, creators } from '../db/schema'
 import { eq, and, inArray } from 'drizzle-orm'
 
 interface ArcFilters {
@@ -36,6 +36,16 @@ export async function getArcs(filters: ArcFilters) {
   }))
 }
 
+async function attachCreator(arc: { creatorId?: string | null }) {
+  if (!arc.creatorId) return null
+  const rows = await db
+    .select({ id: creators.id, name: creators.name, bio: creators.bio, photo: creators.photo, instagram: creators.instagram, website: creators.website, slug: creators.slug })
+    .from(creators)
+    .where(eq(creators.id, arc.creatorId))
+    .limit(1)
+  return rows[0] ?? null
+}
+
 export async function getArcById(id: string) {
   const arc = await db.query.arcs.findFirst({
     where: eq(arcs.id, id),
@@ -45,7 +55,8 @@ export async function getArcById(id: string) {
   if (!arc) return null
 
   const currentMonth = new Date().getMonth() + 1
-  return { ...arc, isActiveNow: isInSeason(arc, currentMonth) }
+  const creator = await attachCreator(arc)
+  return { ...arc, isActiveNow: isInSeason(arc, currentMonth), creator }
 }
 
 export async function getArcBySlug(slug: string) {
@@ -57,7 +68,8 @@ export async function getArcBySlug(slug: string) {
   if (!arc) return null
 
   const currentMonth = new Date().getMonth() + 1
-  return { ...arc, isActiveNow: isInSeason(arc, currentMonth) }
+  const creator = await attachCreator(arc)
+  return { ...arc, isActiveNow: isInSeason(arc, currentMonth), creator }
 }
 
 export async function getChapters(arcId: string) {

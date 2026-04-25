@@ -110,6 +110,7 @@ export default function RootLayout() {
           <Stack.Screen name="partner/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="redeem/scan" options={{ headerShown: false }} />
           <Stack.Screen name="redeem/[partnerId]" options={{ headerShown: false }} />
+          <Stack.Screen name="flash-deals" options={{ headerShown: false }} />
         </Stack>
       </GestureHandlerRootView>
     </QueryClientProvider>

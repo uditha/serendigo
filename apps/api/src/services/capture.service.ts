@@ -2,6 +2,7 @@ import { db } from '../db'
 import { captures, chapters, user, userArcs } from '../db/schema'
 import { eq, and, sql, count } from 'drizzle-orm'
 
+import { haversineMetersLiterals } from '../utils/haversine-sql'
 import { uploadPhoto } from '../utils/storage'
 import { badgeQueue, leaderboardQueue } from '../jobs'
 import { checkAndAwardBadges, type BadgeAwarded } from './badge.service'
@@ -147,11 +148,7 @@ async function verifyLocation(
   radiusMeters: number,
 ): Promise<boolean> {
   const result = await db.execute(sql`
-    SELECT ST_DWithin(
-      ST_SetSRID(ST_MakePoint(${userLng}, ${userLat}), 4326)::geography,
-      ST_SetSRID(ST_MakePoint(${chapterLng}, ${chapterLat}), 4326)::geography,
-      ${radiusMeters}
-    ) AS within
+    SELECT (${haversineMetersLiterals(userLat, userLng, chapterLat, chapterLng)}) <= ${radiusMeters} AS within
   `)
 
   return (result as Array<{ within: boolean }>)[0]?.within === true

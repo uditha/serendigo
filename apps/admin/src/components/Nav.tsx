@@ -1,16 +1,26 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Map, Users, Store, LogOut } from 'lucide-react'
+import { LayoutDashboard, Map, Users, Store, LogOut, PenLine, FileText } from 'lucide-react'
 
 const links = [
-  { href: '/',         label: 'Dashboard', Icon: LayoutDashboard },
-  { href: '/arcs',     label: 'Arcs',      Icon: Map },
-  { href: '/partners', label: 'Partners',  Icon: Store },
-  { href: '/users',    label: 'Users',     Icon: Users },
+  { href: '/',            label: 'Dashboard',   Icon: LayoutDashboard,  badge: '' },
+  { href: '/arcs',        label: 'Arcs',        Icon: Map,              badge: '' },
+  { href: '/partners',    label: 'Partners',    Icon: Store,            badge: 'partners' },
+  { href: '/creators',    label: 'Creators',    Icon: PenLine,          badge: 'creators' },
+  { href: '/submissions', label: 'Submissions', Icon: FileText,         badge: 'submissions' },
+  { href: '/users',       label: 'Users',       Icon: Users,            badge: '' },
 ]
 
-export default function Nav({ pendingCount = 0 }: { pendingCount?: number }) {
+export default function Nav({
+  pendingCount = 0,
+  pendingCreators = 0,
+  pendingSubmissions = 0,
+}: {
+  pendingCount?: number
+  pendingCreators?: number
+  pendingSubmissions?: number
+}) {
   const pathname = usePathname()
 
   return (
@@ -21,8 +31,12 @@ export default function Nav({ pendingCount = 0 }: { pendingCount?: number }) {
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {links.map(({ href, label, Icon }) => {
+        {links.map(({ href, label, Icon, badge }) => {
           const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
+          const badgeCount =
+            badge === 'partners' ? pendingCount :
+            badge === 'creators' ? pendingCreators :
+            badge === 'submissions' ? pendingSubmissions : 0
           return (
             <Link
               key={href}
@@ -35,9 +49,9 @@ export default function Nav({ pendingCount = 0 }: { pendingCount?: number }) {
             >
               <Icon size={16} />
               <span>{label}</span>
-              {label === 'Partners' && pendingCount > 0 && (
+              {badgeCount > 0 && (
                 <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-none">
-                  {pendingCount}
+                  {badgeCount}
                 </span>
               )}
             </Link>

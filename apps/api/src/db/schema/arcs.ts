@@ -21,6 +21,7 @@ export const arcs = pgTable('arcs', {
   isSeasonal: boolean('is_seasonal').default(false).notNull(),
   isPublished: boolean('is_published').default(false).notNull(),
   authorUserId: text('author_user_id').references(() => user.id),
+  creatorId: text('creator_id'),  // FK to creators.id — null for official SerendiGO arcs
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })

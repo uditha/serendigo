@@ -57,6 +57,7 @@ export async function getMe(c: Context) {
         id: user.id,
         name: user.name,
         email: user.email,
+        image: user.image,
         travellerCharacter: user.travellerCharacter,
         serendipityCoins: user.serendipityCoins,
         level: user.level,

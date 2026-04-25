@@ -21,6 +21,7 @@ import { spacing, typography, AppColors } from '@/src/theme'
 import { useTheme } from '@/src/hooks/useTheme'
 import { fetchFromApi } from '@/src/services/api';
 import { useAuthStore } from '@/src/stores/authStore';
+import { useQueryClient } from '@tanstack/react-query';
 
 type WorldType = 'TASTE' | 'WILD' | 'MOVE' | 'ROOTS' | 'RESTORE';
 
@@ -267,6 +268,7 @@ export default function QuizScreen() {
   const [selected, setSelected] = useState<WorldType | null>(null);
   const [result, setResult] = useState<WorldType | null>(null);
   const { user, setAuth, token } = useAuthStore();
+  const queryClient = useQueryClient();
 
   const progress = useSharedValue(0);
   const progressStyle = useAnimatedStyle(() => ({
@@ -305,6 +307,8 @@ export default function QuizScreen() {
           body: JSON.stringify({ character: result }),
         });
         setAuth(token, { ...user, travellerCharacter: result })
+        queryClient.invalidateQueries({ queryKey: ['arcs'] })
+        queryClient.invalidateQueries({ queryKey: ['story'] })
       } catch (e) {
         console.warn('Failed to save character:', e)
       }

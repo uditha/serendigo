@@ -17,6 +17,7 @@ import { spacing, typography, AppColors } from '@/src/theme'
 import { useTheme } from '@/src/hooks/useTheme'
 import { fetchFromApi } from '@/src/services/api';
 import { useAuthStore } from '@/src/stores/authStore';
+import { useGoogleAuth } from '@/src/hooks/useGoogleAuth';
 
 const makeStyles = (colors: AppColors) => StyleSheet.create({
   flex: {
@@ -114,6 +115,53 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     ...typography.body,
     color: colors.primary,
   },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: spacing.md,
+    gap: spacing.sm,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  dividerText: {
+    ...typography.caption,
+    color: colors.textTertiary,
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.surfaceWhite,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 14,
+    paddingVertical: spacing.md,
+    marginTop: spacing.sm,
+  },
+  googleIconWrapper: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleIconText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#4285F4',
+    lineHeight: 16,
+  },
+  googleButtonText: {
+    ...typography.h3,
+    color: colors.textPrimary,
+  },
 })
 
 export default function RegisterScreen() {
@@ -127,6 +175,11 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const setAuth = useAuthStore((s) => s.setAuth);
+
+  const { signInWithGoogle, loading: googleLoading, error: googleError, ready: googleReady } = useGoogleAuth((result) => {
+    setAuth(result.token, result.user);
+    router.replace('/onboarding/welcome');
+  });
 
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password.trim()) {
@@ -235,6 +288,32 @@ export default function RegisterScreen() {
               <Text style={styles.buttonText}>Create account</Text>
             )}
           </Pressable>
+
+          {/* OR divider */}
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* Google Sign-In */}
+          <Pressable
+            style={[styles.googleButton, (!googleReady || googleLoading) && styles.buttonDisabled]}
+            onPress={signInWithGoogle}
+            disabled={!googleReady || googleLoading}
+          >
+            {googleLoading ? (
+              <ActivityIndicator color={colors.textPrimary} />
+            ) : (
+              <>
+                <View style={styles.googleIconWrapper}>
+                  <Text style={styles.googleIconText}>G</Text>
+                </View>
+                <Text style={styles.googleButtonText}>Continue with Google</Text>
+              </>
+            )}
+          </Pressable>
+          {googleError ? <Text style={styles.error}>{googleError}</Text> : null}
         </View>
 
         {/* Footer */}

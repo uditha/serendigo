@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { CircleDollarSign, Zap, Trophy, AlertTriangle, Globe, Lock } from 'lucide-react-native'
+import { WhileYoureHereSheet } from '@/src/components/WhileYoureHereSheet'
+import { useFlashDeals } from '@/src/hooks/useFlashDeals'
 import {
   ActivityIndicator,
   Animated,
@@ -291,6 +293,34 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     color: 'white',
   },
 
+  // Flash deals teaser on success screen
+  dealsTeaser: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: 'rgba(232,131,42,0.18)',
+    borderRadius: 14,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(232,131,42,0.35)',
+    alignSelf: 'stretch',
+  },
+  dealsTeaserEmoji: { fontSize: 22 },
+  dealsTeaserTitle: {
+    ...typography.body,
+    fontFamily: 'SpaceGrotesk_600SemiBold',
+    color: '#F5C07A',
+  },
+  dealsTeaserSub: {
+    ...typography.caption,
+    color: 'rgba(255,255,255,0.65)',
+  },
+  dealsTeaserArrow: {
+    ...typography.h3,
+    color: '#F5C07A',
+  },
+
   // ─── Error ─────────────────────────────────────────────────────
   errorTitle: {
     ...typography.h2,
@@ -337,8 +367,15 @@ export default function CaptureSubmitScreen() {
   const [phase, setPhase] = useState<Phase>('preview')
   const [result, setResult] = useState<CaptureResult | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
+  const [showDealsSheet, setShowDealsSheet] = useState(false)
   const queryClient = useQueryClient()
   const refreshUser = useAuthStore((s) => s.refreshUser)
+
+  // Fetch flash deals using the capture's GPS coords — ready to show post-success
+  const { data: flashDeals } = useFlashDeals(coords ?? undefined)
+  const nearbyDeals = (flashDeals ?? []).filter(
+    (d) => new Date(d.expiresAt).getTime() > Date.now()
+  )
 
   // Coin bounce animation
   const coinScale = useRef(new Animated.Value(0)).current
@@ -380,7 +417,12 @@ export default function CaptureSubmitScreen() {
             useNativeDriver: true,
           }),
         ]),
-      ]).start()
+      ]).start(() => {
+        // After celebration animations finish, surface flash deals if any nearby
+        if (nearbyDeals.length > 0) {
+          setTimeout(() => setShowDealsSheet(true), 800)
+        }
+      })
     }
   }, [phase])
 
@@ -420,6 +462,11 @@ export default function CaptureSubmitScreen() {
       queryClient.invalidateQueries({ queryKey: ['arc-progress'] })
       queryClient.invalidateQueries({ queryKey: ['passport'] })
       queryClient.invalidateQueries({ queryKey: ['badges'] })
+      queryClient.invalidateQueries({ queryKey: ['arcs'] })
+      // Invalidate all community feeds so new capture photo appears immediately
+      queryClient.invalidateQueries({ queryKey: ['discover'] })
+      queryClient.invalidateQueries({ queryKey: ['arc-community'] })
+      queryClient.invalidateQueries({ queryKey: ['chapter-community'] })
     },
     onError: (err: Error) => {
       setErrorMessage(err.message)
@@ -502,10 +549,33 @@ export default function CaptureSubmitScreen() {
             </Animated.View>
           ) : null}
 
+          {/* Flash deals teaser — shown only when deals are nearby */}
+          {nearbyDeals.length > 0 && (
+            <Animated.View style={{ opacity: loreOpacity }}>
+              <Pressable style={styles.dealsTeaser} onPress={() => setShowDealsSheet(true)}>
+                <Text style={styles.dealsTeaserEmoji}>⚡</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.dealsTeaserTitle}>
+                    {nearbyDeals.length} flash deal{nearbyDeals.length !== 1 ? 's' : ''} nearby
+                  </Text>
+                  <Text style={styles.dealsTeaserSub}>While you're here, check these out</Text>
+                </View>
+                <Text style={styles.dealsTeaserArrow}>→</Text>
+              </Pressable>
+            </Animated.View>
+          )}
+
           <Pressable style={styles.doneButton} onPress={handleDone}>
             <Text style={styles.doneButtonText}>Continue your journey →</Text>
           </Pressable>
         </ScrollView>
+
+        {/* "While you're here" flash deals sheet */}
+        <WhileYoureHereSheet
+          visible={showDealsSheet}
+          deals={nearbyDeals}
+          onDismiss={() => { setShowDealsSheet(false); handleDone() }}
+        />
       </View>
     )
   }

@@ -66,6 +66,8 @@ export function usePushNotifications() {
         router.push('/profile')
       } else if (data?.type === 'arc_complete') {
         if (data.arcId) router.push(`/arc/${data.arcId}` as never)
+      } else if (data?.screen === 'flash-deals') {
+        router.push('/flash-deals' as never)
       }
     })
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useQuery } from '@tanstack/react-query'
@@ -60,7 +60,6 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     borderWidth: 2,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.xs,
   },
   avatarRingPlain: {
     width: 96,
@@ -69,7 +68,30 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     backgroundColor: colors.secondary,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  avatarWrapper: {
+    position: 'relative',
     marginBottom: spacing.xs,
+  },
+  avatarPhoto: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+  },
+  characterBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: -4,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  characterBadgeEmoji: {
+    fontSize: 14,
   },
   avatarEmoji: { fontSize: 48 },
   avatarInitial: {
@@ -462,27 +484,35 @@ export default function ProfileScreen() {
 
       {/* Character hero */}
       <View style={[styles.heroCard, character && { borderColor: character.color + '50' }]}>
-        {character ? (
-          <>
+        {/* Avatar — always shows Google photo when available */}
+        <View style={styles.avatarWrapper}>
+          {user?.image ? (
+            <Image source={{ uri: user.image }} style={styles.avatarPhoto} />
+          ) : character ? (
             <View style={[styles.avatarRing, { backgroundColor: character.color + '20', borderColor: character.color + '40' }]}>
               <Text style={styles.avatarEmoji}>{character.emoji}</Text>
             </View>
-            <Text style={[styles.characterName, { color: character.color }]}>{character.label}</Text>
-          </>
-        ) : (
-          <>
+          ) : (
             <View style={styles.avatarRingPlain}>
               <Text style={styles.avatarInitial}>
                 {(user?.name ?? 'T').charAt(0).toUpperCase()}
               </Text>
             </View>
-            <Pressable
-              style={styles.quizCta}
-              onPress={() => router.push('/onboarding/quiz')}
-            >
-              <Text style={styles.quizCtaText}>Discover your traveller type →</Text>
-            </Pressable>
-          </>
+          )}
+          {/* Character badge overlay */}
+          {character && user?.image && (
+            <View style={[styles.characterBadge, { backgroundColor: character.color }]}>
+              <Text style={styles.characterBadgeEmoji}>{character.emoji}</Text>
+            </View>
+          )}
+        </View>
+
+        {character ? (
+          <Text style={[styles.characterName, { color: character.color }]}>{character.label}</Text>
+        ) : (
+          <Pressable style={styles.quizCta} onPress={() => router.push('/onboarding/quiz')}>
+            <Text style={styles.quizCtaText}>Discover your traveller type →</Text>
+          </Pressable>
         )}
 
         <Text style={styles.userName}>{user?.name ?? 'Traveller'}</Text>

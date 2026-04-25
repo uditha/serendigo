@@ -1,9 +1,9 @@
-import { ImageBackground, RefreshControl, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native'
+import { Image, ImageBackground, RefreshControl, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native'
 import { useState } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { useQueryClient, useQuery } from '@tanstack/react-query'
-import { CircleDollarSign, ChevronRight, Compass, QrCode } from 'lucide-react-native'
+import { CircleDollarSign, ChevronRight, Compass, QrCode, Zap } from 'lucide-react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { spacing, typography, AppColors } from '@/src/theme'
 import { useTheme } from '@/src/hooks/useTheme'
@@ -11,6 +11,7 @@ import { useAuthStore } from '@/src/stores/authStore'
 import { useArcs, type ArcPin } from '@/src/hooks/useArcs'
 import { fetchStory, type Journey } from '@/src/services/story'
 import { WORLD_COLORS, WORLD_EMOJI } from '@/src/constants/world'
+import { useFlashDeals } from '@/src/hooks/useFlashDeals'
 
 // ─── Character config — brand colors, same in light & dark ────────────────
 const CHARACTER_CONFIG: Record<string, { emoji: string; label: string; color: string }> = {
@@ -80,6 +81,15 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     ...typography.caption,
     color: colors.textTertiary,
   },
+  signInNudge: {
+    marginTop: spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  signInNudgeText: {
+    ...typography.caption,
+    color: colors.primary,
+    fontFamily: 'SpaceGrotesk_500Medium',
+  },
   avatarButton: {
     width: 46,
     height: 46,
@@ -92,6 +102,11 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
+  },
+  avatarPhoto: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
   },
   avatarText: {
     ...typography.h3,
@@ -419,6 +434,48 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     color: '#7A5230',
   },
 
+  // ─── Flash deal banner ─────────────────────────────────────────
+  flashBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    borderRadius: 16,
+    padding: spacing.md,
+    borderWidth: 1.5,
+    borderColor: '#E8832A35',
+    overflow: 'hidden',
+  },
+  flashBannerIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: 'rgba(232,131,42,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  flashBannerBody: { flex: 1 },
+  flashBannerTitle: {
+    ...typography.body,
+    fontFamily: 'SpaceGrotesk_600SemiBold',
+    color: 'white',
+  },
+  flashBannerSub: {
+    ...typography.caption,
+    color: 'rgba(255,255,255,0.72)',
+  },
+  flashBannerArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  flashBannerArrowText: {
+    ...typography.body,
+    color: 'white',
+  },
+
   // ─── Empty + Error ──────────────────────────────────────────────
   emptyCard: {
     padding: spacing.xl,
@@ -479,6 +536,12 @@ export default function TodayScreen() {
     enabled: isLoggedIn,
   })
 
+  // Flash deals — loaded lazily via device location, shown as banner if any active
+  const { data: flashDeals } = useFlashDeals()
+  const activeFlashDeals = (flashDeals ?? []).filter(
+    (d) => new Date(d.expiresAt).getTime() > Date.now()
+  )
+
   const allActiveJourneys = story?.journeys.filter((j) => !j.isComplete) ?? []
   const activeJourneys = allActiveJourneys
     .sort((a, b) => new Date(b.enrolledAt).getTime() - new Date(a.enrolledAt).getTime())
@@ -523,15 +586,25 @@ export default function TodayScreen() {
         <View style={styles.topLeft}>
           <Text style={styles.greeting}>{contextualGreeting}</Text>
           <Text style={styles.userName} numberOfLines={1}>{user?.name ?? 'Traveller'}</Text>
-          <View style={styles.coinsBadge}>
-            <CircleDollarSign size={15} color={colors.coinGold} />
-            <Text style={styles.coinsValue}>{user?.serendipityCoins ?? 0}</Text>
-            <Text style={styles.coinsLabel}>coins</Text>
-          </View>
+          {isLoggedIn ? (
+            <View style={styles.coinsBadge}>
+              <CircleDollarSign size={15} color={colors.coinGold} />
+              <Text style={styles.coinsValue}>{user?.serendipityCoins ?? 0}</Text>
+              <Text style={styles.coinsLabel}>coins</Text>
+            </View>
+          ) : (
+            <Pressable onPress={() => router.push('/(auth)/login')} style={styles.signInNudge}>
+              <Text style={styles.signInNudgeText}>Sign in to track your adventure →</Text>
+            </Pressable>
+          )}
         </View>
         {isLoggedIn && (
           <Pressable style={styles.avatarButton} onPress={() => router.push('/profile')}>
-            <Text style={styles.avatarText}>{(user?.name ?? 'T').charAt(0).toUpperCase()}</Text>
+            {user?.image ? (
+              <Image source={{ uri: user.image }} style={styles.avatarPhoto} />
+            ) : (
+              <Text style={styles.avatarText}>{(user?.name ?? 'T').charAt(0).toUpperCase()}</Text>
+            )}
           </Pressable>
         )}
       </View>
@@ -610,7 +683,7 @@ export default function TodayScreen() {
           </View>
         </View>
       ) : featuredArc ? (
-        <FeaturedArcCard arc={featuredArc} styles={styles} />
+        <FeaturedArcCard arc={featuredArc} styles={styles} isLoggedIn={isLoggedIn} />
       ) : (
         <View style={styles.emptyCard}>
           <Text style={styles.emptyText}>No journeys available yet — check back soon</Text>
@@ -627,6 +700,33 @@ export default function TodayScreen() {
             ))}
           </View>
         </>
+      )}
+
+      {/* Flash deals banner — only shown when there are active deals nearby */}
+      {activeFlashDeals.length > 0 && (
+        <Pressable onPress={() => router.push('/flash-deals' as never)}>
+          <LinearGradient
+            colors={['#C85A12', '#E8832A']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.flashBanner}
+          >
+            <View style={styles.flashBannerIconWrap}>
+              <Zap size={20} color="white" fill="white" />
+            </View>
+            <View style={styles.flashBannerBody}>
+              <Text style={styles.flashBannerTitle}>
+                {activeFlashDeals.length} Flash Deal{activeFlashDeals.length !== 1 ? 's' : ''} Nearby ⚡
+              </Text>
+              <Text style={styles.flashBannerSub}>
+                Limited time offers from local partners
+              </Text>
+            </View>
+            <View style={styles.flashBannerArrow}>
+              <Text style={styles.flashBannerArrowText}>→</Text>
+            </View>
+          </LinearGradient>
+        </Pressable>
       )}
 
       {/* Discover community banner */}
@@ -699,53 +799,77 @@ function JourneyCard({ journey, styles, colors }: { journey: Journey; styles: Re
 }
 
 // ─── Featured arc card ─────────────────────────────────────────────────────
-function FeaturedArcCard({ arc, styles }: { arc: ArcPin; styles: ReturnType<typeof makeStyles> }) {
+function FeaturedArcCard({
+  arc,
+  styles,
+  isLoggedIn,
+}: {
+  arc: ArcPin
+  styles: ReturnType<typeof makeStyles>
+  isLoggedIn: boolean
+}) {
   const worldColor = WORLD_COLORS[arc.worldType] ?? '#E8832A'
 
+  const goArcDetail = () => {
+    router.push(`/arc/${arc.id}` as never)
+  }
+
+  const onStartJourney = () => {
+    if (isLoggedIn) {
+      goArcDetail()
+    } else {
+      router.push('/(auth)/login' as never)
+    }
+  }
+
   return (
-    <Pressable onPress={() => router.push(`/arc/${arc.id}` as never)}>
-      {arc.coverImage ? (
-        <ImageBackground
-          source={{ uri: arc.coverImage }}
-          style={styles.arcCardImage}
-          resizeMode="cover"
-          imageStyle={{ borderRadius: 20 }}
-        >
-          <LinearGradient
-            colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.65)']}
-            style={styles.arcImageGrad}
+    <View style={styles.arcCardShell}>
+      <Pressable onPress={goArcDetail}>
+        {arc.coverImage ? (
+          <ImageBackground
+            source={{ uri: arc.coverImage }}
+            style={styles.arcCardImage}
+            resizeMode="cover"
+            imageStyle={{ borderRadius: 20 }}
           >
-            <View style={[styles.worldPill, { backgroundColor: worldColor }]}>
+            <LinearGradient
+              colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.65)']}
+              style={styles.arcImageGrad}
+            >
+              <View style={[styles.worldPill, { backgroundColor: worldColor }]}>
+                <Text style={styles.worldPillText}>{WORLD_EMOJI[arc.worldType]}  {arc.worldType}</Text>
+              </View>
+            </LinearGradient>
+          </ImageBackground>
+        ) : (
+          <View style={[styles.arcCardImageFallback, { backgroundColor: worldColor + '22' }]}>
+            <Text style={styles.arcFallbackEmoji}>{WORLD_EMOJI[arc.worldType]}</Text>
+            <View style={[styles.worldPill, { backgroundColor: worldColor, position: 'absolute', bottom: spacing.xl, left: spacing.md }]}>
               <Text style={styles.worldPillText}>{WORLD_EMOJI[arc.worldType]}  {arc.worldType}</Text>
             </View>
-          </LinearGradient>
-        </ImageBackground>
-      ) : (
-        <View style={[styles.arcCardImageFallback, { backgroundColor: worldColor + '22' }]}>
-          <Text style={styles.arcFallbackEmoji}>{WORLD_EMOJI[arc.worldType]}</Text>
-          <View style={[styles.worldPill, { backgroundColor: worldColor, position: 'absolute', bottom: spacing.xl, left: spacing.md }]}>
-            <Text style={styles.worldPillText}>{WORLD_EMOJI[arc.worldType]}  {arc.worldType}</Text>
           </View>
-        </View>
-      )}
+        )}
+      </Pressable>
 
-      {/* Floating body card */}
+      {/* Floating body: browse arc from title; start journey requires sign-in */}
       <View style={styles.arcCardFloatBody}>
-        <Text style={styles.arcCardTitle} numberOfLines={2}>{arc.title}</Text>
-        <View style={styles.arcCardMeta}>
-          <Text style={styles.arcCardMetaText}>
-            {arc.chapters.length} {arc.chapters.length === 1 ? 'chapter' : 'chapters'}
-          </Text>
-          <Text style={styles.metaDot}>·</Text>
-          <Text style={styles.arcCardMetaText}>
-            {arc.province.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-          </Text>
-        </View>
-        <View style={[styles.startButton, { backgroundColor: worldColor }]}>
+        <Pressable onPress={goArcDetail}>
+          <Text style={styles.arcCardTitle} numberOfLines={2}>{arc.title}</Text>
+          <View style={styles.arcCardMeta}>
+            <Text style={styles.arcCardMetaText}>
+              {arc.chapters.length} {arc.chapters.length === 1 ? 'chapter' : 'chapters'}
+            </Text>
+            <Text style={styles.metaDot}>·</Text>
+            <Text style={styles.arcCardMetaText}>
+              {arc.province.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+            </Text>
+          </View>
+        </Pressable>
+        <Pressable style={[styles.startButton, { backgroundColor: worldColor }]} onPress={onStartJourney}>
           <Text style={styles.startButtonText}>Start journey →</Text>
-        </View>
+        </Pressable>
       </View>
-    </Pressable>
+    </View>
   )
 }
 

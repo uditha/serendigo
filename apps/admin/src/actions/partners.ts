@@ -1,10 +1,35 @@
 'use server'
 import { db } from '@/db'
-import { partners, chapterFeaturedPartners, flashDeals } from '@/db/schema'
-import { eq, and } from 'drizzle-orm'
+import { partners, chapterFeaturedPartners, flashDeals, user } from '@/db/schema'
+import { eq, and, isNotNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createId } from '@paralleldrive/cuid2'
+
+// ─── Push notification helper ──────────────────────────────────────────────
+async function sendExpoPush(tokens: string[], title: string, body: string, data?: Record<string, string>) {
+  const valid = tokens.filter((t) => t.startsWith('ExponentPushToken['))
+  if (valid.length === 0) return
+
+  try {
+    // Expo push API accepts up to 100 messages per request
+    const chunks: string[][] = []
+    for (let i = 0; i < valid.length; i += 100) chunks.push(valid.slice(i, i + 100))
+
+    await Promise.all(
+      chunks.map((chunk) =>
+        fetch('https://exp.host/--/api/v2/push/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify(chunk.map((to) => ({ to, sound: 'default', title, body, data: data ?? {} }))),
+        })
+      )
+    )
+  } catch (err) {
+    // Non-fatal — never let push failures block the action
+    console.warn('[Push] Failed to send flash deal notifications:', err)
+  }
+}
 
 // Parse comma-separated tags from form
 function parseTags(raw: string): string[] {
@@ -135,12 +160,16 @@ export async function removeFeaturedPartner(chapterId: string, partnerId: string
 
 // --- Flash Deals ---
 export async function createFlashDeal(formData: FormData) {
+  const partnerId = formData.get('partnerId') as string
+  const title = formData.get('title') as string
+  const discountText = formData.get('discountText') as string
+
   await db.insert(flashDeals).values({
     id: createId(),
-    partnerId: formData.get('partnerId') as string,
-    title: formData.get('title') as string,
+    partnerId,
+    title,
     description: (formData.get('description') as string) || null,
-    discountText: formData.get('discountText') as string,
+    discountText,
     claimCode: formData.get('claimCode') as string,
     startsAt: new Date(formData.get('startsAt') as string),
     expiresAt: new Date(formData.get('expiresAt') as string),
@@ -148,6 +177,33 @@ export async function createFlashDeal(formData: FormData) {
     minCoins: parseInt((formData.get('minCoins') as string) || '200'),
     isActive: true,
   })
+
+  // Fire-and-forget push notifications to all users who have a push token
+  // (location-based filtering happens on the mobile side when they open the app)
+  const partner = await db
+    .select({ name: partners.name, province: partners.province })
+    .from(partners)
+    .where(eq(partners.id, partnerId))
+    .limit(1)
+    .then((r) => r[0])
+
+  if (partner) {
+    const users = await db
+      .select({ pushToken: user.pushToken })
+      .from(user)
+      .where(isNotNull(user.pushToken))
+
+    const tokens = users.map((u) => u.pushToken!).filter(Boolean)
+
+    // Non-blocking — don't await so the action returns immediately
+    sendExpoPush(
+      tokens,
+      `⚡ Flash Deal at ${partner.name}`,
+      `${discountText} — ${title}. Limited time only!`,
+      { screen: 'flash-deals' },
+    )
+  }
+
   revalidatePath('/partners')
 }
 

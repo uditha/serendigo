@@ -16,17 +16,22 @@ import leaderboardRoutes from './routes/leaderboard'
 import communityRoutes from './routes/community'
 import partnerRoutes from './routes/partners'
 import redeemRoute from './routes/redeem'
+import googleMobileRoute from './routes/google-mobile'
 
 const app = new Hono<{ Variables: { userId: string } }>()
 
 // Global middleware
 app.use('*', logger())
-const allowedOrigins = (
-  process.env.CORS_ORIGIN ?? 'http://localhost:3001,http://localhost:3000'
-)
-  .split(',')
-  .map((o) => o.trim())
-  .filter(Boolean)
+const allowedOrigins = [
+  ...new Set([
+    ...(process.env.CORS_ORIGIN ?? 'http://localhost:3001,http://localhost:3000')
+      .split(',')
+      .map((o) => o.trim())
+      .filter(Boolean),
+    ...(process.env.BETTER_AUTH_URL?.trim() ? [process.env.BETTER_AUTH_URL.trim()] : []),
+    ...(process.env.API_BASE_URL?.trim() ? [process.env.API_BASE_URL.trim()] : []),
+  ]),
+]
 
 app.use(
   '*',
@@ -77,6 +82,7 @@ app.route('/api/leaderboard', leaderboardRoutes)
 app.route('/api/community', communityRoutes)
 app.route('/api/partners', partnerRoutes)
 app.route('/api/redeem', redeemRoute)
+app.route('/api/google-signin', googleMobileRoute)
 
 // Error + 404 handlers
 app.onError(errorHandler)
