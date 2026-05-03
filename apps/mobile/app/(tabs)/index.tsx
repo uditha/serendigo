@@ -528,7 +528,7 @@ export default function TodayScreen() {
   const styles = makeStyles(colors)
   const { user, isLoggedIn, isLocal, refreshUser } = useAuthStore()
   const queryClient = useQueryClient()
-  const { data: arcs, isLoading: arcsLoading } = useArcs()
+  const { data: arcs, isLoading: arcsLoading, error: arcsError } = useArcs()
 
   const { data: story } = useQuery({
     queryKey: ['story'],
@@ -681,6 +681,10 @@ export default function TodayScreen() {
             <View style={{ width: '65%', height: 20, borderRadius: 6, backgroundColor: colors.textTertiary + '28' }} />
             <View style={{ width: '40%', height: 14, borderRadius: 4, backgroundColor: colors.textTertiary + '28' }} />
           </View>
+        </View>
+      ) : arcsError ? (
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyText}>Could not load journeys — pull to refresh</Text>
         </View>
       ) : featuredArc ? (
         <FeaturedArcCard arc={featuredArc} styles={styles} isLoggedIn={isLoggedIn} />

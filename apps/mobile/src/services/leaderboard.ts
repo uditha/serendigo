@@ -9,8 +9,10 @@ export interface LeaderboardEntry {
   totalCaptures: number
 }
 
-export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
-  const response = await fetch(`${API_URL}/api/leaderboard`)
+export type LeaderboardPeriod = 'all' | 'week' | 'month'
+
+export async function fetchLeaderboard(period: LeaderboardPeriod = 'all'): Promise<LeaderboardEntry[]> {
+  const response = await fetch(`${API_URL}/api/leaderboard?period=${period}`)
   if (!response.ok) throw new Error('Failed to load leaderboard')
   const json = await response.json()
   return json.data as LeaderboardEntry[]

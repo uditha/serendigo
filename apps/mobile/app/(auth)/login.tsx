@@ -79,7 +79,7 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     borderTopRightRadius: 12,
     borderBottomRightRadius: 12,
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.md,
+    alignSelf: 'stretch',
     justifyContent: 'center',
     alignItems: 'center',
   },

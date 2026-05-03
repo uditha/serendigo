@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, ScrollView, StyleSheet, Text, View, Pressable, Linking } from 'react-native';
+import { Image, Platform, ScrollView, StyleSheet, Text, View, Pressable, Linking } from 'react-native';
 import { CircleDollarSign, Camera, Clock, MapPin, Shirt, DollarSign, Info, Maximize2, ChevronLeft } from 'lucide-react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -328,7 +328,10 @@ export default function ChapterDetailScreen() {
 
   const openMaps = () => {
     if (!chapter) return;
-    const url = `https://maps.google.com/?q=${chapter.lat},${chapter.lng}`;
+    const coords = `${chapter.lat},${chapter.lng}`;
+    const url = Platform.OS === 'ios'
+      ? `maps://?q=${coords}&ll=${coords}`
+      : `https://maps.google.com/?q=${coords}`;
     Linking.openURL(url);
   };
 

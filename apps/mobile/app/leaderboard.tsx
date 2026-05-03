@@ -7,7 +7,7 @@ import { CircleDollarSign } from 'lucide-react-native'
 import { spacing, typography, AppColors } from '@/src/theme'
 import { useTheme } from '@/src/hooks/useTheme'
 import { useAuthStore } from '@/src/stores/authStore'
-import { fetchLeaderboard, type LeaderboardEntry } from '@/src/services/leaderboard'
+import { fetchLeaderboard, type LeaderboardEntry, type LeaderboardPeriod } from '@/src/services/leaderboard'
 
 const CHARACTER_EMOJI: Record<string, string> = {
   TASTE: '🍛', WILD: '🐘', MOVE: '🏄', ROOTS: '🏛️', RESTORE: '🌿',
@@ -45,6 +45,33 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     ...typography.label,
     color: colors.textTertiary,
     letterSpacing: 3,
+  },
+
+  // Period filter
+  filterRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  filterChip: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: 20,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceWhite,
+  },
+  filterChipActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary + '12',
+  },
+  filterChipText: {
+    ...typography.label,
+    color: colors.textSecondary,
+    fontSize: 11,
+  },
+  filterChipTextActive: {
+    color: colors.primary,
   },
 
   // My rank
@@ -217,16 +244,17 @@ export default function LeaderboardScreen() {
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
   const [refreshing, setRefreshing] = useState(false)
+  const [period, setPeriod] = useState<LeaderboardPeriod>('all')
 
   const { data, isLoading } = useQuery({
-    queryKey: ['leaderboard'],
-    queryFn: fetchLeaderboard,
+    queryKey: ['leaderboard', period],
+    queryFn: () => fetchLeaderboard(period),
     staleTime: 2 * 60 * 1000,
   })
 
   const onRefresh = async () => {
     setRefreshing(true)
-    await queryClient.invalidateQueries({ queryKey: ['leaderboard'] })
+    await queryClient.invalidateQueries({ queryKey: ['leaderboard', period] })
     setRefreshing(false)
   }
 
@@ -249,6 +277,23 @@ export default function LeaderboardScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Leaderboard</Text>
         <Text style={styles.headerSubtitle}>Top Explorers</Text>
+      </View>
+
+      {/* Period filter */}
+      <View style={styles.filterRow}>
+        {([
+          { key: 'all', label: 'All Time' },
+          { key: 'week', label: 'This Week' },
+          { key: 'month', label: 'This Month' },
+        ] as { key: LeaderboardPeriod; label: string }[]).map(({ key, label }) => (
+          <Pressable
+            key={key}
+            style={[styles.filterChip, period === key && styles.filterChipActive]}
+            onPress={() => setPeriod(key)}
+          >
+            <Text style={[styles.filterChipText, period === key && styles.filterChipTextActive]}>{label}</Text>
+          </Pressable>
+        ))}
       </View>
 
       {/* My rank card */}

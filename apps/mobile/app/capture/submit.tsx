@@ -7,6 +7,7 @@ import {
   Animated,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -108,6 +109,19 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     ...typography.caption,
     color: colors.error,
     flex: 1,
+  },
+  openSettingsButton: {
+    marginTop: 4,
+    paddingVertical: 4,
+    paddingHorizontal: spacing.sm,
+    backgroundColor: colors.error + '15',
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  openSettingsButtonText: {
+    ...typography.caption,
+    color: colors.error,
+    fontFamily: 'SpaceGrotesk_600SemiBold',
   },
 
   // Note input
@@ -430,7 +444,7 @@ export default function CaptureSubmitScreen() {
     try {
       const { status } = await Location.getForegroundPermissionsAsync()
       if (status !== 'granted') {
-        setLocationError('Location permission required to verify your visit')
+        setLocationError('permission_denied')
         return
       }
       const loc = await Location.getCurrentPositionAsync({
@@ -617,10 +631,23 @@ export default function CaptureSubmitScreen() {
               <View style={styles.locationDot} />
               <Text style={styles.locationText}>Location locked</Text>
             </>
+          ) : locationError === 'permission_denied' ? (
+            <View style={{ flex: 1, gap: 4 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+                <AlertTriangle size={14} color={colors.error} />
+                <Text style={styles.locationErrorText}>Location permission denied</Text>
+              </View>
+              <Pressable style={styles.openSettingsButton} onPress={() => Linking.openSettings()}>
+                <Text style={styles.openSettingsButtonText}>Open Settings →</Text>
+              </Pressable>
+            </View>
           ) : locationError ? (
             <>
               <AlertTriangle size={14} color={colors.error} />
               <Text style={styles.locationErrorText}>{locationError}</Text>
+              <Pressable onPress={getLocation}>
+                <Text style={[styles.locationErrorText, { textDecorationLine: 'underline' }]}>Retry</Text>
+              </Pressable>
             </>
           ) : (
             <>

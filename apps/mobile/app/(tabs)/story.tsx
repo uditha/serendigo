@@ -350,7 +350,13 @@ export default function StoryScreen() {
         <View style={styles.emptyCard}>
           <Text style={styles.emptyEmoji}>🗺️</Text>
           <Text style={styles.emptyTitle}>No journeys yet</Text>
-          <Text style={styles.emptyBody}>Start an arc from the Today tab to begin your adventure.</Text>
+          <Text style={styles.emptyBody}>Pick an arc and start exploring Sri Lanka.</Text>
+          <Pressable
+            style={{ backgroundColor: colors.primary, borderRadius: 12, paddingVertical: spacing.sm, paddingHorizontal: spacing.lg, marginTop: spacing.xs }}
+            onPress={() => router.push('/arc' as never)}
+          >
+            <Text style={{ ...typography.body, color: 'white', fontFamily: 'SpaceGrotesk_600SemiBold' }}>Browse arcs →</Text>
+          </Pressable>
         </View>
       ) : (
         <>

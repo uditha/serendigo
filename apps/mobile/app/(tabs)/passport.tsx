@@ -534,7 +534,7 @@ function StampCard({ province, styles }: { province: ProvinceStamp; styles: Retu
             </Text>
           </View>
         ) : (
-          <Text style={styles.comingSoon}>Coming soon</Text>
+          <Text style={styles.comingSoon}>No journeys yet</Text>
         )}
       </View>
 

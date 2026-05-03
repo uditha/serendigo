@@ -183,6 +183,7 @@ export default function CaptureScreen() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [capturing, setCapturing] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
+  const [captureError, setCaptureError] = useState(false);
   const cameraRef = useRef<CameraView>(null);
 
   useEffect(() => {
@@ -192,11 +193,12 @@ export default function CaptureScreen() {
   const handleCapture = async () => {
     if (!cameraRef.current || capturing) return;
     setCapturing(true);
+    setCaptureError(false);
     try {
       const result = await cameraRef.current.takePictureAsync({ quality: 0.7 });
       if (result) setPhoto(result.uri);
-    } catch (e) {
-      console.error('Capture error:', e);
+    } catch {
+      setCaptureError(true);
     } finally {
       setCapturing(false);
     }
@@ -277,7 +279,11 @@ export default function CaptureScreen() {
 
       {/* Overlay: bottom capture button */}
       <View style={[styles.bottomBar, { paddingBottom: (bottom || spacing.lg) + spacing.md }]}>
-        <Text style={styles.hint}>Position the location in frame</Text>
+        {captureError ? (
+          <Text style={[styles.hint, { color: '#FF6B6B' }]}>Camera failed — tap to try again</Text>
+        ) : (
+          <Text style={styles.hint}>Position the location in frame</Text>
+        )}
         <Pressable
           style={[styles.captureButton, capturing && styles.captureButtonDisabled]}
           onPress={handleCapture}

@@ -299,7 +299,7 @@ export default function QuizScreen() {
     }
   };
 
-  const handleContinue = async () => {
+  const saveCharacter = async () => {
     if (result && token && user) {
       try {
         await fetchFromApi('/api/user/character', {
@@ -313,7 +313,17 @@ export default function QuizScreen() {
         console.warn('Failed to save character:', e)
       }
     }
+  };
+
+  const handleContinue = async () => {
+    await saveCharacter();
     router.replace('/(tabs)');
+  };
+
+  const handleViewProfile = async () => {
+    await saveCharacter();
+    router.replace('/(tabs)');
+    router.push('/profile' as never);
   };
 
   if (step === 3) {
@@ -339,6 +349,12 @@ export default function QuizScreen() {
           onPress={handleContinue}
         >
           <Text style={styles.buttonText}>Begin the journey →</Text>
+        </Pressable>
+        <Pressable
+          style={{ marginTop: spacing.xs, paddingVertical: spacing.sm }}
+          onPress={handleViewProfile}
+        >
+          <Text style={{ ...typography.caption, color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}>View my profile →</Text>
         </Pressable>
       </View>
     );
