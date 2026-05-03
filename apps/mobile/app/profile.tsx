@@ -2,14 +2,15 @@ import React, { useState } from 'react'
 import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useQuery } from '@tanstack/react-query'
-import { CircleDollarSign, Camera, Map, CheckCircle2, Repeat2, LogOut, ChevronRight, Sun, Moon, Smartphone } from 'lucide-react-native'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { CircleDollarSign, Camera, Map, CheckCircle2, Repeat2, LogOut, Trash2, ChevronRight, Sun, Moon, Smartphone } from 'lucide-react-native'
 import { spacing, typography, AppColors } from '@/src/theme'
 import { useTheme } from '@/src/hooks/useTheme'
 import { useThemeStore, type ThemeMode } from '@/src/stores/themeStore'
 import { useAuthStore } from '@/src/stores/authStore'
 import { fetchStory, type StoryXP } from '@/src/services/story'
 import { fetchBadges, type UserBadge } from '@/src/services/badges'
+import { deleteAccount } from '@/src/services/api'
 import { WORLD_COLORS } from '@/src/constants/world'
 
 // ─── Config — brand colors, same in light & dark ──────────────────────────
@@ -449,6 +450,7 @@ export default function ProfileScreen() {
   const styles = makeStyles(colors)
   const { mode: themeMode, setMode: setThemeMode } = useThemeStore()
   const { user, isLocal, clearAuth } = useAuthStore()
+  const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
     queryKey: ['story'],
@@ -469,6 +471,43 @@ export default function ProfileScreen() {
       { text: 'Sign Out', style: 'destructive', onPress: () => { clearAuth(); router.replace('/(tabs)') } },
       { text: 'Cancel', style: 'cancel' },
     ])
+  }
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete your account, all captures, badges, and progress. This cannot be undone.',
+      [
+        {
+          text: 'Delete my account',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Are you absolutely sure?',
+              'All your data will be deleted immediately and cannot be recovered.',
+              [
+                {
+                  text: 'Yes, delete everything',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      await deleteAccount()
+                      queryClient.clear()
+                      clearAuth()
+                      router.replace('/(tabs)')
+                    } catch {
+                      Alert.alert('Error', 'Failed to delete account. Please try again.')
+                    }
+                  },
+                },
+                { text: 'Cancel', style: 'cancel' },
+              ]
+            )
+          },
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    )
   }
 
   return (
@@ -603,6 +642,14 @@ export default function ProfileScreen() {
             Icon={LogOut}
             label="Sign out"
             onPress={handleSignOut}
+            destructive
+            styles={styles}
+            colors={colors}
+          />
+          <ActionRow
+            Icon={Trash2}
+            label="Delete account"
+            onPress={handleDeleteAccount}
             destructive
             styles={styles}
             colors={colors}

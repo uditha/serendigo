@@ -1,6 +1,11 @@
 import { Context } from 'hono'
 import { db } from '../db'
-import { user } from '../db/schema/auth'
+import { user, session, account } from '../db/schema/auth'
+import { captures } from '../db/schema/captures'
+import { captureLikes } from '../db/schema/capture_likes'
+import { userArcs } from '../db/schema/user_arcs'
+import { userBadges } from '../db/schema/badges'
+import { coinRedemptions, partnerReviews } from '../db/schema/partners'
 import { eq } from 'drizzle-orm'
 
 const VALID_CHARACTERS = ['TASTE', 'WILD', 'MOVE', 'ROOTS', 'RESTORE']
@@ -45,6 +50,28 @@ export async function updatePushToken(c: Context) {
   } catch (error) {
     console.error('updatePushToken error:', error)
     return c.json({ success: false, error: 'Failed to save push token' }, 500)
+  }
+}
+
+export async function deleteAccount(c: Context) {
+  try {
+    const userId = c.get('userId')
+
+    // Delete in FK-safe order: dependants first, then auth rows, then user
+    await db.delete(captureLikes).where(eq(captureLikes.userId, userId))
+    await db.delete(coinRedemptions).where(eq(coinRedemptions.userId, userId))
+    await db.delete(partnerReviews).where(eq(partnerReviews.userId, userId))
+    await db.delete(captures).where(eq(captures.userId, userId))
+    await db.delete(userBadges).where(eq(userBadges.userId, userId))
+    await db.delete(userArcs).where(eq(userArcs.userId, userId))
+    await db.delete(session).where(eq(session.userId, userId))
+    await db.delete(account).where(eq(account.userId, userId))
+    await db.delete(user).where(eq(user.id, userId))
+
+    return c.json({ success: true })
+  } catch (error) {
+    console.error('deleteAccount error:', error)
+    return c.json({ success: false, error: 'Failed to delete account' }, 500)
   }
 }
 

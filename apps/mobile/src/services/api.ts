@@ -39,3 +39,7 @@ export async function fetchFromApi<T>(
   }
   return response.json()
 }
+
+export async function deleteAccount(): Promise<void> {
+  await fetchFromApi('/api/user/account', { method: 'DELETE' })
+}
