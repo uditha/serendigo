@@ -13,6 +13,7 @@ export const arcs = pgTable('arcs', {
     enum: ['WESTERN', 'CENTRAL', 'SOUTHERN', 'NORTHERN', 'EASTERN',
            'NORTH_WESTERN', 'NORTH_CENTRAL', 'UVA', 'SABARAGAMUWA'],
   }).notNull(),
+  district: text('district'),
   narratorName: text('narrator_name'),
   introText: text('intro_text'),
   coverImage: text('cover_image'),

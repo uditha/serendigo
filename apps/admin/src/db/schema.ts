@@ -19,6 +19,7 @@ export const arcs = pgTable('arcs', {
   slug: text('slug').notNull(),
   worldType: text('world_type').notNull(),
   province: text('province').notNull(),
+  district: text('district'),
   narratorName: text('narrator_name'),
   introText: text('intro_text'),
   coverImage: text('cover_image'),

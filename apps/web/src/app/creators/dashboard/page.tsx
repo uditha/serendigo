@@ -61,7 +61,9 @@ export default async function CreatorDashboardPage() {
             </span>
           </Link>
           <div className="flex items-center gap-4" style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 14 }}>
-            <span style={{ color: 'var(--sg-muted)' }}>{creator.name}</span>
+            <Link href="/creators/profile" style={{ color: 'var(--sg-muted)', textDecoration: 'none' }}>
+              {creator.name}
+            </Link>
             <form action={logoutCreator}>
               <button
                 type="submit"

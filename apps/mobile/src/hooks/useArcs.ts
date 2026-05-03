@@ -7,6 +7,7 @@ export interface ArcPin {
   slug: string
   worldType: 'TASTE' | 'WILD' | 'MOVE' | 'ROOTS' | 'RESTORE'
   province: string
+  district: string | null
   coverImage: string | null
   chapters: Array<{
     id: string

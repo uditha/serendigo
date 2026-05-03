@@ -6,24 +6,40 @@ import { db } from '@/db'
 import { creators, arcSubmissions, arcs, chapters } from '@/db/schema'
 import { createId } from '@paralleldrive/cuid2'
 import type { ChapterDraft } from '../types/creator'
+import {
+  sendCreatorApprovedEmail,
+  sendCreatorRejectedEmail,
+  sendSubmissionPublishedEmail,
+  sendSubmissionRejectedEmail,
+} from '@/lib/email'
 
 // ─── Creator application review ───────────────────────────────────────────
 export async function approveCreator(id: string) {
+  const rows = await db.select().from(creators).where(eq(creators.id, id)).limit(1)
+  const creator = rows[0]
   await db.update(creators).set({
     status: 'approved',
     approvedAt: new Date(),
     rejectionReason: null,
   }).where(eq(creators.id, id))
+  if (creator) {
+    await sendCreatorApprovedEmail(creator.email, creator.name).catch(e => console.error('[email] send failed:', e))
+  }
   revalidatePath('/creators')
 }
 
 export async function rejectCreator(formData: FormData) {
   const id = String(formData.get('id'))
   const reason = String(formData.get('reason') ?? '').trim()
+  const rows = await db.select().from(creators).where(eq(creators.id, id)).limit(1)
+  const creator = rows[0]
   await db.update(creators).set({
     status: 'rejected',
     rejectionReason: reason || null,
   }).where(eq(creators.id, id))
+  if (creator) {
+    await sendCreatorRejectedEmail(creator.email, creator.name, reason || null).catch(e => console.error('[email] send failed:', e))
+  }
   revalidatePath('/creators')
 }
 
@@ -90,6 +106,13 @@ export async function approveSubmission(formData: FormData) {
     adminFeedback: null,
   }).where(eq(arcSubmissions.id, id))
 
+  // email the creator
+  const creatorRows = await db.select().from(creators).where(eq(creators.id, sub.creatorId)).limit(1)
+  const creator = creatorRows[0]
+  if (creator) {
+    await sendSubmissionPublishedEmail(creator.email, creator.name, sub.title).catch(e => console.error('[email] send failed:', e))
+  }
+
   revalidatePath('/submissions')
   revalidatePath('/arcs')
 }
@@ -97,11 +120,20 @@ export async function approveSubmission(formData: FormData) {
 export async function rejectSubmission(formData: FormData) {
   const id = String(formData.get('id'))
   const feedback = String(formData.get('feedback') ?? '').trim()
+  const rows = await db.select().from(arcSubmissions).where(eq(arcSubmissions.id, id)).limit(1)
+  const sub = rows[0]
   await db.update(arcSubmissions).set({
     status: 'rejected',
     adminFeedback: feedback || null,
     reviewedAt: new Date(),
   }).where(eq(arcSubmissions.id, id))
+  if (sub) {
+    const creatorRows = await db.select().from(creators).where(eq(creators.id, sub.creatorId)).limit(1)
+    const creator = creatorRows[0]
+    if (creator) {
+      await sendSubmissionRejectedEmail(creator.email, creator.name, sub.title, feedback || null).catch(e => console.error('[email] send failed:', e))
+    }
+  }
   revalidatePath('/submissions')
 }
 

@@ -211,4 +211,28 @@ export async function deleteDraft(id: string): Promise<ActionResult> {
   return { ok: true }
 }
 
+// ─── authed: update creator profile ──────────────────────────────────────
+export async function updateCreatorProfile(formData: FormData): Promise<ActionResult> {
+  let creator
+  try {
+    creator = await requireApprovedCreator()
+  } catch {
+    return { ok: false, error: 'Not authorized.' }
+  }
+
+  const photo = String(formData.get('photo') ?? '').trim() || null
+  const bio = String(formData.get('bio') ?? '').trim() || null
+  const instagram = String(formData.get('instagram') ?? '').trim() || null
+  const website = String(formData.get('website') ?? '').trim() || null
+
+  await db
+    .update(creators)
+    .set({ photo, bio, instagram, website })
+    .where(eq(creators.id, creator.id))
+
+  revalidatePath('/creators/dashboard')
+  revalidatePath('/creators/profile')
+  return { ok: true, message: 'Profile updated.' }
+}
+
 export { getCurrentCreator }

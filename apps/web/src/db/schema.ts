@@ -14,6 +14,7 @@ export const creators = pgTable('creators', {
   slug: text('slug').notNull().unique(),
   bio: text('bio'),
   photo: text('photo'),
+  googleId: text('google_id').unique(),
   province: text('province'),
   instagram: text('instagram'),
   website: text('website'),

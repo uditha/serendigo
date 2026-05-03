@@ -18,7 +18,7 @@ serendigo/
 
 ## Current Phase
 Phase 1 — Foundation
-Current Milestone: 47 — Next
+Current Milestone: 49 — Next
 
 ## Tech Stack
 
@@ -114,9 +114,9 @@ const colors = {
 - Body/UI: Space Grotesk
 
 ## Current Session Memory
-- Last completed: M46 Creator Portal (see above); Google login (iOS PKCE + expo-auth-session, /api/google-signin endpoint, auth middleware DB fallback for Google sessions, Google profile photo on Today tab avatar + profile screen); M47 Real-time data (invalidate ['arcs'] after capture + enrollment + quiz; pull-to-refresh on Arc Detail + Discover screens)
+- Last completed: M48 fully complete — email notifications on creator application approval/rejection + arc submission publish/reject via Resend (apps/admin/src/lib/email.ts, 4 HTML email templates, wired into all creator/submission server actions, graceful no-op if RESEND_API_KEY unset)
 - Current blocker: None
-- Next step: Milestone 48 — Creator portal polish (email notification on application approval/rejection, creator photo upload, cover image upload on submission form)
+- Next step: Milestone 49
 
 ## Milestones Completed
 - ✅ 1 — Expo app running
@@ -166,6 +166,7 @@ const colors = {
 - ✅ 45 — Flash Deals mobile: WhileYoureHereSheet (animated slide-up Modal shown 800ms after capture success, showing nearby flash deals with countdown + partner emoji), Today tab amber gradient flash deal banner (→ flash-deals screen), push notifications on flash deal create (admin sendExpoPush), flash-deals.tsx full listing screen, useFlashDeals hook with Sri Lanka center fallback coords
 - ✅ 46 — Creator Portal: creators + arc_submissions tables (DB migration 0012), apps/web creator landing page + application form (HMAC-signed cookie session, bcrypt, cuid2 slug), creator login + dashboard (server component), arc submission form with inline chapter JSONB editor + AI polish route (/api/polish → Claude claude-3-5-sonnet-latest), admin /creators (approve/reject/suspend applications, red nav badge), admin /submissions (approve-to-publish creates live arc + chapters rows, reject with feedback), mobile creator attribution card on arc detail screen, API arcs service attaches creator data to getArcById response
 - ✅ 47 — Google Login + Real-time data: iOS PKCE OAuth via expo-auth-session (useAuthRequest + exchangeCodeAsync, code_verifier in extraParams), /api/google-signin endpoint (Google userinfo verify → find/create user → session token), auth middleware DB fallback for non-Better-Auth sessions, Google profile photo on Today tab avatar + profile hero with character badge overlay, ['arcs'] invalidation after capture/enrollment/quiz, pull-to-refresh on Arc Detail + Discover screens
+- ✅ 48 — Creator portal polish + email notifications: /creators/profile page (circular avatar upload, bio/instagram/website fields, updateCreatorProfile server action); Google OAuth login for creator portal (server-side auth code flow, /api/auth/google + callback route handlers, state cookie CSRF, googleId column on creators table, Google photo backfilled on first login); Resend email notifications on creator approval/rejection + arc submission publish/reject (apps/admin/src/lib/email.ts, 4 HTML email templates)
 
 ## Key Decisions & Notes
 - District name: "Mahanuvara" renamed to "Kandy" everywhere
@@ -220,6 +221,9 @@ const colors = {
 - `/api/google-signin` route name required — `/api/auth/*` is caught by Better Auth wildcard before reaching Hono routes
 - `auth.api.getSession()` only validates Better Auth sessions; custom Google sessions need direct DB token lookup fallback in auth middleware
 - Google profile photo stored in `user.image` (Better Auth standard field); profile screen shows photo with character emoji as badge overlay
+- Creator portal Google OAuth uses server-side auth code flow (no PKCE needed — secret stays on server); state param stored in `google_oauth_state` httpOnly cookie (10min TTL) for CSRF; credentials in `apps/web/.env.local` (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, NEXT_PUBLIC_BASE_URL)
+- Creator Google login matches by `googleId` first, then email fallback — so creators who applied with Gmail can sign in without re-linking; `googleId` column added to creators table (ALTER TABLE, unique)
+- Creator photo upload at `/creators/profile` uses existing `/api/upload` route with `folder=creator-photos`; Google profile photo auto-backfilled into `creator.photo` on first Google login if not already set
 
 ## Environment Setup
 Copy env files before first run:

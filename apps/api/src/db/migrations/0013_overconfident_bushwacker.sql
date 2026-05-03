@@ -1,0 +1,1 @@
+ALTER TABLE "arcs" ADD COLUMN "district" text;
